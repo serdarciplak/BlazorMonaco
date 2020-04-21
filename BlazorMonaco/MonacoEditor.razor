@@ -1,0 +1,71 @@
+﻿@inject Microsoft.JSInterop.IJSRuntime jsRuntime
+
+<div id="@Id" class="@CssClass" style="min-height:100px;border:1px solid grey"></div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    [Parameter]
+    public string CssClass { get; set; }
+
+    [Parameter]
+    public string Value { get; set; }
+
+    [Parameter]
+    public Func<MonacoEditor, Options.EditorOptions> GetOptions { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        staticJsRuntime = jsRuntime;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (string.IsNullOrWhiteSpace(Id))
+                Id = "blazor-monaco-" + Guid.NewGuid().ToString();
+            var options = GetOptions(this);
+            await jsRuntime.Create(Id, options);
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    #region Static Methods
+
+    private static Microsoft.JSInterop.IJSRuntime staticJsRuntime { get; set; }
+
+    public static async Task ColorizeElement(string elementId)
+    {
+        await staticJsRuntime.ColorizeElement(elementId);
+    }
+
+    public static async Task SetTheme(string newTheme)
+    {
+        await staticJsRuntime.SetTheme(newTheme);
+    }
+
+    #endregion
+
+    #region Instance Methods
+
+    public async Task<string> GetValue()
+    {
+        return await jsRuntime.GetValue(Id);
+    }
+
+    public async Task SetValue(string newValue)
+    {
+        await jsRuntime.SetValue(Id, newValue);
+    }
+
+    public async Task UpdateOptions(Options.EditorOptions options)
+    {
+        await jsRuntime.UpdateOptions(Id, options);
+    }
+
+    #endregion
+
+}

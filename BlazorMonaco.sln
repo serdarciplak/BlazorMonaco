@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorMonaco", "BlazorMonaco\BlazorMonaco.csproj", "{CF05DA45-DA06-45BF-B6F7-714558B04FDE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleApp", "SampleApp\SampleApp.csproj", "{D157FECE-23D2-4704-A9DD-6AE19D0D0210}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CF05DA45-DA06-45BF-B6F7-714558B04FDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF05DA45-DA06-45BF-B6F7-714558B04FDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF05DA45-DA06-45BF-B6F7-714558B04FDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF05DA45-DA06-45BF-B6F7-714558B04FDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D157FECE-23D2-4704-A9DD-6AE19D0D0210}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D157FECE-23D2-4704-A9DD-6AE19D0D0210}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D157FECE-23D2-4704-A9DD-6AE19D0D0210}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D157FECE-23D2-4704-A9DD-6AE19D0D0210}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CFA78EDE-A380-4EAC-A6B5-44FEA9484282}
+	EndGlobalSection
+EndGlobal

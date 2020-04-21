@@ -1,0 +1,58 @@
+﻿@page "/editor"
+@using BlazorMonaco.Options
+
+<h3>Editor</h3>
+
+<div>
+    <div>
+        Theme:
+        <select @onchange="ChangeTheme">
+            <option value="vs">Visual Studio</option>
+            <option value="vs-dark">Visual Studio Dark</option>
+            <option value="hc-black">High Contrast Black</option>
+        </select>
+    </div>
+    <div>
+        Value: <input type="text" @bind="ValueToSet" style="width: 400px;" /> <button @onclick="SetValue">Set Value</button>
+    </div>
+    <div>
+        <button @onclick="GetValue">Get Value</button>
+    </div>
+</div>
+
+<MonacoEditor @ref="_editor" Id="test-123" GetOptions="GetEditorOptions" />
+
+@code {
+    private MonacoEditor _editor { get; set; }
+    private string ValueToSet { get; set; }
+
+    private EditorOptions GetEditorOptions(MonacoEditor edt)
+    {
+        return new EditorOptions
+        {
+            AutomaticLayout = true,
+            Language = "javascript",
+            Value = @"function xyza() {
+    console.log(""Hello world!"");
+}"
+        };
+    }
+
+    private async Task ChangeTheme(ChangeEventArgs e)
+    {
+        Console.WriteLine($"setting theme to: {e.Value.ToString()}");
+        await MonacoEditor.SetTheme(e.Value.ToString());
+    }
+
+    private async Task SetValue()
+    {
+        Console.WriteLine($"setting value to: {ValueToSet}");
+        await _editor.SetValue(ValueToSet);
+    }
+
+    private async Task GetValue()
+    {
+        var val = await _editor.GetValue();
+        Console.WriteLine($"value is: {val}");
+    }
+}
