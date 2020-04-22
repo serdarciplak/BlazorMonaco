@@ -1,4 +1,4 @@
-﻿namespace BlazorMonaco.Options
+﻿namespace BlazorMonaco.Bridge
 {
     public class SuggestOptions
     {

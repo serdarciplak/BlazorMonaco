@@ -1,4 +1,4 @@
-using BlazorMonaco.Options;
+using BlazorMonaco.Bridge;
 using Microsoft.JSInterop;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -29,7 +29,13 @@ namespace BlazorMonaco
 
         #endregion
 
-        #region Editor Methods
+        #region Instance Methods
+
+        public static ValueTask AddAction(this IJSRuntime jsRuntime, string id, string actionId, string label, int[] keybindings, string precondition, string keybindingContext, string contextMenuGroupId, double contextMenuOrder, DotNetObjectReference<MonacoEditor> objectReference)
+            => jsRuntime.InvokeVoidAsync("blazorMonaco.editor.addAction", id, actionId, label, keybindings, precondition, keybindingContext, contextMenuGroupId, contextMenuOrder, objectReference);
+
+        public static ValueTask AddCommand(this IJSRuntime jsRuntime, string id, int keyCode, DotNetObjectReference<MonacoEditor> objectReference)
+            => jsRuntime.InvokeVoidAsync("blazorMonaco.editor.addCommand", id, keyCode, objectReference);
 
         public static ValueTask<string> GetValue(this IJSRuntime jsRuntime, string id)
             => jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getValue", id);

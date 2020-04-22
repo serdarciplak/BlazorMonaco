@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BlazorMonaco.Options
+namespace BlazorMonaco.Bridge
 {
     public class TextModel
     {

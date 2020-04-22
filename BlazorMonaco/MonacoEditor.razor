@@ -1,4 +1,7 @@
-﻿@inject Microsoft.JSInterop.IJSRuntime jsRuntime
+﻿@implements IDisposable
+@using BlazorMonaco.Bridge
+@using Microsoft.JSInterop
+@inject IJSRuntime jsRuntime
 
 <div id="@Id" class="@CssClass" style="min-height:100px;border:1px solid grey"></div>
 
@@ -13,12 +16,23 @@
     public string Value { get; set; }
 
     [Parameter]
-    public Func<MonacoEditor, Options.EditorOptions> GetOptions { get; set; }
+    public Func<MonacoEditor, EditorOptions> GetOptions { get; set; }
+
+    private static IJSRuntime staticJsRuntime { get; set; }
+    private DotNetObjectReference<MonacoEditor> jsObjectRef { get; set; }
+    private Dictionary<string, Action<MonacoEditor, int[]>> actions { get; set; } = new Dictionary<string, Action<MonacoEditor, int[]>>();
+    private Dictionary<string, Action<MonacoEditor, int>> commands { get; set; } = new Dictionary<string, Action<MonacoEditor, int>>();
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
         staticJsRuntime = jsRuntime;
+        jsObjectRef = DotNetObjectReference.Create(this);
+    }
+
+    public void Dispose()
+    {
+        jsObjectRef?.Dispose();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -33,9 +47,22 @@
         await base.OnAfterRenderAsync(firstRender);
     }
 
-    #region Static Methods
+    [JSInvokable]
+    public void ActionCallback(string keyCodesStr)
+    {
+        var keyCodes = keyCodesStr.Split(';').Select(k => Int32.Parse(k)).ToArray();
+        var action = actions[keyCodesStr];
+        action?.Invoke(this, keyCodes);
+    }
 
-    private static Microsoft.JSInterop.IJSRuntime staticJsRuntime { get; set; }
+    [JSInvokable]
+    public void CommandCallback(int keyCode)
+    {
+        var action = commands[keyCode.ToString()];
+        action?.Invoke(this, keyCode);
+    }
+
+    #region Static Methods
 
     public static async Task ColorizeElement(string elementId)
     {
@@ -51,6 +78,18 @@
 
     #region Instance Methods
 
+    public async Task AddAction(string actionId, string label, int[] keyCodes, string precondition, string keybindingContext, string contextMenuGroupId, double contextMenuOrder, Action<MonacoEditor, int[]> action)
+    {
+        actions[string.Join(";", keyCodes)] = action;
+        await jsRuntime.AddAction(Id, actionId, label, keyCodes, precondition, keybindingContext, contextMenuGroupId, contextMenuOrder, jsObjectRef);
+    }
+
+    public async Task AddCommand(int keyCode, Action<MonacoEditor, int> action)
+    {
+        commands[keyCode.ToString()] = action;
+        await jsRuntime.AddCommand(Id, keyCode, jsObjectRef);
+    }
+
     public async Task<string> GetValue()
     {
         return await jsRuntime.GetValue(Id);
@@ -61,7 +100,7 @@
         await jsRuntime.SetValue(Id, newValue);
     }
 
-    public async Task UpdateOptions(Options.EditorOptions options)
+    public async Task UpdateOptions(EditorOptions options)
     {
         await jsRuntime.UpdateOptions(Id, options);
     }

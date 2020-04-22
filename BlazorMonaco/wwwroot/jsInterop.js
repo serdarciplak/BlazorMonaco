@@ -32,7 +32,7 @@ window.blazorMonaco.editor = {
 
     //#endregion
 
-    //#region Editor methods
+    //#region Instance methods
 
     getEditorById: function (id) {
         let editorHolder = window.blazorMonaco.editors.find(e => e.id === id);
@@ -43,6 +43,29 @@ window.blazorMonaco.editor = {
             throw "editor is null for editorHolder: " + editorHolder;
         }
         return editorHolder.editor;
+    },
+
+    addAction: function (id, actionId, label, keybindings, precondition, keybindingContext, contextMenuGroupId, contextMenuOrder, handler) {
+        let editor = this.getEditorById(id);
+        editor.addAction({
+            id: actionId,
+            label: label,
+            keybindings: keybindings,
+            precondition: precondition,
+            keybindingContext: keybindingContext,
+            contextMenuGroupId: contextMenuGroupId,
+            contextMenuOrder: contextMenuOrder,
+            run: function () {
+                handler.invokeMethodAsync("ActionCallback", keybindings.join(';'));
+            }
+        });
+    },
+
+    addCommand: function (id, keyCode, handler) {
+        let editor = this.getEditorById(id);
+        editor.addCommand(keyCode, function () {
+            handler.invokeMethodAsync("CommandCallback", keyCode);
+        });
     },
 
     getValue: function (id) {

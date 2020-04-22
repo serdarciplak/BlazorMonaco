@@ -1,5 +1,5 @@
 ﻿@page "/editor"
-@using BlazorMonaco.Options
+@using BlazorMonaco.Bridge
 
 <h3>Editor</h3>
 
@@ -17,6 +17,12 @@
     </div>
     <div>
         <button @onclick="GetValue">Get Value</button>
+    </div>
+    <div>
+        <button @onclick="AddCommand">Add Command</button>
+    </div>
+    <div>
+        <button @onclick="AddAction">Add Action</button>
     </div>
 </div>
 
@@ -54,5 +60,21 @@
     {
         var val = await _editor.GetValue();
         Console.WriteLine($"value is: {val}");
+    }
+
+    private async Task AddAction()
+    {
+        await _editor.AddAction("testAction", "Test Action", new int[] { KeyMode.CtrlCmd | KeyCode.KEY_D, KeyMode.CtrlCmd | KeyCode.KEY_B }, null, null, "navigation", 1.5, (editor, keyCodes) =>
+        {
+            Console.WriteLine("Editor action Ctrl+D is triggered.");
+        });
+    }
+
+    private async Task AddCommand()
+    {
+        await _editor.AddCommand(KeyMode.CtrlCmd | KeyCode.Enter, (editor, keyCode) =>
+        {
+            Console.WriteLine("Editor command Ctr+Enter is triggered.");
+        });
     }
 }

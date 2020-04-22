@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace BlazorMonaco.Options
+namespace BlazorMonaco.Bridge
 {
     public class QuickSuggestionsOptions
     {
