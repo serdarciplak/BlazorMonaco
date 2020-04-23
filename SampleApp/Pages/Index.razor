@@ -1,5 +1,82 @@
 ﻿@page "/"
 
-<h1>Hello, world!</h1>
+<h3>Editor</h3>
 
-Welcome to your new app.
+<div>
+    <div style="margin:10px 0;">
+        Theme:
+        <select @onchange="ChangeTheme">
+            <option value="vs">Visual Studio</option>
+            <option value="vs-dark">Visual Studio Dark</option>
+            <option value="hc-black">High Contrast Black</option>
+        </select>
+    </div>
+    <div style="margin:10px 0;">
+        New Value: <input type="text" @bind="ValueToSet" style="width: 400px;" /> <button @onclick="SetValue">Set Value</button>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="GetValue">Get Value</button>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="AddCommand">Add Command (Ctrl+Enter)</button>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="AddAction">Add Action (Ctrl+D)</button>
+    </div>
+    <div style="margin:10px 0;">
+        See the console for results.
+    </div>
+</div>
+
+<MonacoEditor @ref="_editor" Id="test-123" />
+
+@code {
+    private MonacoEditor _editor { get; set; }
+    private string ValueToSet { get; set; }
+
+    private EditorOptions GetEditorOptions(MonacoEditor edt)
+    {
+        return new EditorOptions
+        {
+            AutomaticLayout = true,
+            Language = "javascript",
+            Value = @"function xyz() {
+    console.log(""Hello world!"");
+}"
+        };
+    }
+
+    private async Task ChangeTheme(ChangeEventArgs e)
+    {
+        Console.WriteLine($"setting theme to: {e.Value.ToString()}");
+        await MonacoEditor.SetTheme(e.Value.ToString());
+    }
+
+    private async Task SetValue()
+    {
+        Console.WriteLine($"setting value to: {ValueToSet}");
+        await _editor.SetValue(ValueToSet);
+    }
+
+    private async Task GetValue()
+    {
+        var val = await _editor.GetValue();
+        Console.WriteLine($"value is: {val}");
+    }
+
+    private async Task AddAction()
+    {
+        await _editor.AddAction("testAction", "Test Action", new int[] { KeyMode.CtrlCmd | KeyCode.KEY_D, KeyMode.CtrlCmd | KeyCode.KEY_B }, null, null, "navigation", 1.5, (editor, keyCodes) =>
+        {
+            Console.WriteLine("Editor action Ctrl+D is triggered.");
+        });
+    }
+
+    private async Task AddCommand()
+    {
+        await _editor.AddCommand(KeyMode.CtrlCmd | KeyCode.Enter, (editor, keyCode) =>
+        {
+            Console.WriteLine("Editor command Ctrl+Enter is triggered.");
+        });
+    }
+}

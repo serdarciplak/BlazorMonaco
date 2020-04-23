@@ -41,7 +41,17 @@
         {
             if (string.IsNullOrWhiteSpace(Id))
                 Id = "blazor-monaco-" + Guid.NewGuid().ToString();
-            var options = GetOptions(this);
+            EditorOptions options = null;
+            if (GetOptions != null)
+                options = GetOptions(this);
+            if (options == null)
+            {
+                options = new EditorOptions
+                {
+                    AutomaticLayout = true,
+                    Language = "javascript"
+                };
+            }
             await jsRuntime.Create(Id, options);
         }
         await base.OnAfterRenderAsync(firstRender);

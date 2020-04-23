@@ -70,7 +70,7 @@ window.blazorMonaco.editor = {
 
     getValue: function (id) {
         let editor = this.getEditorById(id);
-        editor.getValue();
+        return editor.getValue();
     },
 
     setValue: function (id, value) {

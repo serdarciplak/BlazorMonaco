@@ -9,9 +9,10 @@
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Description>Blazor component for Microsoft's Monaco Editor which powers Visual Studio Code.
+
 - Monaco Editor v0.20.0
 - Blazor v3.2.0-preview4</Description>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <PackageProjectUrl>https://serdarciplak.github.io/BlazorMonaco/</PackageProjectUrl>
     <PackageReleaseNotes>See the change log for release notes:
 https://github.com/serdarciplak/BlazorMonaco/blob/master/CHANGELOG.md</PackageReleaseNotes>
