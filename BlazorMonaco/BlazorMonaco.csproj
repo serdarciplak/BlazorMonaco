@@ -1,8 +1,17 @@
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RazorLangVersion>3.0</RazorLangVersion>
+    <Authors>Serdar Ciplak</Authors>
+    <RepositoryUrl>https://github.com/serdarciplak/BlazorMonaco</RepositoryUrl>
+    <PackageTags>blazor;monaco;editor;vs;code;vscode</PackageTags>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Description>Blazor component for Microsoft's Monaco Editor which powers Visual Studio Code.
+- Monaco Editor v0.20.0
+- Blazor v3.2.0-preview4</Description>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
 
