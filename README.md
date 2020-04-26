@@ -43,6 +43,7 @@ Install-Package BlazorMonaco
     ...
     <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
     <script src="_content/BlazorMonaco/jsInterop.js"></script>
+	<script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
 </body>
 ```
@@ -56,24 +57,38 @@ Install-Package BlazorMonaco
 
 ### Providing custom options
 
-* If you provide a method that returns an `EditorOptions` instance to the `GetOptions` parameter, it will be called at creation and the return value will be used as the initial editor options.
+* If you provide a method that returns an `StandaloneEditorConstructionOptions` instance to the `ConstructionOptions` parameter, it will be called at creation and the return value will be used as the initial editor options.
 ```html
-<MonacoEditor Id="any-id-string" GetOptions="GetEditorOptions" />
+<MonacoEditor Id="any-id-string" ConstructionOptions="GetConstructionOptions" />
 ```
 
 * In your razor file's `@code` block, add the method you provided. Return the initial options and customize the editor instance as you need. You can see all available [options](https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.istandaloneeditorconstructionoptions.html) at Monaco Editor's documentation.
 ```csharp
-private EditorOptions GetEditorOptions(MonacoEditor editor)
-    {
-        return new EditorOptions
-        {
-            AutomaticLayout = true,
-            Language = "javascript",
-            Value = @"function xyz() {
-    console.log(""Hello world!"");
-}"
-        };
-    }
+private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
+{
+	return new StandaloneEditorConstructionOptions
+	{
+		AutomaticLayout = true,
+		Language = "javascript",
+		Value = "function xyz() {\n" +
+				"   console.log(\"Hello world!\");\n" +
+				"}"
+	};
+}
+```
+
+### Editor events
+* You can add listeners to editor events like OnDidKeyUp or OnDidPaste for any custom job to be done when that event occurs.
+```html
+<MonacoEditor Id="any-id-string" OnDidChangeCursorPosition="EditorDidChangeCursorPosition" />
+```
+
+* Add your event listener method in your razor file's `@code` block.
+```csharp
+private void EditorDidChangeCursorPosition(CursorPositionChangedEvent eventArgs)
+{
+	Console.WriteLine("EditorDidChangeCursorPosition");
+}
 ```
 
 ### Css styling

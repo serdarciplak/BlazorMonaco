@@ -1,9 +1,10 @@
 ﻿@implements IDisposable
 @using BlazorMonaco.Bridge
 @using Microsoft.JSInterop
+@using System.Text.Json
 @inject IJSRuntime jsRuntime
 
-<div id="@Id" class="@CssClass" style="min-height:100px;border:1px solid grey"></div>
+<div id="@Id" class="@CssClass" style="min-height:100px;border:1px solid gray;"></div>
 
 @code {
     [Parameter]
@@ -15,8 +16,33 @@
     [Parameter]
     public string Value { get; set; }
 
-    [Parameter]
-    public Func<MonacoEditor, EditorOptions> GetOptions { get; set; }
+    [Parameter] public Func<MonacoEditor, StandaloneEditorConstructionOptions> ConstructionOptions { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidInit { get; set; }
+    [Parameter] public EventCallback<EditorMouseEvent> OnContextMenu { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidBlurEditorText { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidBlurEditorWidget { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidChangeConfiguration { get; set; }
+    [Parameter] public EventCallback<CursorPositionChangedEvent> OnDidChangeCursorPosition { get; set; }
+    [Parameter] public EventCallback<CursorSelectionChangedEvent> OnDidChangeCursorSelection { get; set; }
+    //OnDidChangeModel
+    //OnDidChangeModelContent
+    //OnDidChangeModelDecorations
+    //OnDidChangeModelLanguage
+    //OnDidChangeModelLanguageConfiguration
+    //OnDidChangeModelOptions
+    [Parameter] public EventCallback<ContentSizeChangedEvent> OnDidContentSizeChange { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidDispose { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidFocusEditorText { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidFocusEditorWidget { get; set; }
+    [Parameter] public EventCallback<EditorLayoutInfo> OnDidLayoutChange { get; set; }
+    [Parameter] public EventCallback<PasteEvent> OnDidPaste { get; set; }
+    [Parameter] public EventCallback<ScrollEvent> OnDidScrollChange { get; set; }
+    [Parameter] public EventCallback<KeyboardEvent> OnKeyDown { get; set; }
+    [Parameter] public EventCallback<KeyboardEvent> OnKeyUp { get; set; }
+    [Parameter] public EventCallback<EditorMouseEvent> OnMouseDown { get; set; }
+    [Parameter] public EventCallback<EditorMouseEvent> OnMouseLeave { get; set; }
+    [Parameter] public EventCallback<EditorMouseEvent> OnMouseMove { get; set; }
+    [Parameter] public EventCallback<EditorMouseEvent> OnMouseUp { get; set; }
 
     private static IJSRuntime staticJsRuntime { get; set; }
     private DotNetObjectReference<MonacoEditor> jsObjectRef { get; set; }
@@ -37,24 +63,97 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender && string.IsNullOrWhiteSpace(Id))
+        {
+            Id = "blazor-monaco-" + Guid.NewGuid().ToString();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+
         if (firstRender)
         {
-            if (string.IsNullOrWhiteSpace(Id))
-                Id = "blazor-monaco-" + Guid.NewGuid().ToString();
-            EditorOptions options = null;
-            if (GetOptions != null)
-                options = GetOptions(this);
+            StandaloneEditorConstructionOptions options = ConstructionOptions?.Invoke(this);
             if (options == null)
             {
-                options = new EditorOptions
+                options = new StandaloneEditorConstructionOptions
                 {
                     AutomaticLayout = true,
-                    Language = "javascript"
+                    Language = "javascript",
+                    Value = Value
                 };
             }
             await jsRuntime.Create(Id, options);
+
+            if (OnContextMenu.HasDelegate)
+                await jsRuntime.SetEventListener(Id, "OnContextMenu", jsObjectRef);
+            if (OnDidBlurEditorText.HasDelegate)
+                await jsRuntime.SetEventListener(Id, "OnDidBlurEditorText", jsObjectRef);
+            if (OnDidBlurEditorWidget.HasDelegate)
+                await jsRuntime.SetEventListener(Id, "OnDidBlurEditorWidget", jsObjectRef);
+            if (OnDidChangeConfiguration.HasDelegate)
+                await jsRuntime.SetEventListener(Id, "OnDidChangeConfiguration", jsObjectRef);
+            if (OnDidChangeCursorPosition.HasDelegate)
+                await jsRuntime.SetEventListener(Id, "OnDidChangeCursorPosition", jsObjectRef);
+            if (OnDidChangeCursorSelection.HasDelegate)
+                await jsRuntime.SetEventListener(Id, "OnDidChangeCursorSelection", jsObjectRef);
+            if (OnDidContentSizeChange.HasDelegate)
+                await jsRuntime.SetEventListener(Id, "OnDidContentSizeChange", jsObjectRef);
+            if (OnDidDispose.HasDelegate)
+                await jsRuntime.SetEventListener(Id, "OnDidDispose", jsObjectRef);
+            if (OnDidFocusEditorText.HasDelegate)
+                await jsRuntime.SetEventListener(Id, "OnDidFocusEditorText", jsObjectRef);
+            if (OnDidFocusEditorWidget.HasDelegate)
+                await jsRuntime.SetEventListener(Id, "OnDidFocusEditorWidget", jsObjectRef);
+            if (OnDidLayoutChange.HasDelegate)
+                await jsRuntime.SetEventListener(Id, "OnDidLayoutChange", jsObjectRef);
+            if (OnDidPaste.HasDelegate)
+                await jsRuntime.SetEventListener(Id, "OnDidPaste", jsObjectRef);
+            if (OnDidScrollChange.HasDelegate)
+                await jsRuntime.SetEventListener(Id, "OnDidScrollChange", jsObjectRef);
+            if (OnKeyDown.HasDelegate)
+                await jsRuntime.SetEventListener(Id, "OnKeyDown", jsObjectRef);
+            if (OnKeyUp.HasDelegate)
+                await jsRuntime.SetEventListener(Id, "OnKeyUp", jsObjectRef);
+            if (OnMouseDown.HasDelegate)
+                await jsRuntime.SetEventListener(Id, "OnMouseDown", jsObjectRef);
+            if (OnMouseLeave.HasDelegate)
+                await jsRuntime.SetEventListener(Id, "OnMouseLeave", jsObjectRef);
+            if (OnMouseMove.HasDelegate)
+                await jsRuntime.SetEventListener(Id, "OnMouseMove", jsObjectRef);
+            if (OnMouseUp.HasDelegate)
+                await jsRuntime.SetEventListener(Id, "OnMouseUp", jsObjectRef);
+
+            await OnDidInit.InvokeAsync(this);
         }
-        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    [JSInvokable]
+    public async Task EventCallback(string eventName, string eventJson)
+    {
+        var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+        switch (eventName)
+        {
+            case "OnContextMenu": if (eventJson != null) await OnContextMenu.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
+            case "OnDidBlurEditorText": await OnDidBlurEditorText.InvokeAsync(this); break;
+            case "OnDidBlurEditorWidget": await OnDidBlurEditorWidget.InvokeAsync(this); break;
+            case "OnDidChangeConfiguration": await OnDidChangeConfiguration.InvokeAsync(this); break;
+            case "OnDidChangeCursorPosition": await OnDidChangeCursorPosition.InvokeAsync(JsonSerializer.Deserialize<CursorPositionChangedEvent>(eventJson, jsonOptions)); break;
+            case "OnDidChangeCursorSelection": await OnDidChangeCursorSelection.InvokeAsync(JsonSerializer.Deserialize<CursorSelectionChangedEvent>(eventJson, jsonOptions)); break;
+            case "OnDidContentSizeChange": await OnDidContentSizeChange.InvokeAsync(JsonSerializer.Deserialize<ContentSizeChangedEvent>(eventJson, jsonOptions)); break;
+            case "OnDidDispose": await OnDidDispose.InvokeAsync(this); break;
+            case "OnDidFocusEditorText": await OnDidFocusEditorText.InvokeAsync(this); break;
+            case "OnDidFocusEditorWidget": await OnDidFocusEditorWidget.InvokeAsync(this); break;
+            case "OnDidLayoutChange": if (eventJson != null) await OnDidLayoutChange.InvokeAsync(JsonSerializer.Deserialize<EditorLayoutInfo>(eventJson, jsonOptions)); break;
+            case "OnDidPaste": if (eventJson != null) await OnDidPaste.InvokeAsync(JsonSerializer.Deserialize<PasteEvent>(eventJson, jsonOptions)); break;
+            case "OnDidScrollChange": if (eventJson != null) await OnDidScrollChange.InvokeAsync(JsonSerializer.Deserialize<ScrollEvent>(eventJson, jsonOptions)); break;
+            case "OnKeyDown": if (eventJson != null) await OnKeyDown.InvokeAsync(JsonSerializer.Deserialize<KeyboardEvent>(eventJson, jsonOptions)); break;
+            case "OnKeyUp": if (eventJson != null) await OnKeyUp.InvokeAsync(JsonSerializer.Deserialize<KeyboardEvent>(eventJson, jsonOptions)); break;
+            case "OnMouseDown": if (eventJson != null) await OnMouseDown.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
+            case "OnMouseLeave": if (eventJson != null) await OnMouseLeave.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
+            case "OnMouseMove": if (eventJson != null) await OnMouseMove.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
+            case "OnMouseUp": if (eventJson != null) await OnMouseUp.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
+        }
     }
 
     [JSInvokable]
@@ -110,7 +209,7 @@
         await jsRuntime.SetValue(Id, newValue);
     }
 
-    public async Task UpdateOptions(EditorOptions options)
+    public async Task UpdateOptions(GlobalEditorOptions options)
     {
         await jsRuntime.UpdateOptions(Id, options);
     }

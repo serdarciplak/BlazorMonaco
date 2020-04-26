@@ -12,7 +12,7 @@ namespace BlazorMonaco
         public static ValueTask ColorizeElement(this IJSRuntime jsRuntime, string id)
             => jsRuntime.InvokeVoidAsync("blazorMonaco.editor.colorizeElement", id);
 
-        public static ValueTask Create(this IJSRuntime jsRuntime, string id, EditorOptions options)
+        public static ValueTask Create(this IJSRuntime jsRuntime, string id, StandaloneEditorConstructionOptions options)
         {
             // Convert the options object into a dictionary to get rid of the properties with null values
             var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
@@ -40,10 +40,13 @@ namespace BlazorMonaco
         public static ValueTask<string> GetValue(this IJSRuntime jsRuntime, string id)
             => jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getValue", id);
 
+        public static ValueTask SetEventListener(this IJSRuntime jsRuntime, string id, string eventName, DotNetObjectReference<MonacoEditor> objectReference)
+            => jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setEventListener", id, eventName, objectReference);
+
         public static ValueTask SetValue(this IJSRuntime jsRuntime, string id, string value)
             => jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setValue", id, value);
 
-        public static ValueTask UpdateOptions(this IJSRuntime jsRuntime, string id, EditorOptions options)
+        public static ValueTask UpdateOptions(this IJSRuntime jsRuntime, string id, GlobalEditorOptions options)
         {
             // Convert the options object into a dictionary to get rid of the properties with null values
             var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
