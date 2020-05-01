@@ -2,6 +2,26 @@
 
 ## 1.1.0
 * Added support for editor events.
+  * OnDidInit
+  * OnContextMenu
+  * OnDidBlurEditorText
+  * OnDidBlurEditorWidget
+  * OnDidChangeConfiguration
+  * OnDidChangeCursorPosition
+  * OnDidChangeCursorSelection
+  * OnDidContentSizeChange
+  * OnDidDispose
+  * OnDidFocusEditorText
+  * OnDidFocusEditorWidget
+  * OnDidLayoutChange
+  * OnDidPaste
+  * OnDidScrollChange
+  * OnKeyDown
+  * OnKeyUp
+  * OnMouseDown
+  * OnMouseLeave
+  * OnMouseMove
+  * OnMouseUp
 * Changed editor GetOptions parameter name to ConstructionOptions.
 * Bug fixes
 
