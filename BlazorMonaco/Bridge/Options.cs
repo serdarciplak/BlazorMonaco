@@ -153,6 +153,17 @@
 
     // Individual Options
 
+    public class ColorizerElementOptions : ColorizerOptions
+    {
+        public string MimeType { get; set; }
+        public string Theme { get; set; }
+    }
+
+    public class ColorizerOptions
+    {
+        public int? TabSize { get; set; }
+    }
+
     public class CommentOptions
     {
         public bool? InsertSpace { get; set; }

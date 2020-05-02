@@ -97,6 +97,9 @@ private void EditorDidChangeCursorPosition(CursorPositionChangedEvent eventArgs)
 <MonacoEditor Id="any-id-string" CssClass="my-editor-class" />
 ```
 
+## Documentation
+As BlazorMonaco is just a bridge between Javascript and Blazor, you can use Monaco Editor's [documentation](https://microsoft.github.io/monaco-editor/api/index.html).
+
 ## Change log
 History and changes can be located in the [CHANGELOG.md](https://github.com/serdarciplak/BlazorMonaco/blob/master/CHANGELOG.md)
 

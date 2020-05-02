@@ -1,5 +1,69 @@
 # Change Log
 
+## 1.2.0
+* Added support for static methods
+  * Colorize
+  * ColorizeElement
+  * ColorizeModelLine
+  * CreateModel
+  * GetModel
+  * GetModels
+  * RemeasureFonts
+  * SetModelLanguage
+* Added support for editor instance methods
+  * Dispose
+  * Focus
+  * GetContainerDomNodeId
+  * GetContentHeight
+  * GetContentWidth
+  * GetEditorType
+  * GetLayoutInfo
+  * GetOffsetForColumn
+  * GetOption
+  * GetPosition
+  * GetRawOptions
+  * GetScrollHeight
+  * GetScrollLeft
+  * GetScrollTop
+  * GetScrollWidth
+  * GetScrolledVisiblePosition
+  * GetSelection
+  * GetSelections
+  * GetTargetAtClientPoint
+  * GetTopForLineNumber
+  * GetTopForPosition
+  * GetVisibleColumnFromPosition
+  * GetVisibleRanges
+  * HasTextFocus
+  * HasWidgetFocus
+  * Layout
+  * PushUndoStop
+  * Render
+  * RevealLine
+  * RevealLineInCenter
+  * RevealLineInCenterIfOutsideViewport
+  * RevealLines
+  * RevealLinesInCenter
+  * RevealLinesInCenterIfOutsideViewport
+  * RevealPosition
+  * RevealPositionInCenter
+  * RevealPositionInCenterIfOutsideViewport
+  * RevealRange
+  * RevealRangeAtTop
+  * RevealRangeInCenter
+  * RevealRangeInCenterIfOutsideViewport
+  * SetPosition
+  * SetScrollLeft
+  * SetScrollPosition
+  * SetScrollTop
+  * SetSelection
+  * SetSelections
+  * Trigger
+* Added support for editor events.
+  * OnDidCompositionEnd
+  * OnDidCompositionStart
+* Bug fixes
+
 ## 1.1.0
 * Added support for editor events.
   * OnDidInit

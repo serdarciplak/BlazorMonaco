@@ -4,7 +4,7 @@
 @using System.Text.Json
 @inject IJSRuntime jsRuntime
 
-<div id="@Id" class="@CssClass" style="min-height:100px;border:1px solid gray;"></div>
+<div id="@Id" class="monaco-editor-container @CssClass" style="min-height:100px;border:1px solid gray;"></div>
 
 @code {
     [Parameter]
@@ -18,6 +18,8 @@
 
     [Parameter] public Func<MonacoEditor, StandaloneEditorConstructionOptions> ConstructionOptions { get; set; }
     [Parameter] public EventCallback<MonacoEditor> OnDidInit { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidCompositionEnd { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidCompositionStart { get; set; }
     [Parameter] public EventCallback<EditorMouseEvent> OnContextMenu { get; set; }
     [Parameter] public EventCallback<MonacoEditor> OnDidBlurEditorText { get; set; }
     [Parameter] public EventCallback<MonacoEditor> OnDidBlurEditorWidget { get; set; }
@@ -72,56 +74,53 @@
 
         if (firstRender)
         {
+            // Create the editor
             StandaloneEditorConstructionOptions options = ConstructionOptions?.Invoke(this);
-            if (options == null)
-            {
-                options = new StandaloneEditorConstructionOptions
-                {
-                    AutomaticLayout = true,
-                    Language = "javascript",
-                    Value = Value
-                };
-            }
-            await jsRuntime.Create(Id, options);
+            await MonacoEditor.Create(Id, Value, options);
 
+            // Set editor event listeners
+            if (OnDidCompositionEnd.HasDelegate)
+                await SetEventListener("OnDidCompositionEnd");
+            if (OnDidCompositionStart.HasDelegate)
+                await SetEventListener("OnDidCompositionStart");
             if (OnContextMenu.HasDelegate)
-                await jsRuntime.SetEventListener(Id, "OnContextMenu", jsObjectRef);
+                await SetEventListener("OnContextMenu");
             if (OnDidBlurEditorText.HasDelegate)
-                await jsRuntime.SetEventListener(Id, "OnDidBlurEditorText", jsObjectRef);
+                await SetEventListener("OnDidBlurEditorText");
             if (OnDidBlurEditorWidget.HasDelegate)
-                await jsRuntime.SetEventListener(Id, "OnDidBlurEditorWidget", jsObjectRef);
+                await SetEventListener("OnDidBlurEditorWidget");
             if (OnDidChangeConfiguration.HasDelegate)
-                await jsRuntime.SetEventListener(Id, "OnDidChangeConfiguration", jsObjectRef);
+                await SetEventListener("OnDidChangeConfiguration");
             if (OnDidChangeCursorPosition.HasDelegate)
-                await jsRuntime.SetEventListener(Id, "OnDidChangeCursorPosition", jsObjectRef);
+                await SetEventListener("OnDidChangeCursorPosition");
             if (OnDidChangeCursorSelection.HasDelegate)
-                await jsRuntime.SetEventListener(Id, "OnDidChangeCursorSelection", jsObjectRef);
+                await SetEventListener("OnDidChangeCursorSelection");
             if (OnDidContentSizeChange.HasDelegate)
-                await jsRuntime.SetEventListener(Id, "OnDidContentSizeChange", jsObjectRef);
+                await SetEventListener("OnDidContentSizeChange");
             if (OnDidDispose.HasDelegate)
-                await jsRuntime.SetEventListener(Id, "OnDidDispose", jsObjectRef);
+                await SetEventListener("OnDidDispose");
             if (OnDidFocusEditorText.HasDelegate)
-                await jsRuntime.SetEventListener(Id, "OnDidFocusEditorText", jsObjectRef);
+                await SetEventListener("OnDidFocusEditorText");
             if (OnDidFocusEditorWidget.HasDelegate)
-                await jsRuntime.SetEventListener(Id, "OnDidFocusEditorWidget", jsObjectRef);
+                await SetEventListener("OnDidFocusEditorWidget");
             if (OnDidLayoutChange.HasDelegate)
-                await jsRuntime.SetEventListener(Id, "OnDidLayoutChange", jsObjectRef);
+                await SetEventListener("OnDidLayoutChange");
             if (OnDidPaste.HasDelegate)
-                await jsRuntime.SetEventListener(Id, "OnDidPaste", jsObjectRef);
+                await SetEventListener("OnDidPaste");
             if (OnDidScrollChange.HasDelegate)
-                await jsRuntime.SetEventListener(Id, "OnDidScrollChange", jsObjectRef);
+                await SetEventListener("OnDidScrollChange");
             if (OnKeyDown.HasDelegate)
-                await jsRuntime.SetEventListener(Id, "OnKeyDown", jsObjectRef);
+                await SetEventListener("OnKeyDown");
             if (OnKeyUp.HasDelegate)
-                await jsRuntime.SetEventListener(Id, "OnKeyUp", jsObjectRef);
+                await SetEventListener("OnKeyUp");
             if (OnMouseDown.HasDelegate)
-                await jsRuntime.SetEventListener(Id, "OnMouseDown", jsObjectRef);
+                await SetEventListener("OnMouseDown");
             if (OnMouseLeave.HasDelegate)
-                await jsRuntime.SetEventListener(Id, "OnMouseLeave", jsObjectRef);
+                await SetEventListener("OnMouseLeave");
             if (OnMouseMove.HasDelegate)
-                await jsRuntime.SetEventListener(Id, "OnMouseMove", jsObjectRef);
+                await SetEventListener("OnMouseMove");
             if (OnMouseUp.HasDelegate)
-                await jsRuntime.SetEventListener(Id, "OnMouseUp", jsObjectRef);
+                await SetEventListener("OnMouseUp");
 
             await OnDidInit.InvokeAsync(this);
         }
@@ -134,6 +133,8 @@
 
         switch (eventName)
         {
+            case "OnDidCompositionEnd": await OnDidCompositionEnd.InvokeAsync(this); break;
+            case "OnDidCompositionStart": await OnDidCompositionStart.InvokeAsync(this); break;
             case "OnContextMenu": if (eventJson != null) await OnContextMenu.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
             case "OnDidBlurEditorText": await OnDidBlurEditorText.InvokeAsync(this); break;
             case "OnDidBlurEditorWidget": await OnDidBlurEditorWidget.InvokeAsync(this); break;
@@ -173,15 +174,87 @@
 
     #region Static Methods
 
-    public static async Task ColorizeElement(string elementId)
+    public static async Task<string> Colorize(string text, string languageId, ColorizerOptions options)
     {
-        await staticJsRuntime.ColorizeElement(elementId);
+        return await staticJsRuntime.InvokeAsync<string>("blazorMonaco.editor.colorize", text, languageId, options);
     }
+
+    public static async Task ColorizeElement(string elementId, ColorizerElementOptions options)
+    {
+        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.editor.colorizeElement", elementId, options);
+    }
+
+    public static async Task<string> ColorizeModelLine(TextModel model, int lineNumber, int? tabSize = null)
+    {
+        return await staticJsRuntime.InvokeAsync<string>("blazorMonaco.editor.colorizeModelLine", model.Uri, lineNumber, tabSize);
+    }
+
+    private static async Task Create(string id, string value, StandaloneEditorConstructionOptions options)
+    {
+        if (options == null)
+        {
+            options = new StandaloneEditorConstructionOptions
+            {
+                Language = "javascript",
+                Value = value
+            };
+        }
+
+        // Convert the options object into a dictionary to get rid of the properties with null values
+        var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
+        {
+            IgnoreNullValues = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+        var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
+
+        // Create the editor
+        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.editor.create", id, optionsDict);
+    }
+
+    // createDiffEditor
+
+    // createDiffNavigator
+
+    public static async Task<TextModel> CreateModel(string value, string language = null, string uri = null)
+    {
+        return await staticJsRuntime.InvokeAsync<TextModel>("blazorMonaco.editor.createModel", value, language, uri);
+    }
+
+    // createWebWorker
+
+    // defineTheme
+
+    public static async Task<TextModel> GetModel(string uri)
+    {
+        return await staticJsRuntime.InvokeAsync<TextModel>("blazorMonaco.editor.getModel", uri);
+    }
+
+    // getModelMarkers
+
+    public static async Task<List<TextModel>> GetModels()
+    {
+        return await staticJsRuntime.InvokeAsync<List<TextModel>>("blazorMonaco.editor.getModels");
+    }
+
+    public static async Task RemeasureFonts()
+    {
+        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.editor.remeasureFonts");
+    }
+
+    public static async Task SetModelLanguage(TextModel model, string languageId)
+    {
+        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.editor.setModelLanguage", model.Uri, languageId);
+    }
+
+    // setModelMarkers
 
     public static async Task SetTheme(string newTheme)
     {
-        await staticJsRuntime.SetTheme(newTheme);
+        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.editor.setTheme", newTheme);
     }
+
+    // tokenize
 
     #endregion
 
@@ -190,28 +263,342 @@
     public async Task AddAction(string actionId, string label, int[] keyCodes, string precondition, string keybindingContext, string contextMenuGroupId, double contextMenuOrder, Action<MonacoEditor, int[]> action)
     {
         actions[string.Join(";", keyCodes)] = action;
-        await jsRuntime.AddAction(Id, actionId, label, keyCodes, precondition, keybindingContext, contextMenuGroupId, contextMenuOrder, jsObjectRef);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.addAction", Id, actionId, label, keyCodes, precondition, keybindingContext, contextMenuGroupId, contextMenuOrder, jsObjectRef);
     }
 
     public async Task AddCommand(int keyCode, Action<MonacoEditor, int> action)
     {
         commands[keyCode.ToString()] = action;
-        await jsRuntime.AddCommand(Id, keyCode, jsObjectRef);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.addCommand", Id, keyCode, jsObjectRef);
+    }
+
+    // addContentWidget
+
+    // addOverlayWidget
+
+    // applyFontInfo
+
+    // changeViewZones
+
+    // createContextKey
+
+    // deltaDecorations
+
+    public async Task DisposeEditor()
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.dispose", Id);
+    }
+
+    // executeCommand
+
+    // executeCommands
+
+    // executeEdits
+
+    public async Task Focus()
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.focus", Id);
+    }
+
+    // getAction
+
+    public async Task<string> GetContainerDomNodeId()
+    {
+        return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getContainerDomNodeId", Id);
+    }
+
+    public async Task<double> GetContentHeight()
+    {
+        return await jsRuntime.InvokeAsync<double>("blazorMonaco.editor.getContentHeight", Id);
+    }
+
+    public async Task<double> GetContentWidth()
+    {
+        return await jsRuntime.InvokeAsync<double>("blazorMonaco.editor.getContentWidth", Id);
+    }
+
+    // getContribution
+
+    //---- getDomNode
+
+    public async Task<string> GetEditorType()
+    {
+        return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getEditorType", Id);
+    }
+
+    //---- getId
+
+    public async Task<EditorLayoutInfo> GetLayoutInfo()
+    {
+        return await jsRuntime.InvokeAsync<EditorLayoutInfo>("blazorMonaco.editor.getLayoutInfo", Id);
+    }
+
+    // getLineDecorations
+
+    public async Task<TextModel> GetModel()
+    {
+        return await jsRuntime.InvokeAsync<TextModel>("blazorMonaco.editor.getInstanceModel", Id);
+    }
+
+    public async Task<int> GetOffsetForColumn(int lineNumber, int column)
+    {
+        return await jsRuntime.InvokeAsync<int>("blazorMonaco.editor.getOffsetForColumn", Id, lineNumber, column);
+    }
+
+    public async Task<string> GetOption(EditorOption option)
+    {
+        return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getOption", Id, (int)option);
+    }
+
+    public async Task<List<string>> GetOptions()
+    {
+        return await jsRuntime.InvokeAsync<List<string>>("blazorMonaco.editor.getOptions", Id);
+    }
+
+    public async Task<Position> GetPosition()
+    {
+        return await jsRuntime.InvokeAsync<Position>("blazorMonaco.editor.getPosition", Id);
+    }
+
+    public async Task<EditorOptions> GetRawOptions()
+    {
+        return await jsRuntime.InvokeAsync<EditorOptions>("blazorMonaco.editor.getRawOptions", Id);
+    }
+
+    public async Task<double> GetScrollHeight()
+    {
+        return await jsRuntime.InvokeAsync<double>("blazorMonaco.editor.getScrollHeight", Id);
+    }
+
+    public async Task<double> GetScrollLeft()
+    {
+        return await jsRuntime.InvokeAsync<double>("blazorMonaco.editor.getScrollLeft", Id);
+    }
+
+    public async Task<double> GetScrollTop()
+    {
+        return await jsRuntime.InvokeAsync<double>("blazorMonaco.editor.getScrollTop", Id);
+    }
+
+    public async Task<double> GetScrollWidth()
+    {
+        return await jsRuntime.InvokeAsync<double>("blazorMonaco.editor.getScrollWidth", Id);
+    }
+
+    public async Task<Position> GetScrolledVisiblePosition(Position position)
+    {
+        return await jsRuntime.InvokeAsync<Position>("blazorMonaco.editor.getScrolledVisiblePosition", Id, position);
+    }
+
+    public async Task<Selection> GetSelection()
+    {
+        return await jsRuntime.InvokeAsync<Selection>("blazorMonaco.editor.getSelection", Id);
+    }
+
+    public async Task<List<Selection>> GetSelections()
+    {
+        return await jsRuntime.InvokeAsync<List<Selection>>("blazorMonaco.editor.getSelections", Id);
+    }
+
+    // getSupportedActions
+
+    public async Task<MouseTarget> GetTargetAtClientPoint(int clientX, int clientY)
+    {
+        return await jsRuntime.InvokeAsync<MouseTarget>("blazorMonaco.editor.getTargetAtClientPoint", Id, clientX, clientY);
+    }
+
+    public async Task<double> GetTopForLineNumber(int lineNumber)
+    {
+        return await jsRuntime.InvokeAsync<double>("blazorMonaco.editor.getTopForLineNumber", Id, lineNumber);
+    }
+
+    public async Task<double> GetTopForPosition(int lineNumber, int column)
+    {
+        return await jsRuntime.InvokeAsync<double>("blazorMonaco.editor.getTopForPosition", Id, lineNumber, column);
     }
 
     public async Task<string> GetValue()
     {
-        return await jsRuntime.GetValue(Id);
+        return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getValue", Id);
+    }
+
+    public async Task<int> GetVisibleColumnFromPosition(Position position)
+    {
+        return await jsRuntime.InvokeAsync<int>("blazorMonaco.editor.getVisibleColumnFromPosition", Id, position);
+    }
+
+    public async Task<List<Range>> GetVisibleRanges()
+    {
+        return await jsRuntime.InvokeAsync<List<Range>>("blazorMonaco.editor.getVisibleRanges", Id);
+    }
+
+    public async Task<bool> HasTextFocus()
+    {
+        return await jsRuntime.InvokeAsync<bool>("blazorMonaco.editor.hasTextFocus", Id);
+    }
+
+    public async Task<bool> HasWidgetFocus()
+    {
+        return await jsRuntime.InvokeAsync<bool>("blazorMonaco.editor.hasWidgetFocus", Id);
+    }
+
+    public async Task Layout(Dimension dimension = null)
+    {
+        await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.layout", Id, dimension);
+    }
+
+    // layoutContentWidget
+
+    // layoutOverlayWidget
+
+    public async Task<bool> PushUndoStop()
+    {
+        return await jsRuntime.InvokeAsync<bool>("blazorMonaco.editor.pushUndoStop", Id);
+    }
+
+    // removeContentWidget
+
+    // removeOverlayWidget
+
+    public async Task Render(bool? forceRedraw = null)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.render", Id, forceRedraw);
+    }
+
+    // restoreViewState
+
+    public async Task RevealLine(int lineNumber, ScrollType? scrollType = null)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealLine", Id, lineNumber, scrollType);
+    }
+
+    public async Task RevealLineInCenter(int lineNumber, ScrollType? scrollType = null)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealLineInCenter", Id, lineNumber, scrollType);
+    }
+
+    public async Task RevealLineInCenterIfOutsideViewport(int lineNumber, ScrollType? scrollType = null)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealLineInCenterIfOutsideViewport", Id, lineNumber, scrollType);
+    }
+
+    public async Task RevealLines(int startLineNumber, int endLineNumber, ScrollType? scrollType = null)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealLines", Id, startLineNumber, endLineNumber, scrollType);
+    }
+
+    public async Task RevealLinesInCenter(int startLineNumber, int endLineNumber, ScrollType? scrollType = null)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealLinesInCenter", Id, startLineNumber, endLineNumber, scrollType);
+    }
+
+    public async Task RevealLinesInCenterIfOutsideViewport(int startLineNumber, int endLineNumber, ScrollType? scrollType = null)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealLinesInCenterIfOutsideViewport", Id, startLineNumber, endLineNumber, scrollType);
+    }
+
+    public async Task RevealPosition(Position position, ScrollType? scrollType = null)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealPosition", Id, position, scrollType);
+    }
+
+    public async Task RevealPositionInCenter(Position position, ScrollType? scrollType = null)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealPositionInCenter", Id, position, scrollType);
+    }
+
+    public async Task RevealPositionInCenterIfOutsideViewport(Position position, ScrollType? scrollType = null)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealPositionInCenterIfOutsideViewport", Id, position, scrollType);
+    }
+
+    public async Task RevealRange(Range range, ScrollType? scrollType = null)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealRange", Id, range, scrollType);
+    }
+
+    public async Task RevealRangeAtTop(Range range, ScrollType? scrollType = null)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealRangeAtTop", Id, range, scrollType);
+    }
+
+    public async Task RevealRangeInCenter(Range range, ScrollType? scrollType = null)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealRangeInCenter", Id, range, scrollType);
+    }
+
+    public async Task RevealRangeInCenterIfOutsideViewport(Range range, ScrollType? scrollType = null)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealRangeInCenterIfOutsideViewport", Id, range, scrollType);
+    }
+
+    // saveViewState
+
+    private async Task SetEventListener(string eventName)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setEventListener", Id, eventName, jsObjectRef);
+    }
+
+    public async Task SetModel(TextModel model)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setInstanceModel", Id, model.Uri);
+    }
+
+    public async Task SetPosition(Position position)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setPosition", Id, position);
+    }
+
+    public async Task SetScrollLeft(int newScrollLeft)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setScrollLeft", Id, newScrollLeft);
+    }
+
+    public async Task SetScrollPosition(int newScrollLeft, int newScrollTop)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setScrollPosition", Id, newScrollLeft, newScrollTop);
+    }
+
+    public async Task SetScrollTop(int newScrollTop)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setScrollTop", Id, newScrollTop);
+    }
+
+    public async Task SetSelection(Range selection)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setSelection", Id, selection);
+    }
+
+    public async Task SetSelection(Selection selection)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setSelection", Id, selection);
+    }
+
+    public async Task SetSelections(List<Selection> selections)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setSelections", Id, selections);
     }
 
     public async Task SetValue(string newValue)
     {
-        await jsRuntime.SetValue(Id, newValue);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setValue", Id, newValue);
+    }
+
+    public async Task Trigger(string source, string handlerId, JsonElement payload)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.trigger", Id, source, handlerId, payload);
     }
 
     public async Task UpdateOptions(GlobalEditorOptions options)
     {
-        await jsRuntime.UpdateOptions(Id, options);
+        // Convert the options object into a dictionary to get rid of the properties with null values
+        var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
+        {
+            IgnoreNullValues = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+        var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
     }
 
     #endregion
