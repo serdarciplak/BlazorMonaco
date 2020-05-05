@@ -12,7 +12,7 @@ Only a little more than the basic functionality of Monaco Editor is currently su
 
 Current version of BlazorMonaco :
 * Works with Monaco Editor v0.20.0
-* Built and tested for Blazor v3.2.0-preview5
+* Built and tested for Blazor v3.2.0-rc1
 
 ## Demo
 
@@ -39,11 +39,11 @@ Install-Package BlazorMonaco
     <link href="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.css" rel="stylesheet" />
 </head>
 <body>
-    <app></app>
     ...
     <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
+    <script>require.config({ paths: { 'vs': '_content/BlazorMonaco/lib/monaco-editor/min/vs' } });</script>
+    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
     <script src="_content/BlazorMonaco/jsInterop.js"></script>
-	<script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
 </body>
 ```
@@ -96,6 +96,22 @@ private void EditorDidChangeCursorPosition(CursorPositionChangedEvent eventArgs)
 ```html
 <MonacoEditor Id="any-id-string" CssClass="my-editor-class" />
 ```
+
+### Using custom Monaco Editor setup
+* If you've made changes to Monaco Editor, like adding a custom language, and need to use this edited version instead of the unmodified version packed with BlazorMonaco, just change the paths to monaco editor resources in your `index.html` file.
+```html
+<head>
+    <link href="my-path/monaco-editor/min/vs/editor/editor.main.css" rel="stylesheet" />
+</head>
+<body>
+    ...
+    <script src="my-path/monaco-editor/min/vs/loader.js"></script>
+    <script>require.config({ paths: { 'vs': 'my-path/monaco-editor/min/vs' } });</script>
+    <script src="my-path/monaco-editor/min/vs/editor/editor.main.js"></script>
+    ...
+</body>
+```
+
 
 ## Documentation
 As BlazorMonaco is just a bridge between Javascript and Blazor, you can use Monaco Editor's [documentation](https://microsoft.github.io/monaco-editor/api/index.html).

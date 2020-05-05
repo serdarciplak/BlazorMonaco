@@ -1,4 +1,5 @@
-require.config({ paths: { 'vs': '_content/BlazorMonaco/lib/monaco-editor/min/vs' } });
+if (!require.getConfig().paths.vs)  // for lte v1.2.0
+    require.config({ paths: { 'vs': '_content/BlazorMonaco/lib/monaco-editor/min/vs' } });
 window.blazorMonaco = window.blazorMonaco || {};
 window.blazorMonaco.editors = [];
 

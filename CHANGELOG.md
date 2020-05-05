@@ -1,7 +1,11 @@
 # Change Log
 
+## 1.2.1
+* You can now use your custom monaco-editor setup instead of the packed unmodified version.
+* Updated for Blazor v3.2.0-rc1
+
 ## 1.2.0
-* Added support for static methods
+* Added support for static methods.
   * Colorize
   * ColorizeElement
   * ColorizeModelLine
@@ -10,7 +14,7 @@
   * GetModels
   * RemeasureFonts
   * SetModelLanguage
-* Added support for editor instance methods
+* Added support for editor instance methods.
   * Dispose
   * Focus
   * GetContainerDomNodeId
@@ -62,7 +66,7 @@
 * Added support for editor events.
   * OnDidCompositionEnd
   * OnDidCompositionStart
-* Bug fixes
+* Bug fixes.
 
 ## 1.1.0
 * Added support for editor events.
@@ -87,7 +91,7 @@
   * OnMouseMove
   * OnMouseUp
 * Changed editor GetOptions parameter name to ConstructionOptions.
-* Bug fixes
+* Bug fixes.
 
 ## 1.0.3
 * Updated for Blazor v3.2.0-preview5
