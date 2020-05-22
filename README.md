@@ -8,7 +8,7 @@
 
 Blazor component for Microsoft's [Monaco Editor](https://github.com/Microsoft/monaco-editor) which powers Visual Studio Code.
 
-It's not the complete set of the Monaco Editor functionality is currently supported. The package will be updated regularly to cover all the features and use cases soon. Any contributions, comments or suggestions are greatly welcome. Please feel free to contact me at [@serdarciplak](https://twitter.com/serdarciplak) or via GitHub.
+Not the complete set but most of the Monaco Editor functionality is currently supported. The package will be updated regularly to cover all the features and use cases soon. Any contributions, comments or suggestions are greatly welcome. Please feel free to contact me at [@serdarciplak](https://twitter.com/serdarciplak) or via GitHub.
 
 Current version of BlazorMonaco :
 * Works with Monaco Editor v0.20.0
