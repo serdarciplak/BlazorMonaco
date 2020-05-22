@@ -8,11 +8,11 @@
 
 Blazor component for Microsoft's [Monaco Editor](https://github.com/Microsoft/monaco-editor) which powers Visual Studio Code.
 
-Not the complete set of functionality of Monaco Editor is currently supported, but the package will be updated regularly to cover all the features and use cases soon. Any contributions, comments or suggestions are greatly welcome. Please feel free to contact me at [@serdarciplak](https://twitter.com/serdarciplak) or via GitHub.
+It's not the complete set of the Monaco Editor functionality is currently supported. The package will be updated regularly to cover all the features and use cases soon. Any contributions, comments or suggestions are greatly welcome. Please feel free to contact me at [@serdarciplak](https://twitter.com/serdarciplak) or via GitHub.
 
 Current version of BlazorMonaco :
 * Works with Monaco Editor v0.20.0
-* Built and tested for Blazor v3.2.0-rc1
+* Built and tested for Blazor v3.2.0
 
 ## Demo
 
@@ -44,7 +44,7 @@ Install-Package BlazorMonaco
     <script>require.config({ paths: { 'vs': '_content/BlazorMonaco/lib/monaco-editor/min/vs' } });</script>
     <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
     <script src="_content/BlazorMonaco/jsInterop.js"></script>
-    <script src="_framework/blazor.webassembly.js"></script>
+    ...
 </body>
 ```
 
@@ -59,7 +59,7 @@ Install-Package BlazorMonaco
 
 * If you provide a method that returns an `StandaloneEditorConstructionOptions` instance to the `ConstructionOptions` parameter, it will be called at creation and the return value will be used as the initial editor options.
 ```html
-<MonacoEditor Id="any-id-string" ConstructionOptions="GetConstructionOptions" />
+<MonacoEditor Id="any-id-string" ConstructionOptions="EditorConstructionOptions" />
 ```
 
 * In your razor file's `@code` block, add the method you provided. Return the initial options and customize the editor instance as you need. You can see all available [options](https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.istandaloneeditorconstructionoptions.html) at Monaco Editor's documentation.
