@@ -601,6 +601,18 @@
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
     }
 
+    // decorations
+
+    public async Task SetDeltaDecoration(Range range, object options = null)
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setDeltaDecoration", Id, range, options);
+    }
+
+    public async Task ResetDeltaDecorations()
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.resetDeltaDecorations", Id);
+    }
+
     #endregion
 
 }
