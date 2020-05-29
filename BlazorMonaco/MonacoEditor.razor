@@ -601,6 +601,25 @@
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
     }
 
+    // decorations
+
+    public async Task SetDeltaDecoration(Range range, DecorationOptions options = null)
+    {
+        // Convert the options object into a dictionary to get rid of the properties with null values
+        var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
+        {
+            IgnoreNullValues = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+        var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setDeltaDecoration", Id, range, optionsDict);
+    }
+
+    public async Task ResetDeltaDecorations()
+    {
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.resetDeltaDecorations", Id);
+    }
+
     #endregion
 
 }
