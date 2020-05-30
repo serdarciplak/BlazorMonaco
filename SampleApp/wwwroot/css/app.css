@@ -185,3 +185,11 @@ app {
     height: 200px;
     border: 1px solid gray;
 }
+
+.decorationGlyphMarginClass {
+    background: red;
+}
+
+.decorationContentClass {
+    background: lightblue;
+}

@@ -50,6 +50,7 @@
     private DotNetObjectReference<MonacoEditor> jsObjectRef { get; set; }
     private Dictionary<string, Action<MonacoEditor, int[]>> actions { get; set; } = new Dictionary<string, Action<MonacoEditor, int[]>>();
     private Dictionary<string, Action<MonacoEditor, int>> commands { get; set; } = new Dictionary<string, Action<MonacoEditor, int>>();
+    private List<string> deltaDecorationIds { get; set; } = new List<string>();
 
     protected override void OnInitialized()
     {
@@ -200,7 +201,7 @@
             };
         }
 
-        // Convert the options object into a dictionary to get rid of the properties with null values
+        // Convert the options object into a JsonElement to get rid of the properties with null values
         var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
         {
             IgnoreNullValues = true,
@@ -282,7 +283,20 @@
 
     // createContextKey
 
-    // deltaDecorations
+    public async Task<string[]> DeltaDecorations(string[] oldDecorationIds, ModelDeltaDecoration[] newDecorations)
+    {
+        // Convert the newDecorations object into a JsonElement to get rid of the properties with null values
+        var newDecorationsJson = JsonSerializer.Serialize(newDecorations, new JsonSerializerOptions
+        {
+            IgnoreNullValues = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+        var newDecorationsElement = JsonSerializer.Deserialize<JsonElement>(newDecorationsJson);
+        var newDecorationIds = await jsRuntime.InvokeAsync<string[]>("blazorMonaco.editor.deltaDecorations", Id, oldDecorationIds, newDecorationsElement);
+        deltaDecorationIds.RemoveAll(d => oldDecorationIds.Any(o => o == d));
+        deltaDecorationIds.AddRange(newDecorationIds);
+        return newDecorationIds;
+    }
 
     public async Task DisposeEditor()
     {
@@ -465,6 +479,11 @@
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.render", Id, forceRedraw);
     }
 
+    public async Task ResetDeltaDecorations()
+    {
+        await DeltaDecorations(deltaDecorationIds.ToArray(), new ModelDeltaDecoration[0]);
+    }
+
     // restoreViewState
 
     public async Task RevealLine(int lineNumber, ScrollType? scrollType = null)
@@ -591,7 +610,7 @@
 
     public async Task UpdateOptions(GlobalEditorOptions options)
     {
-        // Convert the options object into a dictionary to get rid of the properties with null values
+        // Convert the options object into a JsonElement to get rid of the properties with null values
         var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
         {
             IgnoreNullValues = true,
@@ -599,25 +618,6 @@
         });
         var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
-    }
-
-    // decorations
-
-    public async Task SetDeltaDecoration(Range range, DecorationOptions options = null)
-    {
-        // Convert the options object into a dictionary to get rid of the properties with null values
-        var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
-        {
-            IgnoreNullValues = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
-        var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setDeltaDecoration", Id, range, optionsDict);
-    }
-
-    public async Task ResetDeltaDecorations()
-    {
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.resetDeltaDecorations", Id);
     }
 
     #endregion

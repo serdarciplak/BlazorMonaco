@@ -132,6 +132,11 @@ window.blazorMonaco.editor = {
         });
     },
 
+    deltaDecorations: function (id, oldDecorations, newDecorations) {
+        let editor = this.getEditorById(id);
+        return editor.deltaDecorations(oldDecorations, newDecorations);
+    },
+
     dispose: function (id) {
         let editor = this.getEditorById(id);
         editor.dispose();
@@ -452,23 +457,6 @@ window.blazorMonaco.editor = {
         let editor = this.getEditorById(id);
         editor.updateOptions(options);
     },
-
-    //#endregion
-
-    //#region decorations
-
-    decorations: [],
-
-    setDeltaDecoration: function (id, range, options) {
-      let editor = this.getEditorById(id);
-      console.log(options);
-      this.decorations.push(editor.deltaDecorations([], [{ range: range, options: options }]));
-    },
-
-    resetDeltaDecorations: function (id) {
-      this.decorations.forEach(dec =>
-        window.blazorMonaco.editor.getEditorById(id).deltaDecorations(dec, [{ range: new monaco.Range(1, 1, 1, 1), options: {} }]));
-    }
 
     //#endregion
 }
