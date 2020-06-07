@@ -285,6 +285,9 @@
 
     public async Task<string[]> DeltaDecorations(string[] oldDecorationIds, ModelDeltaDecoration[] newDecorations)
     {
+        if (oldDecorationIds == null)
+            oldDecorationIds = new string[] { };
+
         // Convert the newDecorations object into a JsonElement to get rid of the properties with null values
         var newDecorationsJson = JsonSerializer.Serialize(newDecorations, new JsonSerializerOptions
         {

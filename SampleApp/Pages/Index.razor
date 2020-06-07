@@ -73,7 +73,7 @@
             }
         };
 
-        decorationIds = await _editor.DeltaDecorations(new string[] {}, newDecorations);
+        decorationIds = await _editor.DeltaDecorations(null, newDecorations);
         // You can now use 'decorationIds' to change or remove the decorations
     }
 
@@ -104,11 +104,10 @@
 
     private async Task AddAction()
     {
-        await _editor.ResetDeltaDecorations();
-        /*await _editor.AddAction("testAction", "Test Action", new int[] { (int)KeyMode.CtrlCmd | (int)KeyCode.KEY_D, (int)KeyMode.CtrlCmd | (int)KeyCode.KEY_B }, null, null, "navigation", 1.5, (editor, keyCodes) =>
+        await _editor.AddAction("testAction", "Test Action", new int[] { (int)KeyMode.CtrlCmd | (int)KeyCode.KEY_D, (int)KeyMode.CtrlCmd | (int)KeyCode.KEY_B }, null, null, "navigation", 1.5, (editor, keyCodes) =>
         {
             Console.WriteLine("Ctrl+D : Editor action is triggered.");
-        });*/
+        });
     }
 
     private async Task AddCommand()
