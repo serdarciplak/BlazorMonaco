@@ -16,6 +16,16 @@ namespace BlazorMonaco.Bridge
         public int StartColumn { get; set; }
         public int EndLineNumber { get; set; }
         public int EndColumn { get; set; }
+
+        public Range() { }
+
+        public Range(int startLineNumber, int startColumn, int endLineNumber, int endColumn)
+        {
+            StartLineNumber = startLineNumber;
+            StartColumn = startColumn;
+            EndLineNumber = endLineNumber;
+            EndColumn = endColumn;
+        }
     }
 
     public class Selection : Range

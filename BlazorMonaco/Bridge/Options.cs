@@ -279,4 +279,53 @@
         public bool? ShowWords { get; set; }
         public bool? SnippetsPreventQuickSuggestions { get; set; }
     }
+
+    public class ModelDeltaDecoration
+    {
+        public Range Range { get; set; }
+        public ModelDecorationOptions Options { get; set; }
+    }
+
+    public class ModelDecorationOptions
+    {
+        public string AfterContentClassName { get; set; }
+        public string BeforeContentClassName { get; set; }
+        public string ClassName { get; set; }
+        public string GlyphMarginClassName { get; set; }
+        public MarkdownString[] GlyphMarginHoverMessage { get; set; }
+        public MarkdownString[] HoverMessage { get; set; }
+        public string InlineClassName { get; set; }
+        public bool? InlineClassNameAffectsLetterSpacing { get; set; }
+        public bool? IsWholeLine { get; set; }
+        public string LinesDecorationsClassName { get; set; }
+        public string MarginClassName { get; set; }
+        public ModelDecorationMinimapOptions Minimap { get; set; }
+        public ModelDecorationOverviewRulerOptions OverviewRuler { get; set; }
+        public TrackedRangeStickiness? Stickiness { get; set; }
+        public int? ZIndex { get; set; }
+    }
+
+    public class MarkdownString
+    {
+        public bool? IsTrusted { get; set; }
+        public bool? SupportThemeIcons { get; set; }
+        public string Uris { get; set; }
+        public string Value { get; set; }
+    }
+
+    public class ModelDecorationMinimapOptions : DecorationOptions
+    {
+        public MinimapPosition? Position { get; set; }
+    }
+
+    public class ModelDecorationOverviewRulerOptions : DecorationOptions
+    {
+        public MinimapPosition? Position { get; set; }
+    }
+
+    public class DecorationOptions
+    {
+        public string Color { get; set; }
+        public string DarkColor { get; set; }
+    }
 }

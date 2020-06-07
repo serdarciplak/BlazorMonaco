@@ -399,4 +399,18 @@ namespace BlazorMonaco.Bridge
         Smooth = 0,
         Immediate = 1
     }
+
+    public enum MinimapPosition
+    {
+        Inline = 1,
+        Gutter = 2
+    }
+
+    public enum TrackedRangeStickiness
+    {
+        AlwaysGrowsWhenTypingAtEdges = 0,
+        NeverGrowsWhenTypingAtEdges = 1,
+        GrowsOnlyWhenTypingBefore = 2,
+        GrowsOnlyWhenTypingAfter = 3
+    }
 }
