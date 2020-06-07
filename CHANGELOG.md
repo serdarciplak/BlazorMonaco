@@ -1,5 +1,8 @@
 # Change Log
 
+## 1.3.0
+* Added support for DeltaDecorations and ResetDeltaDecorations.
+
 ## 1.2.2
 * Removed hardcoded style from the monaco editor container
 * Replaced preview dependencies with their latest stable versions

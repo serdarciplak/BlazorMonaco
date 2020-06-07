@@ -132,6 +132,11 @@ window.blazorMonaco.editor = {
         });
     },
 
+    deltaDecorations: function (id, oldDecorations, newDecorations) {
+        let editor = this.getEditorById(id);
+        return editor.deltaDecorations(oldDecorations, newDecorations);
+    },
+
     dispose: function (id) {
         let editor = this.getEditorById(id);
         editor.dispose();
@@ -451,7 +456,7 @@ window.blazorMonaco.editor = {
     updateOptions: function (id, options) {
         let editor = this.getEditorById(id);
         editor.updateOptions(options);
-    }
+    },
 
     //#endregion
 }

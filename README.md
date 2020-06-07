@@ -91,6 +91,30 @@ private void EditorDidChangeCursorPosition(CursorPositionChangedEvent eventArgs)
 }
 ```
 
+### DeltaDecorations
+* You can add, edit and remove decorations to the editor via DeltaDecorations and ResetDeltaDecorations method.
+```csharp
+private async Task EditorOnDidInit(MonacoEditor editor)
+{
+	var newDecorations = new ModelDeltaDecoration[]
+	{
+		new ModelDeltaDecoration
+		{
+			Range = new BlazorMonaco.Bridge.Range(3,1,3,1),
+			Options = new ModelDecorationOptions
+			{
+				IsWholeLine = true,
+				ClassName = "decorationContentClass",
+				GlyphMarginClassName = "decorationGlyphMarginClass"
+			}
+		}
+	};
+
+	decorationIds = await _editor.DeltaDecorations(null, newDecorations);
+	// You can now use 'decorationIds' to change or remove the decorations
+}
+```
+
 ### Css styling
 * When you provide a css class name in the `CssClass` property of the Monaco Editor instance, it will be added to the corresponding html div tag. So you can customize how anything looks in your css files.
 ```html
