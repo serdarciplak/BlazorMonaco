@@ -23,16 +23,23 @@ window.blazorMonaco.editor = {
     },
 
     create: function (id, options) {
-        if (window.blazorMonaco.editors.find(e => e.id === id))
-            return;
-        
         if (options == null)
             options = {};
+
+        var editorExists = this.getEditorById(id, true) !== null;
+        if (editorExists) {
+            options.value = this.getValue(id);
+        }
 
         if (typeof monaco === 'undefined')
             console.log("WARNING : Please check that you have the script tag for editor.main.js in your index.html file");
 
         var editor = monaco.editor.create(document.getElementById(id), options);
+
+        //if it already exists remove it
+      if (!editorExists)
+            window.blazorMonaco.editors.splice(window.blazorMonaco.editors.findIndex(item => item.id === id), 1);
+      
         window.blazorMonaco.editors.push({ id: id, editor: editor });
     },
 
@@ -100,12 +107,16 @@ window.blazorMonaco.editor = {
 
     //#region Instance methods
 
-    getEditorById: function (id) {
+    getEditorById: function (id, unobstrusive = false) {
         let editorHolder = window.blazorMonaco.editors.find(e => e.id === id);
-        if (!editorHolder)
+        if (!editorHolder) {
+            if (unobstrusive) return null;
             throw "Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length;
-        else if (!editorHolder.editor)
+        }
+        else if (!editorHolder.editor) {
+            if (unobstrusive) return null;
             throw "editor is null for editorHolder: " + editorHolder;
+        }
         return editorHolder.editor;
     },
 
