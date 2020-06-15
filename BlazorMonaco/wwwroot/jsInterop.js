@@ -26,20 +26,17 @@ window.blazorMonaco.editor = {
         if (options == null)
             options = {};
 
-        var editorExists = this.getEditorById(id, true) !== null;
-        if (editorExists) {
-            options.value = this.getValue(id);
+        var oldEditor = this.getEditorById(id, true);
+        if (oldEditor !== null) {
+            options.value = oldEditor.getValue();
+            window.blazorMonaco.editors.splice(window.blazorMonaco.editors.findIndex(item => item.id === id), 1);
+            oldEditor.dispose();
         }
 
         if (typeof monaco === 'undefined')
             console.log("WARNING : Please check that you have the script tag for editor.main.js in your index.html file");
 
         var editor = monaco.editor.create(document.getElementById(id), options);
-
-        //if it already exists remove it
-      if (!editorExists)
-            window.blazorMonaco.editors.splice(window.blazorMonaco.editors.findIndex(item => item.id === id), 1);
-      
         window.blazorMonaco.editors.push({ id: id, editor: editor });
     },
 
