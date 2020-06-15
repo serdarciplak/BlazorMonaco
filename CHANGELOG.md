@@ -1,5 +1,8 @@
 # Change Log
 
+## 1.3.1
+* Fixed a bug where recreating the editor instance fails.
+
 ## 1.3.0
 * Added support for DeltaDecorations and ResetDeltaDecorations.
 
