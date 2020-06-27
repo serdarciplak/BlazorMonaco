@@ -41,4 +41,21 @@ namespace BlazorMonaco.Bridge
         public int Width { get; set; }
         public int Height { get; set; }
     }
+
+    public class StandaloneThemeData
+    {
+        public string Base { get; set; }
+        public bool? Inherit { get; set; }
+        public List<TokenThemeRule> Rules { get; set; }
+        public List<string> EncodedTokensColors { get; set; }
+        public Dictionary<string, string> Colors { get; set; }
+    }
+
+    public class TokenThemeRule
+    {
+        public string Token { get; set; }
+        public string Foreground { get; set; }
+        public string Background { get; set; }
+        public string FontStyle { get; set; }
+    }
 }

@@ -52,6 +52,10 @@ window.blazorMonaco.editor = {
         };
     },
 
+    defineTheme: function (themeName, themeData) {
+        monaco.editor.defineTheme(themeName, themeData);
+    },
+
     getModel: function (uriStr) {
         var uri = monaco.Uri.parse(uriStr);
         if (uri == null)
