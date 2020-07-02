@@ -1,18 +1,11 @@
-﻿@implements IDisposable
+﻿@inherits MonacoEditorBase
 @using BlazorMonaco.Bridge
 @using Microsoft.JSInterop
 @using System.Text.Json
-@inject IJSRuntime jsRuntime
 
 <div id="@Id" class="monaco-editor-container @CssClass"></div>
 
 @code {
-    [Parameter]
-    public string Id { get; set; }
-
-    [Parameter]
-    public string CssClass { get; set; }
-
     [Parameter]
     public string Value { get; set; }
 
@@ -46,8 +39,6 @@
     [Parameter] public EventCallback<EditorMouseEvent> OnMouseMove { get; set; }
     [Parameter] public EventCallback<EditorMouseEvent> OnMouseUp { get; set; }
 
-    private static IJSRuntime staticJsRuntime { get; set; }
-    private DotNetObjectReference<MonacoEditor> jsObjectRef { get; set; }
     private Dictionary<string, Action<MonacoEditor, int[]>> actions { get; set; } = new Dictionary<string, Action<MonacoEditor, int[]>>();
     private Dictionary<string, Action<MonacoEditor, int>> commands { get; set; } = new Dictionary<string, Action<MonacoEditor, int>>();
     private List<string> deltaDecorationIds { get; set; } = new List<string>();
@@ -55,13 +46,6 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        staticJsRuntime = jsRuntime;
-        jsObjectRef = DotNetObjectReference.Create(this);
-    }
-
-    public void Dispose()
-    {
-        jsObjectRef?.Dispose();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

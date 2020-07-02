@@ -1,0 +1,29 @@
+﻿@implements IDisposable
+@using BlazorMonaco.Bridge
+@using Microsoft.JSInterop
+@using System.Text.Json
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    [Parameter]
+    public string CssClass { get; set; }
+
+    [Inject]
+    protected IJSRuntime jsRuntime { get; set; }
+
+    protected static IJSRuntime staticJsRuntime { get; set; }
+    protected DotNetObjectReference<MonacoEditorBase> jsObjectRef { get; set; }
+
+    protected override void OnInitialized()
+    {
+        staticJsRuntime = jsRuntime;
+        jsObjectRef = DotNetObjectReference.Create(this);
+    }
+
+    public void Dispose()
+    {
+        jsObjectRef?.Dispose();
+    }
+}
