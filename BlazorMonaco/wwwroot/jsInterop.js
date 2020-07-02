@@ -40,6 +40,36 @@ window.blazorMonaco.editor = {
         window.blazorMonaco.editors.push({ id: id, editor: editor });
     },
 
+    createDiffEditor: function (id, options) {
+        if (options == null)
+            options = {};
+
+        var oldEditor = this.getEditorById(id, true);
+        if (oldEditor !== null) {
+            options.modifiedModel = oldEditor.getOriginalEditor().modifiedModel;
+            options.originalModel = oldEditor.getOriginalEditor().originalModel;
+
+            if (options.originalModel === undefined) {
+                options.originalModel = createModel(options.originalValue, options.language, options.originalUri);
+            }
+            if (options.modifiedModel === undefined) {
+                options.modifiedModel = createModel(options.modifiedValue, options.language, options.modifiedUri);
+            }
+
+            options.original = options.originalModel;
+            options.modified = options.modifiedModel;
+
+            window.blazorMonaco.editors.splice(window.blazorMonaco.editors.findIndex(item => item.id === id), 1);
+            oldEditor.dispose();
+        }
+
+        if (typeof monaco === 'undefined')
+            console.log("WARNING : Please check that you have the script tag for editor.main.js in your index.html file");
+
+        var editor = monaco.editor.createDiffEditor(document.getElementById(id), options);
+        window.blazorMonaco.editors.push({ id: id, editor: editor });
+    },
+
     createModel: function (value, language, uriStr) {
         var uri = monaco.Uri.parse(uriStr);
         var model = monaco.editor.createModel(value, language, uri);
