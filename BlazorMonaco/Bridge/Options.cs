@@ -26,19 +26,6 @@
         public string AccessibilityHelpUrl { get; set; }
     }
 
-    public class StandaloneDiffEditorConstructionOptions : EditorConstructionOptions
-    {
-        public TextModel OriginalModel { get; set; }
-        public TextModel ModifiedModel { get; set; }
-        public string OriginalValue { get; set; }
-        public string ModifiedValue { get; set; }
-        public string OriginalUri { get; set; }
-        public string ModifiedUri { get; set; }
-        public string Language { get; set; }
-        public string Theme { get; set; }
-        public string AccessibilityHelpUrl { get; set; }
-    }
-
     public class EditorConstructionOptions : GlobalEditorOptions
     {
         public Dimension Dimension { get; set; }

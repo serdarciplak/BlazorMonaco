@@ -104,20 +104,32 @@
         await staticJsRuntime.InvokeVoidAsync("blazorMonaco.editor.create", id, optionsDict);
     }
 
-    protected static async Task CreateDiffEditor(string id, string originalValue, string modifiedValue, StandaloneDiffEditorConstructionOptions options)
+    protected static async Task CreateDiffEditor(string id, DiffEditorData diffEditorData, DiffEditorConstructionOptions options)
     {
         if (staticJsRuntime == null)
             return;
 
         if (options == null)
         {
-            options = new StandaloneDiffEditorConstructionOptions
+            options = new DiffEditorConstructionOptions
             {
-                Language = "javascript",
-                OriginalValue = originalValue,
-                ModifiedValue = modifiedValue
             };
         }
+
+        if (diffEditorData == null)
+        {
+            diffEditorData = new DiffEditorData
+            {
+                Language = "javascript"
+            };
+        }
+
+        var diffEditorDataJson = JsonSerializer.Serialize(diffEditorData, new JsonSerializerOptions
+        {
+            IgnoreNullValues = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+        var diffEditorDataDict = JsonSerializer.Deserialize<JsonElement>(diffEditorDataJson);
 
         // Convert the options object into a JsonElement to get rid of the properties with null values
         var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
@@ -128,7 +140,7 @@
         var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
 
         // Create the editor
-        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.editor.createDiffEditor", id, optionsDict);
+        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.editor.createDiffEditor", id, diffEditorDataDict, optionsDict);
     }
 
     // createDiffNavigator

@@ -29,10 +29,14 @@
 </div>
 
 <MonacoEditor @ref="_editor" Id="test-123" ConstructionOptions="EditorConstructionOptions" OnDidInit="EditorOnDidInit" OnContextMenu="OnContextMenu" />
+<MonacoDiffEditor @ref="_diffEditor" Id="123-test" ConstructionOptions="DiffEditorConstructionOptions" DiffEditorData="DiffEditorData" />
 
 @code {
     private MonacoEditor _editor { get; set; }
+    private MonacoDiffEditor _diffEditor { get; set; }
     private string ValueToSet { get; set; }
+
+    #region Editor
 
     private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
     {
@@ -71,7 +75,7 @@
                     GlyphMarginClassName = "decorationGlyphMarginClass"
                 }
             }
-        };
+                };
 
         decorationIds = await _editor.DeltaDecorations(null, newDecorations);
         // You can now use 'decorationIds' to change or remove the decorations
@@ -117,4 +121,44 @@
             Console.WriteLine("Ctrl+Enter : Editor command is triggered.");
         });
     }
+
+    #endregion
+
+    #region Diff Editor
+
+    private DiffEditorConstructionOptions DiffEditorConstructionOptions(MonacoDiffEditor editor)
+    {
+        return new DiffEditorConstructionOptions
+        {
+            GlyphMargin = true
+        };
+    }
+
+    private DiffEditorData DiffEditorData(MonacoDiffEditor editor)
+    {
+        return new DiffEditorData
+        {
+            Language = "javascript",
+            OriginalValue = "\"use strict\";\n" +
+                "function Person(age) {\n" +
+                "	if (age) {\n" +
+                "		this.age = age;\n" +
+                "	}\n" +
+                "}\n" +
+                "Person.prototype.getAge = function () {\n" +
+                "	return this.age;\n" +
+                "};\n",
+            ModifiedValue = "\"don't use strict\";\n" +
+                "furction Person(age_is_just_a_number) {\n" +
+                "	if (age_is_just_a_number) {\n" +
+                "		this.age_is_just_a_number = age_is_just_a_number;\n" +
+                "	}\n" +
+                "}\n" +
+                "Person.prototype.getAge = function () {\n" +
+                "	return this.age_is_just_a_number;\n" +
+                "};\n" +
+                "//Really, it is just a number people!"
+        };
+    }
+    #endregion
 }

@@ -12,7 +12,8 @@
     [Parameter]
     public string ModifiedValue { get; set; } = string.Empty;
 
-    [Parameter] public Func<MonacoDiffEditor, StandaloneDiffEditorConstructionOptions> ConstructionOptions { get; set; } // should move to base
+    [Parameter] public Func<MonacoDiffEditor, DiffEditorConstructionOptions> ConstructionOptions { get; set; } // should move to base
+    [Parameter] public Func<MonacoDiffEditor, DiffEditorData> DiffEditorData { get; set; }
     [Parameter] public EventCallback<MonacoDiffEditor> OnDidDispose { get; set; } // should move to base
     [Parameter] public EventCallback<MonacoDiffEditor> OnDidInit { get; set; } // should move to base
     [Parameter] public EventCallback<MonacoDiffEditor> OnDidUpdateDiff { get; set; }
@@ -31,8 +32,9 @@
         if (firstRender)
         {
             // Create the editor
-            StandaloneDiffEditorConstructionOptions options = ConstructionOptions?.Invoke(this);
-            await MonacoDiffEditor.CreateDiffEditor(Id, OriginalValue, ModifiedValue, options);
+            var options = ConstructionOptions?.Invoke(this);
+            var diffEditorData = DiffEditorData?.Invoke(this);
+            await MonacoDiffEditor.CreateDiffEditor(Id, diffEditorData, options);
 
             // Set editor event listeners
 
