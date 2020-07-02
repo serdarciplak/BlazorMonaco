@@ -6,4 +6,147 @@
 <div id="@Id" class="monaco-editor-container @CssClass"></div>
 
 @code {
+    [Parameter]
+    public string OriginalValue { get; set; } = string.Empty;
+
+    [Parameter]
+    public string ModifiedValue { get; set; } = string.Empty;
+
+    [Parameter] public Func<MonacoDiffEditor, StandaloneDiffEditorConstructionOptions> ConstructionOptions { get; set; } // should move to base
+    [Parameter] public EventCallback<MonacoDiffEditor> OnDidDispose { get; set; } // should move to base
+    [Parameter] public EventCallback<MonacoDiffEditor> OnDidInit { get; set; } // should move to base
+    [Parameter] public EventCallback<MonacoDiffEditor> OnDidUpdateDiff { get; set; }
+
+    private List<string> deltaDecorationIds { get; set; } = new List<string>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && string.IsNullOrWhiteSpace(Id))
+        {
+            Id = "blazor-monaco-diff-" + Guid.NewGuid().ToString();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            // Create the editor
+            StandaloneDiffEditorConstructionOptions options = ConstructionOptions?.Invoke(this);
+            await MonacoDiffEditor.CreateDiffEditor(Id, OriginalValue, ModifiedValue, options);
+
+            // Set editor event listeners
+
+            // should move to base
+            if (OnDidDispose.HasDelegate)
+                await SetEventListener("OnDidDispose");
+            // should move to base
+            await OnDidInit.InvokeAsync(this);
+            if (OnDidUpdateDiff.HasDelegate)
+                await SetEventListener("OnDidUpdateDiff");
+
+            await base.OnAfterRenderAsync(firstRender);
+        }
+    }
+
+    [JSInvokable]
+    public override async Task EventCallback(string eventName, string eventJson)
+    {
+        var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+        switch (eventName)
+        {
+            case "OnDidDispose": await OnDidDispose.InvokeAsync(this); break; // should move to base
+            case "OnDidUpdateDiff": await OnDidUpdateDiff.InvokeAsync(this); break;
+        }
+
+        await base.EventCallback(eventName, eventJson);
+    }
+
+    #region Instance Methods
+
+    // addAction : base
+
+    // addCommand : base
+
+    // createContextKey
+
+    // dispose : base (disposeEditor)
+
+    // focus : base
+
+    // getDiffLineInformationForModified
+
+    // getDiffLineInformationForOriginal
+
+    //---- getDomNode : base
+
+    // getEditorType : base
+
+    //---- getId : base
+
+    // getLineChanges
+
+    // getModel : base
+
+    // getModifiedEditor
+
+    // getOriginalEditor
+
+    // getPosition : base
+
+    // getSelection : base
+
+    // getSelections : base
+
+    // getSupportedActions : base
+
+    // getVisibleColumnFromPosition : base
+
+    // hasTextFocus : base
+
+    // layout : base
+
+    // restoreViewState : base
+
+    // revealLine : base
+
+    // revealLineInCenter : base
+
+    // revealLineInCenterIfOutsideViewport : base
+
+    // revealLines : base
+
+    // revealLinesInCenter : base
+
+    // revealLinesInCenterIfOutsideViewport : base
+
+    // revealPosition : base
+
+    // revealPositionInCenter : base
+
+    // revealPositionInCenterIfOutsideViewport : base
+
+    // revealRange : base
+
+    // revealRangeAtTop : base
+
+    // revealRangeInCenter : base
+
+    // revealRangeInCenterIfOutsideViewport : base
+
+    // saveViewState : base
+
+    // setModel : base
+
+    // setPosition : base
+
+    // setSelection : base
+
+    // setSelections : base
+
+    // trigger : base
+
+    // updateOptions : base
+
+    #endregion
 }
