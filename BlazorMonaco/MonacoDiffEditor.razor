@@ -90,9 +90,27 @@
 
     // getModel : base
 
-    // getModifiedEditor
+    //---- getModifiedEditor
 
-    // getOriginalEditor
+    /// <summary>
+    /// Returns the Id of the modified editor
+    /// </summary>
+    /// <returns></returns>
+    public async Task<string> GetModifiedEditor()
+    {
+        if (jsRuntime == null)
+            return default;
+        return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getModifiedEditor", Id);
+    }
+
+    //---- getOriginalEditor
+
+    public async Task<string> GetOriginalEditor()
+    {
+        if (jsRuntime == null)
+            return default;
+        return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getOriginalEditor", Id);
+    }
 
     // getPosition : base
 

@@ -322,9 +322,7 @@
 
     public async Task<string> GetValue()
     {
-        if (jsRuntime == null)
-            return default;
-        return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getValue", Id);
+        return await base.GetValue(Id);
     }
 
     // getVisibleColumnFromPosition : base
@@ -437,9 +435,7 @@
 
     public async Task SetValue(string newValue)
     {
-        if (jsRuntime == null)
-            return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setValue", Id, newValue);
+        await base.SetValue(Id, newValue);
     }
 
     // trigger : base

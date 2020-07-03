@@ -76,6 +76,11 @@ window.blazorMonaco.editor = {
         if (oldDiffEditor !== null) {
             window.blazorMonaco.editors.splice(window.blazorMonaco.editors.findIndex(item => item.id === id), 1);
             oldDiffEditor.dispose();
+            // get the seperate editors created by the diff editor and dispose of them too
+            var oldDiffEditorOriginal = this.getEditorById(id + "_Original", true);
+            oldDiffEditorOriginal.dispose();
+            var oldDiffEditorModified = this.getEditorById(id + "_Modified", true);
+            oldDiffEditorModified.dispose();
         }
 
         if (typeof monaco === 'undefined')
@@ -88,6 +93,9 @@ window.blazorMonaco.editor = {
             modified: diffEditorData.modifiedModel
         });
         window.blazorMonaco.editors.push({ id: id, editor: diffEditor });
+        // register the seperate editors created by the diff editor
+        window.blazorMonaco.editors.push({ id: id + "_Original", editor: diffEditor.getOriginalEditor() });
+        window.blazorMonaco.editors.push({ id: id + "_Modified", editor: diffEditor.getModifiedEditor() });
     },
 
     createModel: function (value, language, uriStr) {
@@ -144,6 +152,14 @@ window.blazorMonaco.editor = {
                 uri: value.uri.toString()
             };
         });
+    },
+
+    getModifiedEditor: function (id) {
+        return id + "_Modified";
+    },
+
+    getOriginalEditor: function (id) {
+        return id + "_Original";
     },
 
     remeasureFonts: function () {

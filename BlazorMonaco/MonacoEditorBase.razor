@@ -287,6 +287,13 @@
 
     // getSupportedActions
 
+    public async Task<string> GetValue(string Id)
+    {
+        if (jsRuntime == null)
+            return default;
+        return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getValue", Id);
+    }
+
     public async Task<int> GetVisibleColumnFromPosition(Position position)
     {
         if (jsRuntime == null)
@@ -436,6 +443,13 @@
         if (jsRuntime == null)
             return;
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setSelections", Id, selections);
+    }
+
+    public async Task SetValue(string Id, string newValue)
+    {
+        if (jsRuntime == null)
+            return;
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setValue", Id, newValue);
     }
 
     public async Task Trigger(string source, string handlerId, JsonElement payload)
