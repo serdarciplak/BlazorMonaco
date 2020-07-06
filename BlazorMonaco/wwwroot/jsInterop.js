@@ -455,11 +455,16 @@ window.blazorMonaco.editor = {
         editor.revealRangeInCenterIfOutsideViewport(range, scrollType);
     },
 
-    setEventListener: function (id, eventName, handler) {
+    setEventListener: function (id, eventName, handler, type) {
         let editor = this.getEditorById(id);
 
         let listener = function (e) {
-            handler.invokeMethodAsync("EventCallback", eventName, JSON.stringify(e));
+            if (type != 0) {
+                handler.invokeMethodAsync("EventCallbackOnEditor", eventName, JSON.stringify(e), type);
+            }
+            else {
+                handler.invokeMethodAsync("EventCallback", eventName, JSON.stringify(e));
+            }
         };
 
         switch (eventName) {

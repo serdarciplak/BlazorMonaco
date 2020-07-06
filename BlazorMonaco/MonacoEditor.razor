@@ -141,6 +141,11 @@
 
     #region Instance Methods
 
+    protected async Task SetEventListener(string eventName)
+    {
+        await base.SetEventListener(Id, eventName);
+    }
+
     // addAction : base
 
     // addCommand : base

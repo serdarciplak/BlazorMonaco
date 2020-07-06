@@ -207,6 +207,13 @@
 
     #region Instance Methods
 
+    protected async Task SetEventListener(string id, string eventName, DiffEditorType type = DiffEditorType.Undefined)
+    {
+        if (jsRuntime == null)
+            return;
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setEventListener", id, eventName, jsObjectRef, type);
+    }
+
     public async Task AddAction(string actionId, string label, int[] keyCodes, string precondition, string keybindingContext, string contextMenuGroupId, double contextMenuOrder, Action<MonacoEditorBase, int[]> action)
     {
         if (jsRuntime == null)
@@ -230,13 +237,6 @@
         if (jsRuntime == null)
             return;
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.dispose", Id);
-    }
-
-    protected async Task SetEventListener(string eventName)
-    {
-        if (jsRuntime == null)
-            return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setEventListener", Id, eventName, jsObjectRef);
     }
 
     public async Task Focus()
