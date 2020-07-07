@@ -87,7 +87,7 @@ window.blazorMonaco.editor = {
         console.log("WARNING : Please check that you have the script tag for editor.main.js in your index.html file");
 
         var diffEditor = monaco.editor.createDiffEditor(document.getElementById(id), options);
-        console.log(diffEditorData);
+
         diffEditor.setModel({
             original: diffEditorData.originalModel,
             modified: diffEditorData.modifiedModel
