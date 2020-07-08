@@ -22,7 +22,7 @@ window.blazorMonaco.editor = {
         return monaco.editor.colorizeModelLine(model, lineNumber, tabSize);
     },
 
-    create: function (id, options) {
+  create: function (id, options) {
         if (options == null)
             options = {};
 
@@ -74,20 +74,28 @@ window.blazorMonaco.editor = {
 
         // remove the old editor if it exists
         if (oldDiffEditor !== null) {
+
+            //dispose of the diff editor
             window.blazorMonaco.editors.splice(window.blazorMonaco.editors.findIndex(item => item.id === id), 1);
             oldDiffEditor.dispose();
-            // get the seperate editors created by the diff editor and dispose of them too
-            var oldDiffEditorOriginal = this.getEditorById(id + "_Original", true);
+
+            // get the 2 seperate editors created by the diff editor and dispose of them too
+            var idOriginal = id + "_Original";
+            var oldDiffEditorOriginal = this.getEditorById(idOriginal, true);
             oldDiffEditorOriginal.dispose();
-            var oldDiffEditorModified = this.getEditorById(id + "_Modified", true);
+            window.blazorMonaco.editors.splice(window.blazorMonaco.editors.findIndex(item => item.id === idOriginal), 1);
+
+            var idModified = id + "_Modified";
+            var oldDiffEditorModified = this.getEditorById(idModified, true);
             oldDiffEditorModified.dispose();
+            window.blazorMonaco.editors.splice(window.blazorMonaco.editors.findIndex(item => item.id === idModified), 1);
         }
 
         if (typeof monaco === 'undefined')
         console.log("WARNING : Please check that you have the script tag for editor.main.js in your index.html file");
 
         var diffEditor = monaco.editor.createDiffEditor(document.getElementById(id), options);
-
+        
         diffEditor.setModel({
             original: diffEditorData.originalModel,
             modified: diffEditorData.modifiedModel
