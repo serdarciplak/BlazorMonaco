@@ -1,0 +1,61 @@
+﻿@page "/diff-editor"
+
+<h3>Diff Editor</h3>
+
+<MonacoDiffEditor @ref="_diffEditor" Id="sample-diff-editor-123" ConstructionOptions="DiffEditorConstructionOptions" OnDidInit="EditorOnDidInit" />
+
+@code {
+    private MonacoDiffEditor _diffEditor { get; set; }
+    private string ValueToSet { get; set; }
+
+    private DiffEditorConstructionOptions DiffEditorConstructionOptions(MonacoDiffEditor editor)
+    {
+        return new DiffEditorConstructionOptions
+        {
+            OriginalEditable = true
+        };
+    }
+
+    private async Task EditorOnDidInit(MonacoEditorBase editor)
+    {
+        // Get or create the original model
+        TextModel original_model = await MonacoEditorBase.GetModel("sample-diff-editor-originalModel");
+        if (original_model == null)
+        {
+            var original_value = "\"use strict\";\n" +
+                            "function Person(age) {\n" +
+                            "	if (age) {\n" +
+                            "		this.age = age;\n" +
+                            "	}\n" +
+                            "}\n" +
+                            "Person.prototype.getAge = function () {\n" +
+                            "	return this.age;\n" +
+                            "};\n";
+            original_model = await MonacoEditorBase.CreateModel(original_value, "javascript", "sample-diff-editor-originalModel");
+        }
+
+        // Get or create the modified model
+        TextModel modified_model = await MonacoEditorBase.GetModel("sample-diff-editor-modifiedModel");
+        if (modified_model == null)
+        {
+            var modified_value = "\"don't use strict\";\n" +
+                            "furction Person(age_is_just_a_number) {\n" +
+                            "	if (age_is_just_a_number) {\n" +
+                            "		this.age_is_just_a_number = age_is_just_a_number;\n" +
+                            "	}\n" +
+                            "}\n" +
+                            "Person.prototype.getAge = function () {\n" +
+                            "	return this.age_is_just_a_number;\n" +
+                            "};\n" +
+                            "//Really, it is just a number people!";
+            modified_model = await MonacoEditorBase.CreateModel(modified_value, "javascript", "sample-diff-editor-modifiedModel");
+        }
+
+        // Set the editor model
+        await _diffEditor.SetModel(new DiffEditorModel
+        {
+            Original = original_model,
+            Modified = modified_model
+        });
+    }
+}

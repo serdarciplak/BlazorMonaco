@@ -16,13 +16,13 @@ window.blazorMonaco.editor = {
     },
 
     colorizeModelLine: function (uriStr, lineNumber, tabSize) {
-        var model = this.getModelObj(uriStr);
+        var model = this.getModelJsObject(uriStr);
         if (model == null)
             return null;
         return monaco.editor.colorizeModelLine(model, lineNumber, tabSize);
     },
 
-  create: function (id, options) {
+    create: function (id, options) {
         if (options == null)
             options = {};
 
@@ -40,83 +40,36 @@ window.blazorMonaco.editor = {
         window.blazorMonaco.editors.push({ id: id, editor: editor });
     },
 
-    createDiffEditor: function (id, diffEditorData, options) {
-        if (diffEditorData == null)
-            diffEditorData = {};
+    createDiffEditor: function (id, options) {
         if (options == null)
             options = {};
 
-        var oldDiffEditor = this.getEditorById(id, true);
-        if (oldDiffEditor !== null) { //old editor exists, read the Models
-            diffEditorData.originalModel = oldDiffEditor.getOriginalEditor().originalModel;
-            diffEditorData.modifiedModel = oldDiffEditor.getModifiedEditor().modifiedModel;
-        }
-
-        if (diffEditorData.originalModel == null && // not found
-            diffEditorData.originalTextModel != null) { // something supplied
-            // try to find it
-            diffEditorData.originalModel = this.getModelObj(diffEditorData.originalUri);
-        }
-        if (diffEditorData.originalModel == null) { // not found
-            var createModelResult = this.createModel(diffEditorData.originalValue, diffEditorData.language, diffEditorData.originalUri);
-            diffEditorData.originalModel = this.getModelObj(createModelResult.uri);
-        }
-
-        if (options.modifiedModel == null && // not found
-            diffEditorData.modifiedTextModel != null) { // something supplied
-            // try to find it
-            diffEditorData.modifiedModel = this.getModelObj(diffEditorData.modifiedUri);
-        }
-        if (diffEditorData.modifiedModel == null) { // not found
-            var createModelResult = this.createModel(diffEditorData.modifiedValue, diffEditorData.language, diffEditorData.modifiedUri);
-            diffEditorData.modifiedModel = this.getModelObj(createModelResult.uri);
-        }
-
-        // remove the old editor if it exists
-        if (oldDiffEditor !== null) {
-
-            //dispose of the diff editor
+        var oldEditor = this.getEditorById(id, true);
+        var oldModel = null;
+        if (oldEditor !== null) {
+            oldModel = oldEditor.getModel();
             window.blazorMonaco.editors.splice(window.blazorMonaco.editors.findIndex(item => item.id === id), 1);
-            oldDiffEditor.dispose();
-
-            // get the 2 seperate editors created by the diff editor and dispose of them too
-            var idOriginal = id + "_Original";
-            var oldDiffEditorOriginal = this.getEditorById(idOriginal, true);
-            oldDiffEditorOriginal.dispose();
-            window.blazorMonaco.editors.splice(window.blazorMonaco.editors.findIndex(item => item.id === idOriginal), 1);
-
-            var idModified = id + "_Modified";
-            var oldDiffEditorModified = this.getEditorById(idModified, true);
-            oldDiffEditorModified.dispose();
-            window.blazorMonaco.editors.splice(window.blazorMonaco.editors.findIndex(item => item.id === idModified), 1);
+            oldEditor.dispose();
         }
 
         if (typeof monaco === 'undefined')
-        console.log("WARNING : Please check that you have the script tag for editor.main.js in your index.html file");
+            console.log("WARNING : Please check that you have the script tag for editor.main.js in your index.html file");
 
-        var diffEditor = monaco.editor.createDiffEditor(document.getElementById(id), options);
-        
-        diffEditor.setModel({
-            original: diffEditorData.originalModel,
-            modified: diffEditorData.modifiedModel
-        });
-        window.blazorMonaco.editors.push({ id: id, editor: diffEditor });
-        // register the seperate editors created by the diff editor
-        window.blazorMonaco.editors.push({ id: id + "_Original", editor: diffEditor.getOriginalEditor() });
-        window.blazorMonaco.editors.push({ id: id + "_Modified", editor: diffEditor.getModifiedEditor() });
+        var editor = monaco.editor.createDiffEditor(document.getElementById(id), options);
+        window.blazorMonaco.editors.push({ id: id, editor: editor });
+
+        if (oldModel !== null)
+            editor.setModel(oldModel);
     },
 
     createModel: function (value, language, uriStr) {
-      var model = null;
-
         //uri is the key; if no uri exists create one
         if (uriStr == null || uriStr == "") {
             uriStr = "generatedUriKey_" + this.uuidv4();
         }
 
         var uri = monaco.Uri.parse(uriStr);
-        model = monaco.editor.createModel(value, language, uri);
-
+        var model = monaco.editor.createModel(value, language, uri);
         if (model == null)
             return null;
 
@@ -131,11 +84,7 @@ window.blazorMonaco.editor = {
     },
 
     getModel: function (uriStr) {
-        var uri = monaco.Uri.parse(uriStr);
-        if (uri == null)
-            return null;
-
-        var model = monaco.editor.getModel(uri);
+        var model = this.getModelJsObject(uriStr);
         if (model == null)
             return null;
 
@@ -145,7 +94,7 @@ window.blazorMonaco.editor = {
         };
     },
 
-    getModelObj: function (uriStr) {
+    getModelJsObject: function (uriStr) {
         var uri = monaco.Uri.parse(uriStr);
         if (uri == null)
             return null;
@@ -175,7 +124,7 @@ window.blazorMonaco.editor = {
     },
 
     setModelLanguage: function (uriStr, languageId) {
-        var model = this.getModelObj(uriStr);
+        var model = this.getModelJsObject(uriStr);
         if (model == null)
             return null;
         return monaco.editor.setModelLanguage(model, languageId);
@@ -273,6 +222,24 @@ window.blazorMonaco.editor = {
         return {
             id: model.id,
             uri: model.uri.toString()
+        };
+    },
+
+    getInstanceDiffModel: function (id) {
+        let editor = this.getEditorById(id);
+        var model = editor.getModel();
+        if (model == null)
+            return null;
+
+        return {
+            original: {
+                id: model.original.id,
+                uri: model.original.uri.toString()
+            },
+            modified: {
+                id: model.modified.id,
+                uri: model.modified.uri.toString()
+            },
         };
     },
 
@@ -467,12 +434,7 @@ window.blazorMonaco.editor = {
         let editor = this.getEditorById(id);
 
         let listener = function (e) {
-            if (type != 0) {
-                handler.invokeMethodAsync("EventCallbackOnEditor", eventName, JSON.stringify(e), type);
-            }
-            else {
-                handler.invokeMethodAsync("EventCallback", eventName, JSON.stringify(e));
-            }
+            handler.invokeMethodAsync("EventCallback", eventName, JSON.stringify(e), type);
         };
 
         switch (eventName) {
@@ -501,12 +463,25 @@ window.blazorMonaco.editor = {
     },
 
     setInstanceModel: function (id, uriStr) {
-        var model = this.getModelObj(uriStr);
+        var model = this.getModelJsObject(uriStr);
         if (model == null)
             return;
 
         let editor = this.getEditorById(id);
         editor.setModel(model);
+    },
+
+    setInstanceDiffModel: function (id, model) {
+        var original_model = this.getModelJsObject(model.original.uri);
+        var modified_model = this.getModelJsObject(model.modified.uri);
+        if (original_model == null || modified_model == null)
+            return;
+
+        let editor = this.getEditorById(id);
+        editor.setModel({
+            original: original_model,
+            modified: modified_model,
+        });
     },
 
     setPosition: function (id, position) {

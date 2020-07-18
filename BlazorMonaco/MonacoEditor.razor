@@ -6,9 +6,6 @@
 <div id="@Id" class="monaco-editor-container @CssClass"></div>
 
 @code {
-    [Parameter]
-    public string Value { get; set; }
-
     [Parameter] public Func<MonacoEditor, StandaloneEditorConstructionOptions> ConstructionOptions { get; set; } // should move to base
     [Parameter] public EventCallback<MonacoEditor> OnDidCompositionEnd { get; set; }
     [Parameter] public EventCallback<MonacoEditor> OnDidCompositionStart { get; set; }
@@ -25,10 +22,8 @@
     //OnDidChangeModelLanguageConfiguration
     //OnDidChangeModelOptions
     [Parameter] public EventCallback<ContentSizeChangedEvent> OnDidContentSizeChange { get; set; }
-    [Parameter] public EventCallback<MonacoEditor> OnDidDispose { get; set; } // should move to base
     [Parameter] public EventCallback<MonacoEditor> OnDidFocusEditorText { get; set; }
     [Parameter] public EventCallback<MonacoEditor> OnDidFocusEditorWidget { get; set; }
-    [Parameter] public EventCallback<MonacoEditor> OnDidInit { get; set; } // should move to base
     [Parameter] public EventCallback<EditorLayoutInfo> OnDidLayoutChange { get; set; }
     [Parameter] public EventCallback<PasteEvent> OnDidPaste { get; set; }
     [Parameter] public EventCallback<ScrollEvent> OnDidScrollChange { get; set; }
@@ -43,18 +38,14 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && string.IsNullOrWhiteSpace(Id))
-        {
-            Id = "blazor-monaco-" + Guid.NewGuid().ToString();
-        }
-
-        await base.OnAfterRenderAsync(firstRender);
-
         if (firstRender)
         {
+            if (string.IsNullOrWhiteSpace(Id))
+                Id = "blazor-monaco-" + Guid.NewGuid().ToString();
+
             // Create the editor
-            StandaloneEditorConstructionOptions options = ConstructionOptions?.Invoke(this);
-            await MonacoEditor.Create(Id, Value, options);
+            var options = ConstructionOptions?.Invoke(this);
+            await MonacoEditorBase.Create(Id, options);
 
             // Set editor event listeners
             if (OnDidCompositionEnd.HasDelegate)
@@ -75,8 +66,6 @@
                 await SetEventListener("OnDidChangeCursorSelection");
             if (OnDidContentSizeChange.HasDelegate)
                 await SetEventListener("OnDidContentSizeChange");
-            if (OnDidDispose.HasDelegate) // should move to base
-                await SetEventListener("OnDidDispose");
             if (OnDidFocusEditorText.HasDelegate)
                 await SetEventListener("OnDidFocusEditorText");
             if (OnDidFocusEditorWidget.HasDelegate)
@@ -99,15 +88,12 @@
                 await SetEventListener("OnMouseMove");
             if (OnMouseUp.HasDelegate)
                 await SetEventListener("OnMouseUp");
-
-            await OnDidInit.InvokeAsync(this); // should move to base
-
-            await base.OnAfterRenderAsync(firstRender);
         }
+        await base.OnAfterRenderAsync(firstRender);
     }
 
     [JSInvokable]
-    public override async Task EventCallback(string eventName, string eventJson)
+    public override async Task EventCallback(string eventName, string eventJson, DiffEditorType type)
     {
         var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
@@ -122,7 +108,6 @@
             case "OnDidChangeCursorPosition": await OnDidChangeCursorPosition.InvokeAsync(JsonSerializer.Deserialize<CursorPositionChangedEvent>(eventJson, jsonOptions)); break;
             case "OnDidChangeCursorSelection": await OnDidChangeCursorSelection.InvokeAsync(JsonSerializer.Deserialize<CursorSelectionChangedEvent>(eventJson, jsonOptions)); break;
             case "OnDidContentSizeChange": await OnDidContentSizeChange.InvokeAsync(JsonSerializer.Deserialize<ContentSizeChangedEvent>(eventJson, jsonOptions)); break;
-            case "OnDidDispose": await OnDidDispose.InvokeAsync(this); break; // should move to base
             case "OnDidFocusEditorText": await OnDidFocusEditorText.InvokeAsync(this); break;
             case "OnDidFocusEditorWidget": await OnDidFocusEditorWidget.InvokeAsync(this); break;
             case "OnDidLayoutChange": if (eventJson != null) await OnDidLayoutChange.InvokeAsync(JsonSerializer.Deserialize<EditorLayoutInfo>(eventJson, jsonOptions)); break;
@@ -136,15 +121,10 @@
             case "OnMouseUp": if (eventJson != null) await OnMouseUp.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
         }
 
-        await base.EventCallback(eventName, eventJson);
+        await base.EventCallback(eventName, eventJson, type);
     }
 
     #region Instance Methods
-
-    protected async Task SetEventListener(string eventName)
-    {
-        await base.SetEventListener(Id, eventName);
-    }
 
     // addAction : base
 
@@ -158,7 +138,7 @@
 
     // changeViewZones
 
-    // createContextKey
+    // createContextKey : base
 
     public async Task<string[]> DeltaDecorations(string[] oldDecorationIds, ModelDeltaDecoration[] newDecorations)
     {
@@ -181,7 +161,7 @@
         return newDecorationIds;
     }
 
-    // dispose : base (disposeEditor)
+    // dispose : base
 
     // executeCommand
 
@@ -216,11 +196,11 @@
 
     // getContribution
 
-    //---- getDomNode : base
+    // getDomNode : base
 
     // getEditorType : base
 
-    //---- getId : base
+    // getId : base
 
     public async Task<EditorLayoutInfo> GetLayoutInfo()
     {
@@ -231,7 +211,12 @@
 
     // getLineDecorations
 
-    // getModel : base
+    public async Task<TextModel> GetModel()
+    {
+        if (jsRuntime == null)
+            return default;
+        return await jsRuntime.InvokeAsync<TextModel>("blazorMonaco.editor.getInstanceModel", Id);
+    }
 
     public async Task<int> GetOffsetForColumn(int lineNumber, int column)
     {
@@ -327,7 +312,9 @@
 
     public async Task<string> GetValue()
     {
-        return await base.GetValue(Id);
+        if (jsRuntime == null)
+            return default;
+        return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getValue", Id);
     }
 
     // getVisibleColumnFromPosition : base
@@ -379,7 +366,7 @@
         await DeltaDecorations(deltaDecorationIds.ToArray(), new ModelDeltaDecoration[0]);
     }
 
-    // restoreViewState : base
+    // restoreViewState
 
     // revealLine : base
 
@@ -407,9 +394,14 @@
 
     // revealRangeInCenterIfOutsideViewport : base
 
-    // saveViewState : base
+    // saveViewState
 
-    // setModel : base
+    public async Task SetModel(TextModel model)
+    {
+        if (jsRuntime == null)
+            return;
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setInstanceModel", Id, model.Uri);
+    }
 
     // setPosition : base
 
@@ -445,7 +437,20 @@
 
     // trigger : base
 
-    // updateOptions : base    
+    public async Task UpdateOptions(GlobalEditorOptions options)
+    {
+        if (jsRuntime == null)
+            return;
+
+        // Convert the options object into a JsonElement to get rid of the properties with null values
+        var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
+        {
+            IgnoreNullValues = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+        var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
+    }
 
     #endregion
 

@@ -4,27 +4,50 @@
 @using System.Text.Json
 
 @code {
-    [Inject]
-    protected IJSRuntime jsRuntime { get; set; }
-
     [Parameter]
     public string Id { get; set; }
 
     [Parameter]
     public string CssClass { get; set; }
 
+    [Parameter] public EventCallback<MonacoEditorBase> OnDidDispose { get; set; }
+    [Parameter] public EventCallback<MonacoEditorBase> OnDidInit { get; set; }
+
+    [Inject] protected IJSRuntime jsRuntime { get; set; }
+    protected static IJSRuntime staticJsRuntime { get; set; }
+    protected DotNetObjectReference<MonacoEditorBase> jsObjectRef { get; set; }
     private Dictionary<string, Action<MonacoEditorBase, int[]>> actions { get; set; } = new Dictionary<string, Action<MonacoEditorBase, int[]>>();
     private Dictionary<string, Action<MonacoEditorBase, int>> commands { get; set; } = new Dictionary<string, Action<MonacoEditorBase, int>>();
 
-    protected static IJSRuntime staticJsRuntime { get; set; }
-    protected DotNetObjectReference<MonacoEditorBase> jsObjectRef { get; set; }
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        staticJsRuntime = jsRuntime;
+        jsObjectRef = DotNetObjectReference.Create(this);
+    }
 
-    [JSInvokable]
-    public virtual async Task EventCallback(string eventName, string eventJson)
+    public void Dispose()
+    {
+        jsObjectRef?.Dispose();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (OnDidDispose.HasDelegate)
+                await SetEventListener("OnDidDispose");
+
+            await OnDidInit.InvokeAsync(this);
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    public virtual async Task EventCallback(string eventName, string eventJson, DiffEditorType type)
     {
         switch (eventName)
         {
-            // should contain OnDidDispose & OnDidInit
+            case "OnDidDispose": await OnDidDispose.InvokeAsync(this); break;
         }
     }
 
@@ -39,20 +62,8 @@
     [JSInvokable]
     public void CommandCallback(int keyCode)
     {
-        var action = commands[keyCode.ToString()];
-        action?.Invoke(this, keyCode);
-    }
-
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-        staticJsRuntime = jsRuntime;
-        jsObjectRef = DotNetObjectReference.Create(this);
-    }
-
-    public void Dispose()
-    {
-        jsObjectRef?.Dispose();
+        var command = commands[keyCode.ToString()];
+        command?.Invoke(this, keyCode);
     }
 
     #region Static Methods
@@ -78,7 +89,7 @@
         return await staticJsRuntime.InvokeAsync<string>("blazorMonaco.editor.colorizeModelLine", model.Uri, lineNumber, tabSize);
     }
 
-    protected static async Task Create(string id, string value, StandaloneEditorConstructionOptions options)
+    protected static async Task Create(string id, StandaloneEditorConstructionOptions options)
     {
         if (staticJsRuntime == null)
             return;
@@ -87,8 +98,7 @@
         {
             options = new StandaloneEditorConstructionOptions
             {
-                Language = "javascript",
-                Value = value
+                Language = "javascript"
             };
         }
 
@@ -104,7 +114,7 @@
         await staticJsRuntime.InvokeVoidAsync("blazorMonaco.editor.create", id, optionsDict);
     }
 
-    protected static async Task CreateDiffEditor(string id, DiffEditorData diffEditorData, DiffEditorConstructionOptions options)
+    protected static async Task CreateDiffEditor(string id, DiffEditorConstructionOptions options)
     {
         if (staticJsRuntime == null)
             return;
@@ -116,21 +126,6 @@
             };
         }
 
-        if (diffEditorData == null)
-        {
-            diffEditorData = new DiffEditorData
-            {
-                Language = "javascript"
-            };
-        }
-
-        var diffEditorDataJson = JsonSerializer.Serialize(diffEditorData, new JsonSerializerOptions
-        {
-            IgnoreNullValues = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
-        var diffEditorDataDict = JsonSerializer.Deserialize<JsonElement>(diffEditorDataJson);
-
         // Convert the options object into a JsonElement to get rid of the properties with null values
         var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
         {
@@ -140,7 +135,7 @@
         var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
 
         // Create the editor
-        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.editor.createDiffEditor", id, diffEditorDataDict, optionsDict);
+        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.editor.createDiffEditor", id, optionsDict);
     }
 
     // createDiffNavigator
@@ -207,13 +202,6 @@
 
     #region Instance Methods
 
-    protected async Task SetEventListener(string id, string eventName, DiffEditorType type = DiffEditorType.Undefined)
-    {
-        if (jsRuntime == null)
-            return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setEventListener", id, eventName, jsObjectRef, type);
-    }
-
     public async Task AddAction(string actionId, string label, int[] keyCodes, string precondition, string keybindingContext, string contextMenuGroupId, double contextMenuOrder, Action<MonacoEditorBase, int[]> action)
     {
         if (jsRuntime == null)
@@ -231,6 +219,8 @@
         commands[keyCode.ToString()] = action;
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.addCommand", Id, keyCode, jsObjectRef);
     }
+
+    // createContextKey
 
     public async Task DisposeEditor()
     {
@@ -257,13 +247,6 @@
 
     // getId
 
-    public async Task<TextModel> GetModel()
-    {
-        if (jsRuntime == null)
-            return default;
-        return await jsRuntime.InvokeAsync<TextModel>("blazorMonaco.editor.getInstanceModel", Id);
-    }
-
     public async Task<Position> GetPosition()
     {
         if (jsRuntime == null)
@@ -287,13 +270,6 @@
 
     // getSupportedActions
 
-    public async Task<string> GetValue(string Id)
-    {
-        if (jsRuntime == null)
-            return default;
-        return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getValue", Id);
-    }
-
     public async Task<int> GetVisibleColumnFromPosition(Position position)
     {
         if (jsRuntime == null)
@@ -314,8 +290,6 @@
             return;
         await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.layout", Id, dimension);
     }
-
-    // restoreViewState
 
     public async Task RevealLine(int lineNumber, ScrollType? scrollType = null)
     {
@@ -408,20 +382,23 @@
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealRangeInCenterIfOutsideViewport", Id, range, scrollType);
     }
 
-    // saveViewState
-
-    public async Task SetModel(TextModel model)
-    {
-        if (jsRuntime == null)
-            return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setInstanceModel", Id, model.Uri);
-    }
-
     public async Task SetPosition(Position position)
     {
         if (jsRuntime == null)
             return;
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setPosition", Id, position);
+    }
+
+    protected async Task SetEventListener(string eventName)
+    {
+        await SetEventListener(Id, eventName);
+    }
+
+    protected async Task SetEventListener(string id, string eventName, DiffEditorType type = DiffEditorType.Undefined)
+    {
+        if (jsRuntime == null)
+            return;
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setEventListener", id, eventName, jsObjectRef, type);
     }
 
     public async Task SetSelection(Range selection)
@@ -445,11 +422,11 @@
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setSelections", Id, selections);
     }
 
-    public async Task SetValue(string Id, string newValue)
+    public async Task SetValue(string id, string newValue)
     {
         if (jsRuntime == null)
             return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setValue", Id, newValue);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setValue", id, newValue);
     }
 
     public async Task Trigger(string source, string handlerId, JsonElement payload)
@@ -457,21 +434,6 @@
         if (jsRuntime == null)
             return;
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.trigger", Id, source, handlerId, payload);
-    }
-
-    public async Task UpdateOptions(GlobalEditorOptions options)
-    {
-        if (jsRuntime == null)
-            return;
-
-        // Convert the options object into a JsonElement to get rid of the properties with null values
-        var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
-        {
-            IgnoreNullValues = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
-        var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
     }
 
     #endregion

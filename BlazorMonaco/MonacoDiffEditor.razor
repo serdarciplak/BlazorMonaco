@@ -6,17 +6,9 @@
 <div id="@Id" class="monaco-editor-container @CssClass"></div>
 
 @code {
-    [Parameter]
-    public string OriginalValue { get; set; } = string.Empty;
-
-    [Parameter]
-    public string ModifiedValue { get; set; } = string.Empty;
-
     [Parameter] public Func<MonacoDiffEditor, DiffEditorConstructionOptions> ConstructionOptions { get; set; } // should move to base
-    [Parameter] public Func<MonacoDiffEditor, DiffEditorData> DiffEditorData { get; set; }
-    [Parameter] public EventCallback<MonacoDiffEditor> OnDidDispose { get; set; } // should move to base
-    [Parameter] public EventCallback<MonacoDiffEditor> OnDidInit { get; set; } // should move to base
     [Parameter] public EventCallback<MonacoDiffEditor> OnDidUpdateDiff { get; set; }
+
     // Events on the original editor (left)
     [Parameter] public EventCallback<MonacoDiffEditor> OnDidCompositionEndOriginal { get; set; }
     [Parameter] public EventCallback<MonacoDiffEditor> OnDidCompositionStartOriginal { get; set; }
@@ -44,7 +36,8 @@
     [Parameter] public EventCallback<EditorMouseEvent> OnMouseLeaveOriginal { get; set; }
     [Parameter] public EventCallback<EditorMouseEvent> OnMouseMoveOriginal { get; set; }
     [Parameter] public EventCallback<EditorMouseEvent> OnMouseUpOriginal { get; set; }
-    // Events on the modified editof (right)
+
+    // Events on the modified editor (right)
     [Parameter] public EventCallback<MonacoDiffEditor> OnDidCompositionEndModified { get; set; }
     [Parameter] public EventCallback<MonacoDiffEditor> OnDidCompositionStartModified { get; set; }
     [Parameter] public EventCallback<EditorMouseEvent> OnContextMenuModified { get; set; }
@@ -72,30 +65,18 @@
     [Parameter] public EventCallback<EditorMouseEvent> OnMouseMoveModified { get; set; }
     [Parameter] public EventCallback<EditorMouseEvent> OnMouseUpModified { get; set; }
 
-    private List<string> deltaDecorationIds { get; set; } = new List<string>();
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && string.IsNullOrWhiteSpace(Id))
-        {
-            Id = "blazor-monaco-diff-" + Guid.NewGuid().ToString();
-        }
-
-        await base.OnAfterRenderAsync(firstRender);
-
         if (firstRender)
         {
+            if (string.IsNullOrWhiteSpace(Id))
+                Id = "blazor-monaco-" + Guid.NewGuid().ToString();
+
             // Create the editor
             var options = ConstructionOptions?.Invoke(this);
-            var diffEditorData = DiffEditorData?.Invoke(this);
-            await MonacoDiffEditor.CreateDiffEditor(Id, diffEditorData, options);
+            await MonacoDiffEditor.CreateDiffEditor(Id, options);
 
             // Set editor event listeners
-
-            // Should move to base
-            if (OnDidDispose.HasDelegate)
-                await SetEventListener("OnDidDispose");
-
             if (OnDidUpdateDiff.HasDelegate)
                 await SetEventListener("OnDidUpdateDiff");
 
@@ -182,15 +163,12 @@
                 await SetEventListenerModified("OnMouseMove");
             if (OnMouseUpModified.HasDelegate)
                 await SetEventListenerModified("OnMouseUp");
-
-            await OnDidInit.InvokeAsync(this); // should move to base
-
-            await base.OnAfterRenderAsync(firstRender);
         }
+        await base.OnAfterRenderAsync(firstRender);
     }
 
     [JSInvokable]
-    public async Task EventCallbackOnEditor(string eventName, string eventJson, DiffEditorType type)
+    public override async Task EventCallback(string eventName, string eventJson, DiffEditorType type)
     {
         var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
@@ -199,9 +177,9 @@
             case DiffEditorType.Undefined: //on the diffeditor
                 switch (eventName)
                 {
-                    case "OnDidDispose": await OnDidDispose.InvokeAsync(this); break; // should move to base
                     case "OnDidUpdateDiff": await OnDidUpdateDiff.InvokeAsync(this); break;
                 }
+                await base.EventCallback(eventName, eventJson, type);
                 break;
             case DiffEditorType.Original: //on the original editor (left)
                 switch (eventName)
@@ -254,34 +232,17 @@
                 }
                 break;
         }
-
-        await base.EventCallback(eventName, eventJson);
     }
 
     #region Instance Methods
-
-    protected async Task SetEventListener(string eventName)
-    {
-        await base.SetEventListener(Id, eventName);
-    }
-
-    protected async Task SetEventListenerOriginal(string eventName)
-    {
-        await base.SetEventListener(await GetOriginalEditor(), eventName, DiffEditorType.Original);
-    }
-
-    protected async Task SetEventListenerModified(string eventName)
-    {
-        await base.SetEventListener(await GetModifiedEditor(), eventName, DiffEditorType.Modified);
-    }
 
     // addAction : base
 
     // addCommand : base
 
-    // createContextKey
+    // createContextKey : base
 
-    // dispose : base (disposeEditor)
+    // dispose : base
 
     // focus : base
 
@@ -289,30 +250,27 @@
 
     // getDiffLineInformationForOriginal
 
-    //---- getDomNode : base
+    // getDomNode : base
 
     // getEditorType : base
 
-    //---- getId : base
+    // getId : base
 
     // getLineChanges
 
-    // getModel : base
+    public async Task<DiffEditorModel> GetModel()
+    {
+        if (jsRuntime == null)
+            return default;
+        return await jsRuntime.InvokeAsync<DiffEditorModel>("blazorMonaco.editor.getInstanceDiffModel", Id);
+    }
 
-    //---- getModifiedEditor
-
-    /// <summary>
-    /// Returns the Id of the modified editor
-    /// </summary>
-    /// <returns></returns>
     public async Task<string> GetModifiedEditor()
     {
         if (jsRuntime == null)
             return default;
         return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getModifiedEditor", Id);
     }
-
-    //---- getOriginalEditor
 
     public async Task<string> GetOriginalEditor()
     {
@@ -335,7 +293,7 @@
 
     // layout : base
 
-    // restoreViewState : base
+    // restoreViewState
 
     // revealLine : base
 
@@ -363,11 +321,26 @@
 
     // revealRangeInCenterIfOutsideViewport : base
 
-    // saveViewState : base
+    // saveViewState
 
-    // setModel : base
+    public async Task SetModel(DiffEditorModel model)
+    {
+        if (jsRuntime == null)
+            return;
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setInstanceDiffModel", Id, model);
+    }
 
     // setPosition : base
+
+    protected async Task SetEventListenerOriginal(string eventName)
+    {
+        await base.SetEventListener(await GetOriginalEditor(), eventName, DiffEditorType.Original);
+    }
+
+    protected async Task SetEventListenerModified(string eventName)
+    {
+        await base.SetEventListener(await GetModifiedEditor(), eventName, DiffEditorType.Modified);
+    }
 
     // setSelection : base
 
@@ -375,7 +348,7 @@
 
     // trigger : base
 
-    // updateOptions : base
+    // updateOptions
 
     #endregion
 }
