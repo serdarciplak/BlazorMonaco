@@ -6,7 +6,7 @@
 <div id="@Id" class="monaco-editor-container @CssClass"></div>
 
 @code {
-    [Parameter] public Func<MonacoEditor, StandaloneEditorConstructionOptions> ConstructionOptions { get; set; } // should move to base
+    [Parameter] public Func<MonacoEditor, StandaloneEditorConstructionOptions> ConstructionOptions { get; set; }
     [Parameter] public EventCallback<MonacoEditor> OnDidCompositionEnd { get; set; }
     [Parameter] public EventCallback<MonacoEditor> OnDidCompositionStart { get; set; }
     [Parameter] public EventCallback<EditorMouseEvent> OnContextMenu { get; set; }
@@ -47,53 +47,58 @@
             var options = ConstructionOptions?.Invoke(this);
             await MonacoEditorBase.Create(Id, options);
 
-            // Set editor event listeners
-            if (OnDidCompositionEnd.HasDelegate)
-                await SetEventListener("OnDidCompositionEnd");
-            if (OnDidCompositionStart.HasDelegate)
-                await SetEventListener("OnDidCompositionStart");
-            if (OnContextMenu.HasDelegate)
-                await SetEventListener("OnContextMenu");
-            if (OnDidBlurEditorText.HasDelegate)
-                await SetEventListener("OnDidBlurEditorText");
-            if (OnDidBlurEditorWidget.HasDelegate)
-                await SetEventListener("OnDidBlurEditorWidget");
-            if (OnDidChangeConfiguration.HasDelegate)
-                await SetEventListener("OnDidChangeConfiguration");
-            if (OnDidChangeCursorPosition.HasDelegate)
-                await SetEventListener("OnDidChangeCursorPosition");
-            if (OnDidChangeCursorSelection.HasDelegate)
-                await SetEventListener("OnDidChangeCursorSelection");
-            if (OnDidContentSizeChange.HasDelegate)
-                await SetEventListener("OnDidContentSizeChange");
-            if (OnDidFocusEditorText.HasDelegate)
-                await SetEventListener("OnDidFocusEditorText");
-            if (OnDidFocusEditorWidget.HasDelegate)
-                await SetEventListener("OnDidFocusEditorWidget");
-            if (OnDidLayoutChange.HasDelegate)
-                await SetEventListener("OnDidLayoutChange");
-            if (OnDidPaste.HasDelegate)
-                await SetEventListener("OnDidPaste");
-            if (OnDidScrollChange.HasDelegate)
-                await SetEventListener("OnDidScrollChange");
-            if (OnKeyDown.HasDelegate)
-                await SetEventListener("OnKeyDown");
-            if (OnKeyUp.HasDelegate)
-                await SetEventListener("OnKeyUp");
-            if (OnMouseDown.HasDelegate)
-                await SetEventListener("OnMouseDown");
-            if (OnMouseLeave.HasDelegate)
-                await SetEventListener("OnMouseLeave");
-            if (OnMouseMove.HasDelegate)
-                await SetEventListener("OnMouseMove");
-            if (OnMouseUp.HasDelegate)
-                await SetEventListener("OnMouseUp");
+            await SetEventListeners();
         }
         await base.OnAfterRenderAsync(firstRender);
     }
 
+    internal override async Task SetEventListeners()
+    {
+        if (OnDidCompositionEnd.HasDelegate)
+            await SetEventListener("OnDidCompositionEnd");
+        if (OnDidCompositionStart.HasDelegate)
+            await SetEventListener("OnDidCompositionStart");
+        if (OnContextMenu.HasDelegate)
+            await SetEventListener("OnContextMenu");
+        if (OnDidBlurEditorText.HasDelegate)
+            await SetEventListener("OnDidBlurEditorText");
+        if (OnDidBlurEditorWidget.HasDelegate)
+            await SetEventListener("OnDidBlurEditorWidget");
+        if (OnDidChangeConfiguration.HasDelegate)
+            await SetEventListener("OnDidChangeConfiguration");
+        if (OnDidChangeCursorPosition.HasDelegate)
+            await SetEventListener("OnDidChangeCursorPosition");
+        if (OnDidChangeCursorSelection.HasDelegate)
+            await SetEventListener("OnDidChangeCursorSelection");
+        if (OnDidContentSizeChange.HasDelegate)
+            await SetEventListener("OnDidContentSizeChange");
+        if (OnDidFocusEditorText.HasDelegate)
+            await SetEventListener("OnDidFocusEditorText");
+        if (OnDidFocusEditorWidget.HasDelegate)
+            await SetEventListener("OnDidFocusEditorWidget");
+        if (OnDidLayoutChange.HasDelegate)
+            await SetEventListener("OnDidLayoutChange");
+        if (OnDidPaste.HasDelegate)
+            await SetEventListener("OnDidPaste");
+        if (OnDidScrollChange.HasDelegate)
+            await SetEventListener("OnDidScrollChange");
+        if (OnKeyDown.HasDelegate)
+            await SetEventListener("OnKeyDown");
+        if (OnKeyUp.HasDelegate)
+            await SetEventListener("OnKeyUp");
+        if (OnMouseDown.HasDelegate)
+            await SetEventListener("OnMouseDown");
+        if (OnMouseLeave.HasDelegate)
+            await SetEventListener("OnMouseLeave");
+        if (OnMouseMove.HasDelegate)
+            await SetEventListener("OnMouseMove");
+        if (OnMouseUp.HasDelegate)
+            await SetEventListener("OnMouseUp");
+        await base.SetEventListeners();
+    }
+
     [JSInvokable]
-    public override async Task EventCallback(string eventName, string eventJson, DiffEditorType type)
+    public override async Task EventCallback(string eventName, string eventJson)
     {
         var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
@@ -121,14 +126,20 @@
             case "OnMouseUp": if (eventJson != null) await OnMouseUp.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
         }
 
-        await base.EventCallback(eventName, eventJson, type);
+        await base.EventCallback(eventName, eventJson);
+    }
+
+    public static MonacoEditor CreateVirtualEditor(string id, string cssClass = null)
+    {
+        var virtual_editor = new MonacoEditor();
+        virtual_editor.Id = id;
+        virtual_editor.CssClass = cssClass;
+        virtual_editor.jsRuntime = staticJsRuntime;
+        virtual_editor.jsObjectRef = DotNetObjectReference.Create(virtual_editor as MonacoEditorBase);
+        return virtual_editor;
     }
 
     #region Instance Methods
-
-    // addAction : base
-
-    // addCommand : base
 
     // addContentWidget
 
@@ -137,8 +148,6 @@
     // applyFontInfo
 
     // changeViewZones
-
-    // createContextKey : base
 
     public async Task<string[]> DeltaDecorations(string[] oldDecorationIds, ModelDeltaDecoration[] newDecorations)
     {
@@ -161,15 +170,11 @@
         return newDecorationIds;
     }
 
-    // dispose : base
-
     // executeCommand
 
     // executeCommands
 
     // executeEdits
-
-    // focus : base
 
     // getAction
 
@@ -195,12 +200,6 @@
     }
 
     // getContribution
-
-    // getDomNode : base
-
-    // getEditorType : base
-
-    // getId : base
 
     public async Task<EditorLayoutInfo> GetLayoutInfo()
     {
@@ -238,8 +237,6 @@
             return default;
         return await jsRuntime.InvokeAsync<List<string>>("blazorMonaco.editor.getOptions", Id);
     }
-
-    // getPosition : base
 
     public async Task<EditorOptions> GetRawOptions()
     {
@@ -283,12 +280,6 @@
         return await jsRuntime.InvokeAsync<Position>("blazorMonaco.editor.getScrolledVisiblePosition", Id, position);
     }
 
-    // getSelection : base
-
-    // getSelections : base
-
-    // getSupportedActions : base
-
     public async Task<MouseTarget> GetTargetAtClientPoint(int clientX, int clientY)
     {
         if (jsRuntime == null)
@@ -317,8 +308,6 @@
         return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getValue", Id);
     }
 
-    // getVisibleColumnFromPosition : base
-
     public async Task<List<Range>> GetVisibleRanges()
     {
         if (jsRuntime == null)
@@ -326,16 +315,12 @@
         return await jsRuntime.InvokeAsync<List<Range>>("blazorMonaco.editor.getVisibleRanges", Id);
     }
 
-    // hasTextFocus : base
-
     public async Task<bool> HasWidgetFocus()
     {
         if (jsRuntime == null)
             return default;
         return await jsRuntime.InvokeAsync<bool>("blazorMonaco.editor.hasWidgetFocus", Id);
     }
-
-    // layout : base
 
     // layoutContentWidget
 
@@ -368,32 +353,6 @@
 
     // restoreViewState
 
-    // revealLine : base
-
-    // revealLineInCenter : base
-
-    // revealLineInCenterIfOutsideViewport : base
-
-    // revealLines : base
-
-    // revealLinesInCenter : base
-
-    // revealLinesInCenterIfOutsideViewport : base
-
-    // revealPosition : base
-
-    // revealPositionInCenter : base
-
-    // revealPositionInCenterIfOutsideViewport : base
-
-    // revealRange : base
-
-    // revealRangeAtTop : base
-
-    // revealRangeInCenter : base
-
-    // revealRangeInCenterIfOutsideViewport : base
-
     // saveViewState
 
     public async Task SetModel(TextModel model)
@@ -402,8 +361,6 @@
             return;
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setInstanceModel", Id, model.Uri);
     }
-
-    // setPosition : base
 
     public async Task SetScrollLeft(int newScrollLeft)
     {
@@ -426,16 +383,12 @@
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setScrollTop", Id, newScrollTop);
     }
 
-    // setSelection : base
-
-    // setSelections : base
-
     public async Task SetValue(string newValue)
     {
-        await base.SetValue(Id, newValue);
+        if (jsRuntime == null)
+            return;
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setValue", Id, newValue);
     }
-
-    // trigger : base
 
     public async Task UpdateOptions(GlobalEditorOptions options)
     {

@@ -6,16 +6,16 @@
 <div id="@Id" class="monaco-editor-container @CssClass"></div>
 
 @code {
-    [Parameter] public Func<MonacoDiffEditor, DiffEditorConstructionOptions> ConstructionOptions { get; set; } // should move to base
+    [Parameter] public Func<MonacoDiffEditor, DiffEditorConstructionOptions> ConstructionOptions { get; set; }
     [Parameter] public EventCallback<MonacoDiffEditor> OnDidUpdateDiff { get; set; }
 
-    // Events on the original editor (left)
-    [Parameter] public EventCallback<MonacoDiffEditor> OnDidCompositionEndOriginal { get; set; }
-    [Parameter] public EventCallback<MonacoDiffEditor> OnDidCompositionStartOriginal { get; set; }
+    // Events for the original editor (left)
+    [Parameter] public EventCallback<MonacoEditor> OnDidCompositionEndOriginal { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidCompositionStartOriginal { get; set; }
     [Parameter] public EventCallback<EditorMouseEvent> OnContextMenuOriginal { get; set; }
-    [Parameter] public EventCallback<MonacoDiffEditor> OnDidBlurEditorTextOriginal { get; set; }
-    [Parameter] public EventCallback<MonacoDiffEditor> OnDidBlurEditorWidgetOriginal { get; set; }
-    [Parameter] public EventCallback<MonacoDiffEditor> OnDidChangeConfigurationOriginal { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidBlurEditorTextOriginal { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidBlurEditorWidgetOriginal { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidChangeConfigurationOriginal { get; set; }
     [Parameter] public EventCallback<CursorPositionChangedEvent> OnDidChangeCursorPositionOriginal { get; set; }
     [Parameter] public EventCallback<CursorSelectionChangedEvent> OnDidChangeCursorSelectionOriginal { get; set; }
     //OnDidChangeModelOriginal
@@ -25,8 +25,10 @@
     //OnDidChangeModelLanguageConfigurationOriginal
     //OnDidChangeModelOptionsOriginal
     [Parameter] public EventCallback<ContentSizeChangedEvent> OnDidContentSizeChangeOriginal { get; set; }
-    [Parameter] public EventCallback<MonacoDiffEditor> OnDidFocusEditorTextOriginal { get; set; }
-    [Parameter] public EventCallback<MonacoDiffEditor> OnDidFocusEditorWidgetOriginal { get; set; }
+    [Parameter] public EventCallback<MonacoEditorBase> OnDidDisposeOriginal { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidFocusEditorTextOriginal { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidFocusEditorWidgetOriginal { get; set; }
+    [Parameter] public EventCallback<MonacoEditorBase> OnDidInitOriginal { get; set; }
     [Parameter] public EventCallback<EditorLayoutInfo> OnDidLayoutChangeOriginal { get; set; }
     [Parameter] public EventCallback<PasteEvent> OnDidPasteOriginal { get; set; }
     [Parameter] public EventCallback<ScrollEvent> OnDidScrollChangeOriginal { get; set; }
@@ -37,13 +39,13 @@
     [Parameter] public EventCallback<EditorMouseEvent> OnMouseMoveOriginal { get; set; }
     [Parameter] public EventCallback<EditorMouseEvent> OnMouseUpOriginal { get; set; }
 
-    // Events on the modified editor (right)
-    [Parameter] public EventCallback<MonacoDiffEditor> OnDidCompositionEndModified { get; set; }
-    [Parameter] public EventCallback<MonacoDiffEditor> OnDidCompositionStartModified { get; set; }
+    // Events for the modified editor (right)
+    [Parameter] public EventCallback<MonacoEditor> OnDidCompositionEndModified { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidCompositionStartModified { get; set; }
     [Parameter] public EventCallback<EditorMouseEvent> OnContextMenuModified { get; set; }
-    [Parameter] public EventCallback<MonacoDiffEditor> OnDidBlurEditorTextModified { get; set; }
-    [Parameter] public EventCallback<MonacoDiffEditor> OnDidBlurEditorWidgetModified { get; set; }
-    [Parameter] public EventCallback<MonacoDiffEditor> OnDidChangeConfigurationModified { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidBlurEditorTextModified { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidBlurEditorWidgetModified { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidChangeConfigurationModified { get; set; }
     [Parameter] public EventCallback<CursorPositionChangedEvent> OnDidChangeCursorPositionModified { get; set; }
     [Parameter] public EventCallback<CursorSelectionChangedEvent> OnDidChangeCursorSelectionModified { get; set; }
     //OnDidChangeModelModified
@@ -53,8 +55,10 @@
     //OnDidChangeModelLanguageConfigurationModified
     //OnDidChangeModelOptionsModified
     [Parameter] public EventCallback<ContentSizeChangedEvent> OnDidContentSizeChangeModified { get; set; }
-    [Parameter] public EventCallback<MonacoDiffEditor> OnDidFocusEditorTextModified { get; set; }
-    [Parameter] public EventCallback<MonacoDiffEditor> OnDidFocusEditorWidgetModified { get; set; }
+    [Parameter] public EventCallback<MonacoEditorBase> OnDidDisposeModified { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidFocusEditorTextModified { get; set; }
+    [Parameter] public EventCallback<MonacoEditor> OnDidFocusEditorWidgetModified { get; set; }
+    [Parameter] public EventCallback<MonacoEditorBase> OnDidInitModified { get; set; }
     [Parameter] public EventCallback<EditorLayoutInfo> OnDidLayoutChangeModified { get; set; }
     [Parameter] public EventCallback<PasteEvent> OnDidPasteModified { get; set; }
     [Parameter] public EventCallback<ScrollEvent> OnDidScrollChangeModified { get; set; }
@@ -64,6 +68,16 @@
     [Parameter] public EventCallback<EditorMouseEvent> OnMouseLeaveModified { get; set; }
     [Parameter] public EventCallback<EditorMouseEvent> OnMouseMoveModified { get; set; }
     [Parameter] public EventCallback<EditorMouseEvent> OnMouseUpModified { get; set; }
+
+    public MonacoEditor OriginalEditor { get; set; }
+    public MonacoEditor ModifiedEditor { get; set; }
+
+    public override void Dispose()
+    {
+        OriginalEditor.Dispose();
+        ModifiedEditor.Dispose();
+        base.Dispose();
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -76,185 +90,90 @@
             var options = ConstructionOptions?.Invoke(this);
             await MonacoDiffEditor.CreateDiffEditor(Id, options);
 
-            // Set editor event listeners
-            if (OnDidUpdateDiff.HasDelegate)
-                await SetEventListener("OnDidUpdateDiff");
+            await SetEventListeners();
 
-            // Event listeners for the original editor(left)
-            if (OnDidCompositionEndOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnDidCompositionEnd");
-            if (OnDidCompositionStartOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnDidCompositionStart");
-            if (OnContextMenuOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnContextMenu");
-            if (OnDidBlurEditorTextOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnDidBlurEditorText");
-            if (OnDidBlurEditorWidgetOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnDidBlurEditorWidget");
-            if (OnDidChangeConfigurationOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnDidChangeConfiguration");
-            if (OnDidChangeCursorPositionOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnDidChangeCursorPosition");
-            if (OnDidChangeCursorSelectionOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnDidChangeCursorSelection");
-            if (OnDidContentSizeChangeOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnDidContentSizeChange");
-            if (OnDidFocusEditorTextOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnDidFocusEditorText");
-            if (OnDidFocusEditorWidgetOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnDidFocusEditorWidget");
-            if (OnDidLayoutChangeOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnDidLayoutChange");
-            if (OnDidPasteOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnDidPaste");
-            if (OnDidScrollChangeOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnDidScrollChange");
-            if (OnKeyDownOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnKeyDown");
-            if (OnKeyUpOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnKeyUp");
-            if (OnMouseDownOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnMouseDown");
-            if (OnMouseLeaveOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnMouseLeave");
-            if (OnMouseMoveOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnMouseMove");
-            if (OnMouseUpOriginal.HasDelegate)
-                await SetEventListenerOriginal("OnMouseUp");
+            // Create the bridges for the inner editors
+#pragma warning disable BL0005
+            OriginalEditor = MonacoEditor.CreateVirtualEditor(Id + "_original");
+            OriginalEditor.OnDidCompositionEnd = OnDidCompositionEndOriginal;
+            OriginalEditor.OnDidCompositionStart = OnDidCompositionStartOriginal;
+            OriginalEditor.OnContextMenu = OnContextMenuOriginal;
+            OriginalEditor.OnDidBlurEditorText = OnDidBlurEditorTextOriginal;
+            OriginalEditor.OnDidBlurEditorWidget = OnDidBlurEditorWidgetOriginal;
+            OriginalEditor.OnDidChangeConfiguration = OnDidChangeConfigurationOriginal;
+            OriginalEditor.OnDidChangeCursorPosition = OnDidChangeCursorPositionOriginal;
+            OriginalEditor.OnDidChangeCursorSelection = OnDidChangeCursorSelectionOriginal;
+            OriginalEditor.OnDidContentSizeChange = OnDidContentSizeChangeOriginal;
+            OriginalEditor.OnDidDispose = OnDidDisposeOriginal;
+            OriginalEditor.OnDidFocusEditorText = OnDidFocusEditorTextOriginal;
+            OriginalEditor.OnDidFocusEditorWidget = OnDidFocusEditorWidgetOriginal;
+            OriginalEditor.OnDidInit = OnDidInitOriginal;
+            OriginalEditor.OnDidLayoutChange = OnDidLayoutChangeOriginal;
+            OriginalEditor.OnDidPaste = OnDidPasteOriginal;
+            OriginalEditor.OnDidScrollChange = OnDidScrollChangeOriginal;
+            OriginalEditor.OnKeyDown = OnKeyDownOriginal;
+            OriginalEditor.OnKeyUp = OnKeyUpOriginal;
+            OriginalEditor.OnMouseDown = OnMouseDownOriginal;
+            OriginalEditor.OnMouseLeave = OnMouseLeaveOriginal;
+            OriginalEditor.OnMouseMove = OnMouseMoveOriginal;
+            OriginalEditor.OnMouseUp = OnMouseUpOriginal;
+            await OriginalEditor.SetEventListeners();
+            await OriginalEditor.OnDidInit.InvokeAsync(OriginalEditor);
 
-            // Event listeners for the modified editor (right)
-            if (OnDidCompositionEndModified.HasDelegate)
-                await SetEventListenerModified("OnDidCompositionEnd");
-            if (OnDidCompositionStartModified.HasDelegate)
-                await SetEventListenerModified("OnDidCompositionStart");
-            if (OnContextMenuModified.HasDelegate)
-                await SetEventListenerModified("OnContextMenu");
-            if (OnDidBlurEditorTextModified.HasDelegate)
-                await SetEventListenerModified("OnDidBlurEditorText");
-            if (OnDidBlurEditorWidgetModified.HasDelegate)
-                await SetEventListenerModified("OnDidBlurEditorWidget");
-            if (OnDidChangeConfigurationModified.HasDelegate)
-                await SetEventListenerModified("OnDidChangeConfiguration");
-            if (OnDidChangeCursorPositionModified.HasDelegate)
-                await SetEventListenerModified("OnDidChangeCursorPosition");
-            if (OnDidChangeCursorSelectionModified.HasDelegate)
-                await SetEventListenerModified("OnDidChangeCursorSelection");
-            if (OnDidContentSizeChangeModified.HasDelegate)
-                await SetEventListenerModified("OnDidContentSizeChange");
-            if (OnDidFocusEditorTextModified.HasDelegate)
-                await SetEventListenerModified("OnDidFocusEditorText");
-            if (OnDidFocusEditorWidgetModified.HasDelegate)
-                await SetEventListenerModified("OnDidFocusEditorWidget");
-            if (OnDidLayoutChangeModified.HasDelegate)
-                await SetEventListenerModified("OnDidLayoutChange");
-            if (OnDidPasteModified.HasDelegate)
-                await SetEventListenerModified("OnDidPaste");
-            if (OnDidScrollChangeModified.HasDelegate)
-                await SetEventListenerModified("OnDidScrollChange");
-            if (OnKeyDownModified.HasDelegate)
-                await SetEventListenerModified("OnKeyDown");
-            if (OnKeyUpModified.HasDelegate)
-                await SetEventListenerModified("OnKeyUp");
-            if (OnMouseDownModified.HasDelegate)
-                await SetEventListenerModified("OnMouseDown");
-            if (OnMouseLeaveModified.HasDelegate)
-                await SetEventListenerModified("OnMouseLeave");
-            if (OnMouseMoveModified.HasDelegate)
-                await SetEventListenerModified("OnMouseMove");
-            if (OnMouseUpModified.HasDelegate)
-                await SetEventListenerModified("OnMouseUp");
+            ModifiedEditor = MonacoEditor.CreateVirtualEditor(Id + "_modified");
+            ModifiedEditor.OnDidCompositionEnd = OnDidCompositionEndModified;
+            ModifiedEditor.OnDidCompositionStart = OnDidCompositionStartModified;
+            ModifiedEditor.OnContextMenu = OnContextMenuModified;
+            ModifiedEditor.OnDidBlurEditorText = OnDidBlurEditorTextModified;
+            ModifiedEditor.OnDidBlurEditorWidget = OnDidBlurEditorWidgetModified;
+            ModifiedEditor.OnDidChangeConfiguration = OnDidChangeConfigurationModified;
+            ModifiedEditor.OnDidChangeCursorPosition = OnDidChangeCursorPositionModified;
+            ModifiedEditor.OnDidChangeCursorSelection = OnDidChangeCursorSelectionModified;
+            ModifiedEditor.OnDidContentSizeChange = OnDidContentSizeChangeModified;
+            ModifiedEditor.OnDidDispose = OnDidDisposeModified;
+            ModifiedEditor.OnDidFocusEditorText = OnDidFocusEditorTextModified;
+            ModifiedEditor.OnDidFocusEditorWidget = OnDidFocusEditorWidgetModified;
+            ModifiedEditor.OnDidInit = OnDidInitModified;
+            ModifiedEditor.OnDidLayoutChange = OnDidLayoutChangeModified;
+            ModifiedEditor.OnDidPaste = OnDidPasteModified;
+            ModifiedEditor.OnDidScrollChange = OnDidScrollChangeModified;
+            ModifiedEditor.OnKeyDown = OnKeyDownModified;
+            ModifiedEditor.OnKeyUp = OnKeyUpModified;
+            ModifiedEditor.OnMouseDown = OnMouseDownModified;
+            ModifiedEditor.OnMouseLeave = OnMouseLeaveModified;
+            ModifiedEditor.OnMouseMove = OnMouseMoveModified;
+            ModifiedEditor.OnMouseUp = OnMouseUpModified;
+            await ModifiedEditor.SetEventListeners();
+            await ModifiedEditor.OnDidInit.InvokeAsync(ModifiedEditor);
+#pragma warning restore BL0005
         }
         await base.OnAfterRenderAsync(firstRender);
     }
 
+    internal override async Task SetEventListeners()
+    {
+        if (OnDidUpdateDiff.HasDelegate)
+            await SetEventListener("OnDidUpdateDiff");
+        await base.SetEventListeners();
+    }
+
     [JSInvokable]
-    public override async Task EventCallback(string eventName, string eventJson, DiffEditorType type)
+    public override async Task EventCallback(string eventName, string eventJson)
     {
         var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
-        switch (type)
+        switch (eventName)
         {
-            case DiffEditorType.Undefined: //on the diffeditor
-                switch (eventName)
-                {
-                    case "OnDidUpdateDiff": await OnDidUpdateDiff.InvokeAsync(this); break;
-                }
-                await base.EventCallback(eventName, eventJson, type);
-                break;
-            case DiffEditorType.Original: //on the original editor (left)
-                switch (eventName)
-                {
-                    case "OnDidCompositionEnd": await OnDidCompositionEndOriginal.InvokeAsync(this); break;
-                    case "OnDidCompositionStart": await OnDidCompositionStartOriginal.InvokeAsync(this); break;
-                    case "OnContextMenu": if (eventJson != null) await OnContextMenuOriginal.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
-                    case "OnDidBlurEditorText": await OnDidBlurEditorTextOriginal.InvokeAsync(this); break;
-                    case "OnDidBlurEditorWidget": await OnDidBlurEditorWidgetOriginal.InvokeAsync(this); break;
-                    case "OnDidChangeConfiguration": await OnDidChangeConfigurationOriginal.InvokeAsync(this); break;
-                    case "OnDidChangeCursorPosition": await OnDidChangeCursorPositionOriginal.InvokeAsync(JsonSerializer.Deserialize<CursorPositionChangedEvent>(eventJson, jsonOptions)); break;
-                    case "OnDidChangeCursorSelection": await OnDidChangeCursorSelectionOriginal.InvokeAsync(JsonSerializer.Deserialize<CursorSelectionChangedEvent>(eventJson, jsonOptions)); break;
-                    case "OnDidContentSizeChange": await OnDidContentSizeChangeOriginal.InvokeAsync(JsonSerializer.Deserialize<ContentSizeChangedEvent>(eventJson, jsonOptions)); break;
-                    case "OnDidFocusEditorText": await OnDidFocusEditorTextOriginal.InvokeAsync(this); break;
-                    case "OnDidFocusEditorWidget": await OnDidFocusEditorWidgetOriginal.InvokeAsync(this); break;
-                    case "OnDidLayoutChange": if (eventJson != null) await OnDidLayoutChangeOriginal.InvokeAsync(JsonSerializer.Deserialize<EditorLayoutInfo>(eventJson, jsonOptions)); break;
-                    case "OnDidPaste": if (eventJson != null) await OnDidPasteOriginal.InvokeAsync(JsonSerializer.Deserialize<PasteEvent>(eventJson, jsonOptions)); break;
-                    case "OnDidScrollChange": if (eventJson != null) await OnDidScrollChangeOriginal.InvokeAsync(JsonSerializer.Deserialize<ScrollEvent>(eventJson, jsonOptions)); break;
-                    case "OnKeyDown": if (eventJson != null) await OnKeyDownOriginal.InvokeAsync(JsonSerializer.Deserialize<KeyboardEvent>(eventJson, jsonOptions)); break;
-                    case "OnKeyUp": if (eventJson != null) await OnKeyUpOriginal.InvokeAsync(JsonSerializer.Deserialize<KeyboardEvent>(eventJson, jsonOptions)); break;
-                    case "OnMouseDown": if (eventJson != null) await OnMouseDownOriginal.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
-                    case "OnMouseLeave": if (eventJson != null) await OnMouseLeaveOriginal.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
-                    case "OnMouseMove": if (eventJson != null) await OnMouseMoveOriginal.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
-                    case "OnMouseUp": if (eventJson != null) await OnMouseUpOriginal.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
-                }
-                break;
-            case DiffEditorType.Modified: //on the modified editor (right)
-                switch (eventName)
-                {
-                    case "OnDidCompositionEnd": await OnDidCompositionEndModified.InvokeAsync(this); break;
-                    case "OnDidCompositionStart": await OnDidCompositionStartModified.InvokeAsync(this); break;
-                    case "OnContextMenu": if (eventJson != null) await OnContextMenuModified.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
-                    case "OnDidBlurEditorText": await OnDidBlurEditorTextModified.InvokeAsync(this); break;
-                    case "OnDidBlurEditorWidget": await OnDidBlurEditorWidgetModified.InvokeAsync(this); break;
-                    case "OnDidChangeConfiguration": await OnDidChangeConfigurationModified.InvokeAsync(this); break;
-                    case "OnDidChangeCursorPosition": await OnDidChangeCursorPositionModified.InvokeAsync(JsonSerializer.Deserialize<CursorPositionChangedEvent>(eventJson, jsonOptions)); break;
-                    case "OnDidChangeCursorSelection": await OnDidChangeCursorSelectionModified.InvokeAsync(JsonSerializer.Deserialize<CursorSelectionChangedEvent>(eventJson, jsonOptions)); break;
-                    case "OnDidContentSizeChange": await OnDidContentSizeChangeModified.InvokeAsync(JsonSerializer.Deserialize<ContentSizeChangedEvent>(eventJson, jsonOptions)); break;
-                    case "OnDidFocusEditorText": await OnDidFocusEditorTextModified.InvokeAsync(this); break;
-                    case "OnDidFocusEditorWidget": await OnDidFocusEditorWidgetModified.InvokeAsync(this); break;
-                    case "OnDidLayoutChange": if (eventJson != null) await OnDidLayoutChangeModified.InvokeAsync(JsonSerializer.Deserialize<EditorLayoutInfo>(eventJson, jsonOptions)); break;
-                    case "OnDidPaste": if (eventJson != null) await OnDidPasteModified.InvokeAsync(JsonSerializer.Deserialize<PasteEvent>(eventJson, jsonOptions)); break;
-                    case "OnDidScrollChange": if (eventJson != null) await OnDidScrollChangeModified.InvokeAsync(JsonSerializer.Deserialize<ScrollEvent>(eventJson, jsonOptions)); break;
-                    case "OnKeyDown": if (eventJson != null) await OnKeyDownModified.InvokeAsync(JsonSerializer.Deserialize<KeyboardEvent>(eventJson, jsonOptions)); break;
-                    case "OnKeyUp": if (eventJson != null) await OnKeyUpModified.InvokeAsync(JsonSerializer.Deserialize<KeyboardEvent>(eventJson, jsonOptions)); break;
-                    case "OnMouseDown": if (eventJson != null) await OnMouseDownModified.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
-                    case "OnMouseLeave": if (eventJson != null) await OnMouseLeaveModified.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
-                    case "OnMouseMove": if (eventJson != null) await OnMouseMoveModified.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
-                    case "OnMouseUp": if (eventJson != null) await OnMouseUpModified.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
-                }
-                break;
+            case "OnDidUpdateDiff": await OnDidUpdateDiff.InvokeAsync(this); break;
         }
+        await base.EventCallback(eventName, eventJson);
     }
 
     #region Instance Methods
 
-    // addAction : base
-
-    // addCommand : base
-
-    // createContextKey : base
-
-    // dispose : base
-
-    // focus : base
-
     // getDiffLineInformationForModified
 
     // getDiffLineInformationForOriginal
-
-    // getDomNode : base
-
-    // getEditorType : base
-
-    // getId : base
 
     // getLineChanges
 
@@ -265,61 +184,7 @@
         return await jsRuntime.InvokeAsync<DiffEditorModel>("blazorMonaco.editor.getInstanceDiffModel", Id);
     }
 
-    public async Task<string> GetModifiedEditor()
-    {
-        if (jsRuntime == null)
-            return default;
-        return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getModifiedEditor", Id);
-    }
-
-    public async Task<string> GetOriginalEditor()
-    {
-        if (jsRuntime == null)
-            return default;
-        return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getOriginalEditor", Id);
-    }
-
-    // getPosition : base
-
-    // getSelection : base
-
-    // getSelections : base
-
-    // getSupportedActions : base
-
-    // getVisibleColumnFromPosition : base
-
-    // hasTextFocus : base
-
-    // layout : base
-
     // restoreViewState
-
-    // revealLine : base
-
-    // revealLineInCenter : base
-
-    // revealLineInCenterIfOutsideViewport : base
-
-    // revealLines : base
-
-    // revealLinesInCenter : base
-
-    // revealLinesInCenterIfOutsideViewport : base
-
-    // revealPosition : base
-
-    // revealPositionInCenter : base
-
-    // revealPositionInCenterIfOutsideViewport : base
-
-    // revealRange : base
-
-    // revealRangeAtTop : base
-
-    // revealRangeInCenter : base
-
-    // revealRangeInCenterIfOutsideViewport : base
 
     // saveViewState
 
@@ -329,24 +194,6 @@
             return;
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setInstanceDiffModel", Id, model);
     }
-
-    // setPosition : base
-
-    protected async Task SetEventListenerOriginal(string eventName)
-    {
-        await base.SetEventListener(await GetOriginalEditor(), eventName, DiffEditorType.Original);
-    }
-
-    protected async Task SetEventListenerModified(string eventName)
-    {
-        await base.SetEventListener(await GetModifiedEditor(), eventName, DiffEditorType.Modified);
-    }
-
-    // setSelection : base
-
-    // setSelections : base
-
-    // trigger : base
 
     // updateOptions
 

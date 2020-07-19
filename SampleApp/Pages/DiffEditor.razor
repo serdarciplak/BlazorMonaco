@@ -2,11 +2,36 @@
 
 <h3>Diff Editor</h3>
 
-<MonacoDiffEditor @ref="_diffEditor" Id="sample-diff-editor-123" ConstructionOptions="DiffEditorConstructionOptions" OnDidInit="EditorOnDidInit" />
+<div>
+    <div style="margin:10px 0;">
+        New Value: <input type="text" @bind="ValueToSetOriginal" style="width: 400px;" /> <button @onclick="SetValueOriginal">Set Value Original</button>
+    </div>
+    <div style="margin:10px 0;">
+        New Value: <input type="text" @bind="ValueToSetModified" style="width: 400px;" /> <button @onclick="SetValueModified">Set Value Modified</button>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="GetValueOriginal">Get Value Original</button>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="GetValueModified">Get Value Modified</button>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="AddCommand">Add Command Original (Ctrl+Enter)</button>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="AddAction">Add Action Modified (Ctrl+D)</button>
+    </div>
+    <div style="margin:10px 0;">
+        See the console for results.
+    </div>
+</div>
+
+<MonacoDiffEditor @ref="_diffEditor" Id="sample-diff-editor-123" ConstructionOptions="DiffEditorConstructionOptions" OnDidInit="EditorOnDidInit" OnKeyUpOriginal="EditorOnKeyUpOriginal" OnKeyUpModified="EditorOnKeyUpModified" />
 
 @code {
     private MonacoDiffEditor _diffEditor { get; set; }
-    private string ValueToSet { get; set; }
+    private string ValueToSetOriginal { get; set; }
+    private string ValueToSetModified { get; set; }
 
     private DiffEditorConstructionOptions DiffEditorConstructionOptions(MonacoDiffEditor editor)
     {
@@ -56,6 +81,56 @@
         {
             Original = original_model,
             Modified = modified_model
+        });
+    }
+
+    private void EditorOnKeyUpOriginal(KeyboardEvent keyboardEvent)
+    {
+        Console.WriteLine("OnKeyUpOriginal : " + keyboardEvent.Code);
+    }
+
+    private void EditorOnKeyUpModified(KeyboardEvent keyboardEvent)
+    {
+        Console.WriteLine("OnKeyUpModified : " + keyboardEvent.Code);
+    }
+
+    private async Task SetValueOriginal()
+    {
+        Console.WriteLine($"setting original value to: {ValueToSetOriginal}");
+        await _diffEditor.OriginalEditor.SetValue(ValueToSetOriginal);
+    }
+
+    private async Task SetValueModified()
+    {
+        Console.WriteLine($"setting modified value to: {ValueToSetModified}");
+        await _diffEditor.ModifiedEditor.SetValue(ValueToSetModified);
+    }
+
+    private async Task GetValueOriginal()
+    {
+        var val = await _diffEditor.OriginalEditor.GetValue();
+        Console.WriteLine($"original value is: {val}");
+    }
+
+    private async Task GetValueModified()
+    {
+        var val = await _diffEditor.ModifiedEditor.GetValue();
+        Console.WriteLine($"modified value is: {val}");
+    }
+
+    private async Task AddCommand()
+    {
+        await _diffEditor.ModifiedEditor.AddCommand((int)KeyMode.CtrlCmd | (int)KeyCode.Enter, (editor, keyCode) =>
+        {
+            Console.WriteLine($"Ctrl+Enter : Original Editor command is triggered. ({editor.Id})");
+        });
+    }
+
+    private async Task AddAction()
+    {
+        await _diffEditor.ModifiedEditor.AddAction("testAction", "Test Action", new int[] { (int)KeyMode.CtrlCmd | (int)KeyCode.KEY_D, (int)KeyMode.CtrlCmd | (int)KeyCode.KEY_B }, null, null, "navigation", 1.5, (editor, keyCodes) =>
+        {
+            Console.WriteLine($"Ctrl+D : Modified Editor action is triggered. ({editor.Id})");
         });
     }
 }

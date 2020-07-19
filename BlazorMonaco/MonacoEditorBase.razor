@@ -26,7 +26,7 @@
         jsObjectRef = DotNetObjectReference.Create(this);
     }
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         jsObjectRef?.Dispose();
     }
@@ -35,15 +35,19 @@
     {
         if (firstRender)
         {
-            if (OnDidDispose.HasDelegate)
-                await SetEventListener("OnDidDispose");
-
+            await SetEventListeners();
             await OnDidInit.InvokeAsync(this);
         }
         await base.OnAfterRenderAsync(firstRender);
     }
 
-    public virtual async Task EventCallback(string eventName, string eventJson, DiffEditorType type)
+    internal virtual async Task SetEventListeners()
+    {
+        if (OnDidDispose.HasDelegate)
+            await SetEventListener("OnDidDispose");
+    }
+
+    public virtual async Task EventCallback(string eventName, string eventJson)
     {
         switch (eventName)
         {
@@ -198,7 +202,6 @@
     // tokenize
 
     #endregion
-
 
     #region Instance Methods
 
@@ -389,16 +392,11 @@
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setPosition", Id, position);
     }
 
-    protected async Task SetEventListener(string eventName)
-    {
-        await SetEventListener(Id, eventName);
-    }
-
-    protected async Task SetEventListener(string id, string eventName, DiffEditorType type = DiffEditorType.Undefined)
+    internal async Task SetEventListener(string eventName)
     {
         if (jsRuntime == null)
             return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setEventListener", id, eventName, jsObjectRef, type);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setEventListener", Id, eventName, jsObjectRef);
     }
 
     public async Task SetSelection(Range selection)
@@ -420,13 +418,6 @@
         if (jsRuntime == null)
             return;
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setSelections", Id, selections);
-    }
-
-    public async Task SetValue(string id, string newValue)
-    {
-        if (jsRuntime == null)
-            return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setValue", id, newValue);
     }
 
     public async Task Trigger(string source, string handlerId, JsonElement payload)

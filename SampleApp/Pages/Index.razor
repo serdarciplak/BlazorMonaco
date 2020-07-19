@@ -102,19 +102,19 @@
         Console.WriteLine($"value is: {val}");
     }
 
-    private async Task AddAction()
-    {
-        await _editor.AddAction("testAction", "Test Action", new int[] { (int)KeyMode.CtrlCmd | (int)KeyCode.KEY_D, (int)KeyMode.CtrlCmd | (int)KeyCode.KEY_B }, null, null, "navigation", 1.5, (editor, keyCodes) =>
-        {
-            Console.WriteLine("Ctrl+D : Editor action is triggered.");
-        });
-    }
-
     private async Task AddCommand()
     {
         await _editor.AddCommand((int)KeyMode.CtrlCmd | (int)KeyCode.Enter, (editor, keyCode) =>
         {
             Console.WriteLine("Ctrl+Enter : Editor command is triggered.");
+        });
+    }
+
+    private async Task AddAction()
+    {
+        await _editor.AddAction("testAction", "Test Action", new int[] { (int)KeyMode.CtrlCmd | (int)KeyCode.KEY_D, (int)KeyMode.CtrlCmd | (int)KeyCode.KEY_B }, null, null, "navigation", 1.5, (editor, keyCodes) =>
+        {
+            Console.WriteLine("Ctrl+D : Editor action is triggered.");
         });
     }
 }

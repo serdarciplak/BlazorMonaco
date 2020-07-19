@@ -48,6 +48,9 @@ window.blazorMonaco.editor = {
         var oldModel = null;
         if (oldEditor !== null) {
             oldModel = oldEditor.getModel();
+
+            window.blazorMonaco.editors.splice(window.blazorMonaco.editors.findIndex(item => item.id === id + "_original"), 1);
+            window.blazorMonaco.editors.splice(window.blazorMonaco.editors.findIndex(item => item.id === id + "_modified"), 1);
             window.blazorMonaco.editors.splice(window.blazorMonaco.editors.findIndex(item => item.id === id), 1);
             oldEditor.dispose();
         }
@@ -57,6 +60,8 @@ window.blazorMonaco.editor = {
 
         var editor = monaco.editor.createDiffEditor(document.getElementById(id), options);
         window.blazorMonaco.editors.push({ id: id, editor: editor });
+        window.blazorMonaco.editors.push({ id: id + "_original", editor: editor.getOriginalEditor() });
+        window.blazorMonaco.editors.push({ id: id + "_modified", editor: editor.getModifiedEditor() });
 
         if (oldModel !== null)
             editor.setModel(oldModel);
@@ -109,14 +114,6 @@ window.blazorMonaco.editor = {
                 uri: value.uri.toString()
             };
         });
-    },
-
-    getModifiedEditor: function (id) {
-        return id + "_Modified";
-    },
-
-    getOriginalEditor: function (id) {
-        return id + "_Original";
     },
 
     remeasureFonts: function () {
@@ -430,11 +427,11 @@ window.blazorMonaco.editor = {
         editor.revealRangeInCenterIfOutsideViewport(range, scrollType);
     },
 
-    setEventListener: function (id, eventName, handler, type) {
+    setEventListener: function (id, eventName, handler) {
         let editor = this.getEditorById(id);
 
         let listener = function (e) {
-            handler.invokeMethodAsync("EventCallback", eventName, JSON.stringify(e), type);
+            handler.invokeMethodAsync("EventCallback", eventName, JSON.stringify(e));
         };
 
         switch (eventName) {
