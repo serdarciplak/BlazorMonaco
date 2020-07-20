@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.4.0
+* Diff Editor support is finally here. This was possibly the biggest feature missing in BlazorMonaco.
+* Added DefineTheme method
+* Fixed some minor bugs
+
 ## 1.3.1
 * Fixed a bug where recreating the editor instance fails.
 

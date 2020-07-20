@@ -48,12 +48,12 @@ Install-Package BlazorMonaco
 </body>
 ```
 
+## Code Editor
+
 * Add a `MonacoEditor` component in your .razor file and configure it as you need.
 ```html
 <MonacoEditor Id="any-id-string" />
 ```
-
-## Customization
 
 ### Providing custom options
 
@@ -78,6 +78,7 @@ private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEdit
 ```
 
 ### Editor events
+
 * You can add listeners to editor events like OnDidKeyUp or OnDidPaste for any custom job to be done when that event occurs.
 ```html
 <MonacoEditor Id="any-id-string" OnDidChangeCursorPosition="EditorDidChangeCursorPosition" />
@@ -91,10 +92,43 @@ private void EditorDidChangeCursorPosition(CursorPositionChangedEvent eventArgs)
 }
 ```
 
+## Diff Editor
+
+* Add a `MonacoDiffEditor` component in your .razor file and configure it as you need.
+```html
+<MonacoDiffEditor Id="any-id-string" />
+```
+
+### Access to inner editor instances
+
+* `MonacoDiffEditor` class has two properties named `OriginalEditor` and `ModifiedEditor` to access the inner editors. They're regular code editors. So, you can use them like any other `MonacoEditor` instance.
+
+### Access to inner editor events
+
+* You can register to inner editor events via the helper EventCallback parameters of the MonacoDiffEditor.
+```html
+<MonacoDiffEditor Id="any-id-string" OnKeyUpOriginal="OnKeyUpOriginal" OnKeyUpModified="OnKeyUpModified" />
+```
+
+* And add the callback methods to your razor file's `@code` block.
+```csharp
+private void OnKeyUpOriginal(KeyboardEvent keyboardEvent)
+{
+	Console.WriteLine("OnKeyUpOriginal : " + keyboardEvent.Code);
+}
+private void OnKeyUpModified(KeyboardEvent keyboardEvent)
+{
+	Console.WriteLine("OnKeyUpModified : " + keyboardEvent.Code);
+}
+```
+
+## Customization
+
 ### DeltaDecorations
+
 * You can add, edit and remove decorations to the editor via DeltaDecorations and ResetDeltaDecorations method.
 ```csharp
-private async Task EditorOnDidInit(MonacoEditor editor)
+private async Task EditorOnDidInit(MonacoEditorBase editor)
 {
 	var newDecorations = new ModelDeltaDecoration[]
 	{
@@ -116,12 +150,47 @@ private async Task EditorOnDidInit(MonacoEditor editor)
 ```
 
 ### Css styling
+
 * When you provide a css class name in the `CssClass` property of the Monaco Editor instance, it will be added to the corresponding html div tag. So you can customize how anything looks in your css files.
 ```html
 <MonacoEditor Id="any-id-string" CssClass="my-editor-class" />
 ```
 
+### Custom themes
+
+* You can define custom themes using the `DefineTheme` static method. Just make sure that you don't call `DefineTheme` before any editor instance is initialized. BlazorMonaco needs an `IJSRuntime` instance to call JavaScript methods and it gets one when the first instance is initialized.
+
+```csharp
+await MonacoEditorBase.DefineTheme("my-custom-theme", new StandaloneThemeData
+{
+	Base = "vs-dark",
+	Inherit = true,
+	Rules = new List<TokenThemeRule>
+	{
+		new TokenThemeRule { Background = "363636", Foreground = "E0E0E0" },
+		new TokenThemeRule { Token = "keyword", Foreground = "59ADFF" },
+		new TokenThemeRule { Token = "operator.sql", Foreground = "59ADFF" },
+		new TokenThemeRule { Token = "number", Foreground = "66CC66" },
+		new TokenThemeRule { Token = "string.sql", Foreground = "E65C5C" },
+		new TokenThemeRule { Token = "comment", Foreground = "7A7A7A" }
+	},
+	Colors = new Dictionary<string, string>
+	{
+		["editor.background"] = "#363636",
+		["editorCursor.foreground"] = "#E0E0E0",
+		["editorLineNumber.foreground"] = "#7A7A7A"
+	}
+});
+```
+
+* After defining your custom theme, you can call `SetTheme` at any time with your custom theme name to set it active.
+
+```csharp
+await MonacoEditorBase.SetTheme("my-custom-theme");
+```
+
 ### Using custom Monaco Editor setup
+
 * If you've made changes to Monaco Editor, like adding a custom language, and need to use this edited version instead of the unmodified version packed with BlazorMonaco, just change the paths to monaco editor resources in your `index.html` file.
 ```html
 <head>
@@ -136,12 +205,14 @@ private async Task EditorOnDidInit(MonacoEditor editor)
 </body>
 ```
 
-
 ## Documentation
+
 As BlazorMonaco is just a bridge between Javascript and Blazor, you can use Monaco Editor's [documentation](https://microsoft.github.io/monaco-editor/api/index.html).
 
 ## Change log
+
 History and changes can be located in the [CHANGELOG.md](https://github.com/serdarciplak/BlazorMonaco/blob/master/CHANGELOG.md)
 
 ## License
+
 MIT, see the [LICENSE](https://github.com/serdarciplak/BlazorMonaco/blob/master/LICENSE) file for detail.

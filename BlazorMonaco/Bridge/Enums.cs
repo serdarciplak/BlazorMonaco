@@ -413,11 +413,4 @@ namespace BlazorMonaco.Bridge
         GrowsOnlyWhenTypingBefore = 2,
         GrowsOnlyWhenTypingAfter = 3
     }
-
-    public enum DiffEditorType
-    {
-        Undefined = 0,
-        Original = 1,
-        Modified = 2
-    }
 }
