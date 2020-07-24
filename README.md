@@ -50,7 +50,7 @@ Install-Package BlazorMonaco
 
 ## Code Editor
 
-* Add a `MonacoEditor` component in your .razor file and configure it as you need.
+* Add a `MonacoEditor` component in your .razor file and configure it as you need. **Note:** the `Id` parameter is required.
 ```html
 <MonacoEditor Id="any-id-string" />
 ```
