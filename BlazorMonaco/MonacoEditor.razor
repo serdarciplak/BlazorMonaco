@@ -40,9 +40,6 @@
     {
         if (firstRender)
         {
-            if (string.IsNullOrWhiteSpace(Id))
-                Id = "blazor-monaco-" + Guid.NewGuid().ToString();
-
             // Create the editor
             var options = ConstructionOptions?.Invoke(this);
             await MonacoEditorBase.Create(Id, options);
