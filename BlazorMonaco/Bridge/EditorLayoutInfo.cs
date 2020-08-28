@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace BlazorMonaco.Bridge
+﻿namespace BlazorMonaco
 {
     public class EditorLayoutInfo
     {

@@ -30,6 +30,10 @@ Install-Package BlazorMonaco
 * Add the following using directives to your root `_Imports.razor` file, or any other .razor file where you want to add a Monaco Editor.
 ```csharp
 @using BlazorMonaco
+```
+
+Breaking change: Bridge namespace has been removed; the line below should be removed from your project.
+```csharp
 @using BlazorMonaco.Bridge
 ```
 

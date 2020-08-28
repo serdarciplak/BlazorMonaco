@@ -1,4 +1,4 @@
-﻿namespace BlazorMonaco.Bridge
+﻿namespace BlazorMonaco
 {
     // Options Containers
 

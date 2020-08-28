@@ -1,5 +1,9 @@
 # Change Log
 
+## 2.0.0
+* Removed the BlazorMonaco.Bridge namespace, this is now included in BlazorMonaco. Where it is included in your project it should be removed
+* Added deltadecorations for the minimap
+
 ## 1.4.0
 * Diff Editor support is finally here. This was possibly the biggest feature missing in BlazorMonaco.
 * Added DefineTheme method
