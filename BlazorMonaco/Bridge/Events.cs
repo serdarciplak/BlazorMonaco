@@ -45,6 +45,54 @@ namespace BlazorMonaco.Bridge
         public string Code { get; set; }
     }
 
+    public class ModelContentChange
+    {
+        public Range Range { get; set; }
+        public int RangeOffset { get; set; }
+        public int RangeLength { get; set; }
+        public string Text { get; set; }
+    }
+
+    public class ModelChangedEvent
+    {
+        public string OldModelUri { get; set; }
+        public string NewModelUri { get; set; }
+    }
+
+    public class ModelContentChangedEvent
+    {
+        public List<ModelContentChange> Changes { get; set; }
+        public string Eol { get; set; }
+        public int VersionId { get; set; }
+        public bool IsUndoing { get; set; }
+        public bool IsRedoing { get; set; }
+        public bool IsFlush { get; set; }
+    }
+
+    public class ModelDecorationsChangedEvent
+    {
+        public bool AffectsMinimap { get; set; }
+        public bool AffectsOverviewRuler { get; set; }
+    }
+
+    public class ModelLanguageChangedEvent
+    {
+        public string OldLanguage { get; set; }
+        public string NewLanguage { get; set; }
+    }
+
+    public class ModelLanguageConfigurationChangedEvent
+    {
+    }
+
+    public class ModelOptionsChangedEvent
+    {
+        public bool TabSize { get; set; }
+        public bool IndentSize { get; set; }
+        public bool InsertSpaces { get; set; }
+        public bool TrimAutoWhitespace { get; set; }
+    }
+
     public class EditorMouseEvent
     {
         public MouseEvent Event { get; set; }

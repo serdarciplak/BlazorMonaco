@@ -15,12 +15,12 @@
     [Parameter] public EventCallback<MonacoEditor> OnDidChangeConfiguration { get; set; }
     [Parameter] public EventCallback<CursorPositionChangedEvent> OnDidChangeCursorPosition { get; set; }
     [Parameter] public EventCallback<CursorSelectionChangedEvent> OnDidChangeCursorSelection { get; set; }
-    //OnDidChangeModel
-    //OnDidChangeModelContent
-    //OnDidChangeModelDecorations
-    //OnDidChangeModelLanguage
-    //OnDidChangeModelLanguageConfiguration
-    //OnDidChangeModelOptions
+    [Parameter] public EventCallback<ModelChangedEvent> OnDidChangeModel { get; set; }
+    [Parameter] public EventCallback<ModelContentChangedEvent> OnDidChangeModelContent { get; set; }
+    [Parameter] public EventCallback<ModelDecorationsChangedEvent> OnDidChangeModelDecorations { get; set; }
+    [Parameter] public EventCallback<ModelLanguageChangedEvent> OnDidChangeModelLanguage { get; set; }
+    [Parameter] public EventCallback<ModelLanguageConfigurationChangedEvent> OnDidChangeModelLanguageConfiguration { get; set; }
+    [Parameter] public EventCallback<ModelOptionsChangedEvent> OnDidChangeModelOptions { get; set; }
     [Parameter] public EventCallback<ContentSizeChangedEvent> OnDidContentSizeChange { get; set; }
     [Parameter] public EventCallback<MonacoEditor> OnDidFocusEditorText { get; set; }
     [Parameter] public EventCallback<MonacoEditor> OnDidFocusEditorWidget { get; set; }
@@ -67,6 +67,18 @@
             await SetEventListener("OnDidChangeCursorPosition");
         if (OnDidChangeCursorSelection.HasDelegate)
             await SetEventListener("OnDidChangeCursorSelection");
+        if (OnDidChangeModel.HasDelegate)
+            await SetEventListener("OnDidChangeModel");
+        if (OnDidChangeModelContent.HasDelegate)
+            await SetEventListener("OnDidChangeModelContent");
+        if (OnDidChangeModelDecorations.HasDelegate)
+            await SetEventListener("OnDidChangeModelDecorations");
+        if (OnDidChangeModelLanguage.HasDelegate)
+            await SetEventListener("OnDidChangeModelLanguage");
+        if (OnDidChangeModelLanguageConfiguration.HasDelegate)
+            await SetEventListener("OnDidChangeModelLanguageConfiguration");
+        if (OnDidChangeModelOptions.HasDelegate)
+            await SetEventListener("OnDidChangeModelOptions");
         if (OnDidContentSizeChange.HasDelegate)
             await SetEventListener("OnDidContentSizeChange");
         if (OnDidFocusEditorText.HasDelegate)
@@ -109,6 +121,12 @@
             case "OnDidChangeConfiguration": await OnDidChangeConfiguration.InvokeAsync(this); break;
             case "OnDidChangeCursorPosition": await OnDidChangeCursorPosition.InvokeAsync(JsonSerializer.Deserialize<CursorPositionChangedEvent>(eventJson, jsonOptions)); break;
             case "OnDidChangeCursorSelection": await OnDidChangeCursorSelection.InvokeAsync(JsonSerializer.Deserialize<CursorSelectionChangedEvent>(eventJson, jsonOptions)); break;
+            case "OnDidChangeModel": await OnDidChangeModel.InvokeAsync(JsonSerializer.Deserialize<ModelChangedEvent>(eventJson, jsonOptions)); break;
+            case "OnDidChangeModelContent": await OnDidChangeModelContent.InvokeAsync(JsonSerializer.Deserialize<ModelContentChangedEvent>(eventJson, jsonOptions)); break;
+            case "OnDidChangeModelDecorations": await OnDidChangeModelDecorations.InvokeAsync(JsonSerializer.Deserialize<ModelDecorationsChangedEvent>(eventJson, jsonOptions)); break;
+            case "OnDidChangeModelLanguage": await OnDidChangeModelLanguage.InvokeAsync(JsonSerializer.Deserialize<ModelLanguageChangedEvent>(eventJson, jsonOptions)); break;
+            case "OnDidChangeModelLanguageConfiguration": await OnDidChangeModelLanguageConfiguration.InvokeAsync(JsonSerializer.Deserialize<ModelLanguageConfigurationChangedEvent>(eventJson, jsonOptions)); break;
+            case "OnDidChangeModelOptions": await OnDidChangeModelOptions.InvokeAsync(JsonSerializer.Deserialize<ModelOptionsChangedEvent>(eventJson, jsonOptions)); break;
             case "OnDidContentSizeChange": await OnDidContentSizeChange.InvokeAsync(JsonSerializer.Deserialize<ContentSizeChangedEvent>(eventJson, jsonOptions)); break;
             case "OnDidFocusEditorText": await OnDidFocusEditorText.InvokeAsync(this); break;
             case "OnDidFocusEditorWidget": await OnDidFocusEditorWidget.InvokeAsync(this); break;

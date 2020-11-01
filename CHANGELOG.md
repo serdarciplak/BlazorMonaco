@@ -1,5 +1,15 @@
 # Change Log
 
+## 1.5.0
+* Added support for editor model events.
+  * OnDidChangeModel
+  * OnDidChangeModelContent
+  * OnDidChangeModelDecorations
+  * OnDidChangeModelLanguage
+  * OnDidChangeModelLanguageConfiguration
+  * OnDidChangeModelOptions
+* Editor Id is auto-generated if it's not provided.
+  
 ## 1.4.0
 * Diff Editor support is finally here. This was possibly the biggest feature missing in BlazorMonaco.
 * Added DefineTheme method
