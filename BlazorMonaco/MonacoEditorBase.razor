@@ -364,28 +364,28 @@
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealPositionInCenterIfOutsideViewport", Id, position, scrollType);
     }
 
-    public async Task RevealRange(Range range, ScrollType? scrollType = null)
+    public async Task RevealRange(BlazorMonaco.Bridge.Range range, ScrollType? scrollType = null)
     {
         if (jsRuntime == null)
             return;
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealRange", Id, range, scrollType);
     }
 
-    public async Task RevealRangeAtTop(Range range, ScrollType? scrollType = null)
+    public async Task RevealRangeAtTop(BlazorMonaco.Bridge.Range range, ScrollType? scrollType = null)
     {
         if (jsRuntime == null)
             return;
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealRangeAtTop", Id, range, scrollType);
     }
 
-    public async Task RevealRangeInCenter(Range range, ScrollType? scrollType = null)
+    public async Task RevealRangeInCenter(BlazorMonaco.Bridge.Range range, ScrollType? scrollType = null)
     {
         if (jsRuntime == null)
             return;
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealRangeInCenter", Id, range, scrollType);
     }
 
-    public async Task RevealRangeInCenterIfOutsideViewport(Range range, ScrollType? scrollType = null)
+    public async Task RevealRangeInCenterIfOutsideViewport(BlazorMonaco.Bridge.Range range, ScrollType? scrollType = null)
     {
         if (jsRuntime == null)
             return;
@@ -406,7 +406,7 @@
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setEventListener", Id, eventName, jsObjectRef);
     }
 
-    public async Task SetSelection(Range selection)
+    public async Task SetSelection(BlazorMonaco.Bridge.Range selection)
     {
         if (jsRuntime == null)
             return;

@@ -12,7 +12,7 @@ Not the complete set but most of the Monaco Editor functionality is currently su
 
 Current version of BlazorMonaco :
 * Works with Monaco Editor v0.20.0
-* Built and tested for Blazor v3.2.1
+* Built and tested for netstandard2.0 and net5.0
 
 ## Demo
 
@@ -33,7 +33,7 @@ Install-Package BlazorMonaco
 @using BlazorMonaco.Bridge
 ```
 
-* Add the below Javascript and CSS links to your `index.html` file.
+* Add the below Javascript and CSS links to your `index.html` file. Note: These script tags should come before the script tag for the `blazor.webassembly.js` file.
 ```html
 <head>
     <link href="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.css" rel="stylesheet" />

@@ -431,7 +431,14 @@ window.blazorMonaco.editor = {
         let editor = this.getEditorById(id);
 
         let listener = function (e) {
-            handler.invokeMethodAsync("EventCallback", eventName, JSON.stringify(e));
+            var params = JSON.stringify(e);
+            if (eventName == "OnDidChangeModel") {
+                params = JSON.stringify({
+                    oldModelUri: e.oldModelUrl == null ? null : e.oldModelUrl.toString(),
+                    newModelUri: e.newModelUrl == null ? null : e.newModelUrl.toString(),
+                });
+            }
+            handler.invokeMethodAsync("EventCallback", eventName, params);
         };
 
         switch (eventName) {
@@ -443,6 +450,12 @@ window.blazorMonaco.editor = {
             case "OnDidChangeConfiguration": editor.onDidChangeConfiguration(listener); break;
             case "OnDidChangeCursorPosition": editor.onDidChangeCursorPosition(listener); break;
             case "OnDidChangeCursorSelection": editor.onDidChangeCursorSelection(listener); break;
+            case "OnDidChangeModel": editor.onDidChangeModel(listener); break;
+            case "OnDidChangeModelContent": editor.onDidChangeModelContent(listener); break;
+            case "OnDidChangeModelDecorations": editor.onDidChangeModelDecorations(listener); break;
+            case "OnDidChangeModelLanguage": editor.onDidChangeModelLanguage(listener); break;
+            case "OnDidChangeModelLanguageConfiguration": editor.onDidChangeModelLanguageConfiguration(listener); break;
+            case "OnDidChangeModelOptions": editor.onDidChangeModelOptions(listener); break;
             case "OnDidContentSizeChange": editor.onDidContentSizeChange(listener); break;
             case "OnDidDispose": editor.onDidDispose(listener); break;
             case "OnDidFocusEditorText": editor.onDidFocusEditorText(listener); break;

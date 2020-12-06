@@ -323,11 +323,11 @@
         return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getValue", Id);
     }
 
-    public async Task<List<Range>> GetVisibleRanges()
+    public async Task<List<BlazorMonaco.Bridge.Range>> GetVisibleRanges()
     {
         if (jsRuntime == null)
             return default;
-        return await jsRuntime.InvokeAsync<List<Range>>("blazorMonaco.editor.getVisibleRanges", Id);
+        return await jsRuntime.InvokeAsync<List<BlazorMonaco.Bridge.Range>>("blazorMonaco.editor.getVisibleRanges", Id);
     }
 
     public async Task<bool> HasWidgetFocus()
