@@ -87,8 +87,6 @@
             var options = ConstructionOptions?.Invoke(this);
             await MonacoDiffEditor.CreateDiffEditor(Id, options);
 
-            await SetEventListeners();
-
             // Create the bridges for the inner editors
 #pragma warning disable BL0005
             OriginalEditor = MonacoEditor.CreateVirtualEditor(Id + "_original");

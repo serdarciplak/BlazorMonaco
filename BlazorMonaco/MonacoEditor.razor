@@ -43,8 +43,6 @@
             // Create the editor
             var options = ConstructionOptions?.Invoke(this);
             await MonacoEditorBase.Create(Id, options);
-
-            await SetEventListeners();
         }
         await base.OnAfterRenderAsync(firstRender);
     }
