@@ -1,5 +1,4 @@
 ﻿@implements IDisposable
-@using BlazorMonaco.Bridge
 @using Microsoft.JSInterop
 @using System.Text.Json
 
@@ -183,6 +182,18 @@
         return await staticJsRuntime.InvokeAsync<List<TextModel>>("blazorMonaco.editor.getModels");
     }
 
+    // export function onDidCreateEditor(listener: (codeEditor: ICodeEditor) => void): IDisposable;
+
+    // export function onDidChangeMarkers(listener: (e: readonly Uri[]) => void): IDisposable;
+
+    // export function onDidCreateModel(listener: (model: ITextModel) => void): IDisposable;
+
+    // export function onWillDisposeModel(listener: (model: ITextModel) => void): IDisposable;
+
+    // export function onDidChangeModelLanguage(listener: (e: { readonly model: ITextModel; readonly oldLanguage: string;}) => void): IDisposable;
+
+    // export function registerCommand(id: string, handler: (accessor: any, ...args: any[]) => void): IDisposable;
+
     public static async Task RemeasureFonts()
     {
         if (staticJsRuntime == null)
@@ -322,6 +333,8 @@
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealLineInCenterIfOutsideViewport", Id, lineNumber, scrollType);
     }
 
+    // revealLineNearTop(lineNumber: number, scrollType?: ScrollType) : void;
+
     public async Task RevealLines(int startLineNumber, int endLineNumber, ScrollType? scrollType = null)
     {
         if (jsRuntime == null)
@@ -342,6 +355,8 @@
             return;
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealLinesInCenterIfOutsideViewport", Id, startLineNumber, endLineNumber, scrollType);
     }
+
+    // revealLinesNearTop(lineNumber: number, endLineNumber: number, scrollType?: ScrollType) : void;
 
     public async Task RevealPosition(Position position, ScrollType? scrollType = null)
     {
@@ -364,33 +379,39 @@
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealPositionInCenterIfOutsideViewport", Id, position, scrollType);
     }
 
-    public async Task RevealRange(BlazorMonaco.Bridge.Range range, ScrollType? scrollType = null)
+    // revealPositionNearTop(position: IPosition, scrollType?: ScrollType) : void;
+
+    public async Task RevealRange(Range range, ScrollType? scrollType = null)
     {
         if (jsRuntime == null)
             return;
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealRange", Id, range, scrollType);
     }
 
-    public async Task RevealRangeAtTop(BlazorMonaco.Bridge.Range range, ScrollType? scrollType = null)
+    public async Task RevealRangeAtTop(Range range, ScrollType? scrollType = null)
     {
         if (jsRuntime == null)
             return;
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealRangeAtTop", Id, range, scrollType);
     }
 
-    public async Task RevealRangeInCenter(BlazorMonaco.Bridge.Range range, ScrollType? scrollType = null)
+    public async Task RevealRangeInCenter(Range range, ScrollType? scrollType = null)
     {
         if (jsRuntime == null)
             return;
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealRangeInCenter", Id, range, scrollType);
     }
 
-    public async Task RevealRangeInCenterIfOutsideViewport(BlazorMonaco.Bridge.Range range, ScrollType? scrollType = null)
+    public async Task RevealRangeInCenterIfOutsideViewport(Range range, ScrollType? scrollType = null)
     {
         if (jsRuntime == null)
             return;
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.revealRangeInCenterIfOutsideViewport", Id, range, scrollType);
     }
+
+    // revealRangeNearTop(range: IRange, scrollType?: ScrollType) : void;
+
+    // revealRangeNearTopIfOutsideViewport(range: IRange, scrollType?: ScrollType) : void;
 
     public async Task SetPosition(Position position)
     {
@@ -406,7 +427,7 @@
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setEventListener", Id, eventName, jsObjectRef);
     }
 
-    public async Task SetSelection(BlazorMonaco.Bridge.Range selection)
+    public async Task SetSelection(Range selection)
     {
         if (jsRuntime == null)
             return;

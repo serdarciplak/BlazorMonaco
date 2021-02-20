@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace BlazorMonaco.Bridge
+namespace BlazorMonaco
 {
     public class Position
     {
@@ -57,5 +57,57 @@ namespace BlazorMonaco.Bridge
         public string Foreground { get; set; }
         public string Background { get; set; }
         public string FontStyle { get; set; }
+    }
+
+    public class EditorLayoutInfo
+    {
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public double GlyphMarginLeft { get; set; }
+        public double GlyphMarginWidth { get; set; }
+        public double LineNumbersLeft { get; set; }
+        public double LineNumbersWidth { get; set; }
+        public double DecorationsLeft { get; set; }
+        public double DecorationsWidth { get; set; }
+        public double ContentLeft { get; set; }
+        public double ContentWidth { get; set; }
+        public EditorMinimapLayoutInfo Minimap { get; set; }
+        public double ViewportColumn { get; set; }
+        public bool IsWordWrapMinified { get; set; }
+        public bool IsViewportWrapping { get; set; }
+        public double WrappingColumn { get; set; }
+        public double VerticalScrollbarWidth { get; set; }
+        public double HorizontalScrollbarHeight { get; set; }
+        public OverviewRulerPosition OverviewRuler { get; set; }
+    }
+
+    public class EditorMinimapLayoutInfo
+    {
+        public RenderMinimap RenderMinimap { get; set; }
+        public double MinimapLeft { get; set; }
+        public double MinimapWidth { get; set; }
+        public bool MinimapHeightIsEditorHeight { get; set; }
+        public bool MinimapIsSampling { get; set; }
+        public double MinimapScale { get; set; }
+        public double MinimapLineHeight { get; set; }
+        public double MinimapCanvasInnerWidth { get; set; }
+        public double MinimapCanvasInnerHeight { get; set; }
+        public double MinimapCanvasOuterWidth { get; set; }
+        public double MinimapCanvasOuterHeight { get; set; }
+    }
+
+    public class OverviewRulerPosition
+    {
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public double Top { get; set; }
+        public double Right { get; set; }
+    }
+
+    public enum RenderMinimap
+    {
+        None = 0,
+        Text = 1,
+        Blocks = 2
     }
 }

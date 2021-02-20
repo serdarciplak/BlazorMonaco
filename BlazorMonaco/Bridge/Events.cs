@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 
-namespace BlazorMonaco.Bridge
+namespace BlazorMonaco
 {
     public class ContentSizeChangedEvent
     {

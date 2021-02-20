@@ -499,22 +499,22 @@ window.blazorMonaco.editor = {
         editor.setPosition(position);
     },
 
-    setScrollLeft: function (id, newScrollLeft) {
+    setScrollLeft: function (id, newScrollLeft, scrollType) {
         let editor = this.getEditorById(id);
-        editor.setScrollLeft(newScrollLeft);
+        editor.setScrollLeft(newScrollLeft, scrollType);
     },
 
-    setScrollPosition: function (id, newScrollLeft, newScrollTop) {
+    setScrollPosition: function (id, newScrollLeft, newScrollTop, scrollType) {
         let editor = this.getEditorById(id);
         editor.setScrollPosition({
             scrollLeft: newScrollLeft,
             scrollTop: newScrollTop
-        });
+        }, scrollType);
     },
 
-    setScrollTop: function (id, newScrollTop) {
+    setScrollTop: function (id, newScrollTop, scrollType) {
         let editor = this.getEditorById(id);
-        editor.setScrollTop(newScrollTop);
+        editor.setScrollTop(newScrollTop, scrollType);
     },
 
     setSelection: function (id, selection) {

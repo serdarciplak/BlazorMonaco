@@ -1,5 +1,26 @@
 # Change Log
 
+## 2.0.0
+* Updated to Monaco Editor v0.22.3
+* Added TextModel methods.
+* Breaking Changes:
+  * Merged 'BlazorMonaco.Bridge' namespace into 'BlazorMonaco' namespace
+  * Renamed 'CommentOptions' class to 'EditorCommentsOptions'
+  * Renamed 'FindOptions' class to 'EditorFindOptions'
+  * Renamed 'HoverOptions' class to 'EditorHoverOptions'
+  * Renamed 'LightbulbOptions' class to 'EditorLightbulbOptions'
+  * Renamed 'MinimapOptions' class to 'EditorMinimapOptions'
+  * Renamed 'ParameterHintOptions' class to 'EditorParameterHintOptions'
+  * Renamed 'ScrollbarOptions' class to 'EditorScrollbarOptions'
+  * Restructured 'EditorLayoutInfo'
+  * Removed some options and properties that are removed by Monaco Editor itself
+
+## 1.6.1
+* Fixed a bug that causes event listeners to trigger twice.
+
+## 1.6.0
+* Added support for net5.0
+
 ## 1.5.0
 * Added support for editor model events.
   * OnDidChangeModel

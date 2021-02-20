@@ -1,5 +1,4 @@
 ﻿@inherits MonacoEditorBase
-@using BlazorMonaco.Bridge
 @using Microsoft.JSInterop
 @using System.Text.Json
 
@@ -10,6 +9,7 @@
     [Parameter] public EventCallback<MonacoEditor> OnDidCompositionEnd { get; set; }
     [Parameter] public EventCallback<MonacoEditor> OnDidCompositionStart { get; set; }
     [Parameter] public EventCallback<EditorMouseEvent> OnContextMenu { get; set; }
+    // onDidAttemptReadOnlyEdit(listener: () => void) : IDisposable;
     [Parameter] public EventCallback<MonacoEditor> OnDidBlurEditorText { get; set; }
     [Parameter] public EventCallback<MonacoEditor> OnDidBlurEditorWidget { get; set; }
     [Parameter] public EventCallback<MonacoEditor> OnDidChangeConfiguration { get; set; }
@@ -321,11 +321,11 @@
         return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getValue", Id);
     }
 
-    public async Task<List<BlazorMonaco.Bridge.Range>> GetVisibleRanges()
+    public async Task<List<Range>> GetVisibleRanges()
     {
         if (jsRuntime == null)
             return default;
-        return await jsRuntime.InvokeAsync<List<BlazorMonaco.Bridge.Range>>("blazorMonaco.editor.getVisibleRanges", Id);
+        return await jsRuntime.InvokeAsync<List<Range>>("blazorMonaco.editor.getVisibleRanges", Id);
     }
 
     public async Task<bool> HasWidgetFocus()
@@ -338,6 +338,8 @@
     // layoutContentWidget
 
     // layoutOverlayWidget
+
+    // popUndoStop(): boolean;
 
     public async Task<bool> PushUndoStop()
     {
@@ -375,25 +377,25 @@
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setInstanceModel", Id, model.Uri);
     }
 
-    public async Task SetScrollLeft(int newScrollLeft)
+    public async Task SetScrollLeft(int newScrollLeft, ScrollType? scrollType = null)
     {
         if (jsRuntime == null)
             return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setScrollLeft", Id, newScrollLeft);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setScrollLeft", Id, newScrollLeft, scrollType);
     }
 
-    public async Task SetScrollPosition(int newScrollLeft, int newScrollTop)
+    public async Task SetScrollPosition(int newScrollLeft, int newScrollTop, ScrollType? scrollType = null)
     {
         if (jsRuntime == null)
             return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setScrollPosition", Id, newScrollLeft, newScrollTop);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setScrollPosition", Id, newScrollLeft, newScrollTop, scrollType);
     }
 
-    public async Task SetScrollTop(int newScrollTop)
+    public async Task SetScrollTop(int newScrollTop, ScrollType? scrollType = null)
     {
         if (jsRuntime == null)
             return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setScrollTop", Id, newScrollTop);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setScrollTop", Id, newScrollTop, scrollType);
     }
 
     public async Task SetValue(string newValue)

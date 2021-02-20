@@ -11,7 +11,7 @@ Blazor component for Microsoft's [Monaco Editor](https://github.com/Microsoft/mo
 Not the complete set but most of the Monaco Editor functionality is currently supported. The package will be updated regularly to cover all the features and use cases soon. Any contributions, comments or suggestions are greatly welcome. Please feel free to contact me at [@serdarciplak](https://twitter.com/serdarciplak) or via GitHub.
 
 Current version of BlazorMonaco :
-* Works with Monaco Editor v0.20.0
+* Works with Monaco Editor v0.22.3
 * Built and tested for netstandard2.0 and net5.0
 
 ## Demo
