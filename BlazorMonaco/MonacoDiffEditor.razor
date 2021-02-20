@@ -73,8 +73,8 @@
 
     public override void Dispose()
     {
-        OriginalEditor.Dispose();
-        ModifiedEditor.Dispose();
+        OriginalEditor?.Dispose();
+        ModifiedEditor?.Dispose();
         base.Dispose();
     }
 
