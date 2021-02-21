@@ -423,11 +423,37 @@ namespace BlazorMonaco
         Gutter = 2
     }
 
+    public enum RenderMinimap
+    {
+        None = 0,
+        Text = 1,
+        Blocks = 2
+    }
+
     public enum TrackedRangeStickiness
     {
         AlwaysGrowsWhenTypingAtEdges = 0,
         NeverGrowsWhenTypingAtEdges = 1,
         GrowsOnlyWhenTypingBefore = 2,
         GrowsOnlyWhenTypingAfter = 3
+    }
+
+    public enum DefaultEndOfLine
+    {
+        LF = 1,
+        CRLF = 2
+    }
+
+    public enum EndOfLinePreference
+    {
+        TextDefined = 0,
+        LF = 1,
+        CRLF = 2
+    }
+
+    public enum EndOfLineSequence
+    {
+        LF = 0,
+        CRLF = 1
     }
 }

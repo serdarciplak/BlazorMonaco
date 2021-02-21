@@ -1,4 +1,6 @@
-﻿namespace BlazorMonaco
+﻿using System.Collections.Generic;
+
+namespace BlazorMonaco
 {
     // Options Containers
 
@@ -332,6 +334,14 @@
         public ModelDecorationOptions Options { get; set; }
     }
 
+    public class ModelDecoration
+    {
+        public string Id { get; set; }
+        public int OwnerId { get; set; }
+        public Range Range { get; set; }
+        public ModelDecorationOptions Options { get; set; }
+    }
+
     public class ModelDecorationOptions
     {
         public string AfterContentClassName { get; set; }
@@ -375,4 +385,54 @@
         public string Color { get; set; }
         public string DarkColor { get; set; }
     }
+
+    // Model Options
+
+    public class TextModelResolvedOptions
+    {
+        public int? TabSize { get; set; }
+        public int? IndentSize { get; set; }
+        public bool? InsertSpaces { get; set; }
+        public DefaultEndOfLine? DefaultEOL { get; set; }
+        public bool? TrimAutoWhitespace { get; set; }
+    }
+
+    public class TextModelUpdateOptions
+    {
+        public int? TabSize { get; set; }
+        public int? IndentSize { get; set; }
+        public bool? InsertSpaces { get; set; }
+        public bool? TrimAutoWhitespace { get; set; }
+    }
+
+    public class WordAtPosition
+    {
+        public string Word { get; set; }
+        public int StartColumn { get; set; }
+        public int EndColumn { get; set; }
+    }
+
+    public class FindMatch
+    {
+        public Range Range { get; set; }
+        public List<string> Matches { get; set; }
+    }
+
+    public class IdentifiedSingleEditOperation
+    {
+        public Range Range { get; set; }
+        public string Text { get; set; }
+        public bool? ForceMoveMarkers { get; set; }
+    }
+
+    public class ValidEditOperation
+    {
+        public Range Range { get; set; }
+        public string Text { get; set; }
+    }
+
+    /*public class CursorStateComputer
+    {
+        public Func<List<ValidEditOperation>, List<Selection>> InverseEditOperations { get; set; }
+    }*/
 }

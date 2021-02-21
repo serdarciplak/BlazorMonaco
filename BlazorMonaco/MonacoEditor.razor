@@ -227,7 +227,9 @@
     {
         if (jsRuntime == null)
             return default;
-        return await jsRuntime.InvokeAsync<TextModel>("blazorMonaco.editor.getInstanceModel", Id);
+        var model = await jsRuntime.InvokeAsync<TextModel>("blazorMonaco.editor.getInstanceModel", Id);
+        model.jsRuntime = jsRuntime;
+        return model;
     }
 
     public async Task<int> GetOffsetForColumn(int lineNumber, int column)

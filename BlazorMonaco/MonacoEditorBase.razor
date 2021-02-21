@@ -154,7 +154,9 @@
     {
         if (staticJsRuntime == null)
             return default;
-        return await staticJsRuntime.InvokeAsync<TextModel>("blazorMonaco.editor.createModel", value, language, uri);
+        var model = await staticJsRuntime.InvokeAsync<TextModel>("blazorMonaco.editor.createModel", value, language, uri);
+        model.jsRuntime = staticJsRuntime;
+        return model;
     }
 
     // createWebWorker
@@ -170,7 +172,9 @@
     {
         if (staticJsRuntime == null)
             return default;
-        return await staticJsRuntime.InvokeAsync<TextModel>("blazorMonaco.editor.getModel", uri);
+        var model = await staticJsRuntime.InvokeAsync<TextModel>("blazorMonaco.editor.getModel", uri);
+        model.jsRuntime = staticJsRuntime;
+        return model;
     }
 
     // getModelMarkers
@@ -179,7 +183,9 @@
     {
         if (staticJsRuntime == null)
             return default;
-        return await staticJsRuntime.InvokeAsync<List<TextModel>>("blazorMonaco.editor.getModels");
+        var models = await staticJsRuntime.InvokeAsync<List<TextModel>>("blazorMonaco.editor.getModels");
+        models.ForEach(m => m.jsRuntime = staticJsRuntime);
+        return models;
     }
 
     // export function onDidCreateEditor(listener: (codeEditor: ICodeEditor) => void): IDisposable;

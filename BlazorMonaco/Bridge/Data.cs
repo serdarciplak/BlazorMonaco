@@ -103,11 +103,4 @@ namespace BlazorMonaco
         public double Top { get; set; }
         public double Right { get; set; }
     }
-
-    public enum RenderMinimap
-    {
-        None = 0,
-        Text = 1,
-        Blocks = 2
-    }
 }

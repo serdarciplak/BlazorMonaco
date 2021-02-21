@@ -30,7 +30,6 @@ Install-Package BlazorMonaco
 * Add the following using directives to your root `_Imports.razor` file, or any other .razor file where you want to add a Monaco Editor.
 ```csharp
 @using BlazorMonaco
-@using BlazorMonaco.Bridge
 ```
 
 * Add the below Javascript and CSS links to your `index.html` file. Note: These script tags should come before the script tag for the `blazor.webassembly.js` file.
@@ -134,7 +133,7 @@ private async Task EditorOnDidInit(MonacoEditorBase editor)
 	{
 		new ModelDeltaDecoration
 		{
-			Range = new BlazorMonaco.Bridge.Range(3,1,3,1),
+			Range = new BlazorMonaco.Range(3,1,3,1),
 			Options = new ModelDecorationOptions
 			{
 				IsWholeLine = true,

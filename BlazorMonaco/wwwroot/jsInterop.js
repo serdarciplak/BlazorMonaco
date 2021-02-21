@@ -16,7 +16,7 @@ window.blazorMonaco.editor = {
     },
 
     colorizeModelLine: function (uriStr, lineNumber, tabSize) {
-        var model = this.getModelJsObject(uriStr);
+        var model = this.model.getJsObject(uriStr);
         if (model == null)
             return null;
         return monaco.editor.colorizeModelLine(model, lineNumber, tabSize);
@@ -89,7 +89,7 @@ window.blazorMonaco.editor = {
     },
 
     getModel: function (uriStr) {
-        var model = this.getModelJsObject(uriStr);
+        var model = this.model.getJsObject(uriStr);
         if (model == null)
             return null;
 
@@ -97,14 +97,6 @@ window.blazorMonaco.editor = {
             id: model.id,
             uri: model.uri.toString()
         };
-    },
-
-    getModelJsObject: function (uriStr) {
-        var uri = monaco.Uri.parse(uriStr);
-        if (uri == null)
-            return null;
-
-        return monaco.editor.getModel(uri);
     },
 
     getModels: function () {
@@ -121,7 +113,7 @@ window.blazorMonaco.editor = {
     },
 
     setModelLanguage: function (uriStr, languageId) {
-        var model = this.getModelJsObject(uriStr);
+        var model = this.model.getJsObject(uriStr);
         if (model == null)
             return null;
         return monaco.editor.setModelLanguage(model, languageId);
@@ -473,7 +465,7 @@ window.blazorMonaco.editor = {
     },
 
     setInstanceModel: function (id, uriStr) {
-        var model = this.getModelJsObject(uriStr);
+        var model = this.model.getJsObject(uriStr);
         if (model == null)
             return;
 
@@ -482,8 +474,8 @@ window.blazorMonaco.editor = {
     },
 
     setInstanceDiffModel: function (id, model) {
-        var original_model = this.getModelJsObject(model.original.uri);
-        var modified_model = this.getModelJsObject(model.modified.uri);
+        var original_model = this.model.getJsObject(model.original.uri);
+        var modified_model = this.model.getJsObject(model.modified.uri);
         if (original_model == null || modified_model == null)
             return;
 
@@ -547,6 +539,269 @@ window.blazorMonaco.editor = {
             var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
             return v.toString(16);
         });
+    },
+
+    //#endregion
+
+    //#region TextModel methods
+
+    model: {
+        getJsObject: function (uriStr) {
+            var uri = monaco.Uri.parse(uriStr);
+            if (uri == null)
+                return null;
+            return monaco.editor.getModel(uri);
+        },
+
+        getOptions: function (uriStr) {
+            let model = this.getJsObject(uriStr);
+            return model.getOptions();
+        },
+
+        getVersionId: function (uriStr) {
+            let model = this.getJsObject(uriStr);
+            return model.getVersionId();
+        },
+
+        getAlternativeVersionId: function (uriStr) {
+            let model = this.getJsObject(uriStr);
+            return model.getAlternativeVersionId();
+        },
+
+        setValue: function (uriStr, newValue) {
+            let model = this.getJsObject(uriStr);
+            return model.setValue(newValue);
+        },
+
+        getValue: function (uriStr, eol, preserveBOM) {
+            let model = this.getJsObject(uriStr);
+            return model.getValue(eol, preserveBOM);
+        },
+
+        getValueLength: function (uriStr, eol, preserveBOM) {
+            let model = this.getJsObject(uriStr);
+            return model.getValueLength(eol, preserveBOM);
+        },
+
+        getValueInRange: function (uriStr, range, eol) {
+            let model = this.getJsObject(uriStr);
+            return model.getValueInRange(range, eol);
+        },
+
+        getValueLengthInRange: function (uriStr, range) {
+            let model = this.getJsObject(uriStr);
+            return model.getValueLengthInRange(range);
+        },
+
+        getCharacterCountInRange: function (uriStr, range) {
+            let model = this.getJsObject(uriStr);
+            return model.getCharacterCountInRange(range);
+        },
+
+        getLineCount: function (uriStr) {
+            let model = this.getJsObject(uriStr);
+            return model.getLineCount();
+        },
+
+        getLineContent: function (uriStr, lineNumber) {
+            let model = this.getJsObject(uriStr);
+            return model.getLineContent(lineNumber);
+        },
+
+        getLineLength: function (uriStr, lineNumber) {
+            let model = this.getJsObject(uriStr);
+            return model.getLineLength(lineNumber);
+        },
+
+        getLinesContent: function (uriStr) {
+            let model = this.getJsObject(uriStr);
+            return model.getLinesContent();
+        },
+
+        getEOL: function (uriStr) {
+            let model = this.getJsObject(uriStr);
+            return model.getEOL();
+        },
+
+        getEndOfLineSequence: function (uriStr) {
+            let model = this.getJsObject(uriStr);
+            return model.getEndOfLineSequence();
+        },
+
+        getLineMinColumn: function (uriStr, lineNumber) {
+            let model = this.getJsObject(uriStr);
+            return model.getLineMinColumn(lineNumber);
+        },
+
+        getLineMaxColumn: function (uriStr, lineNumber) {
+            let model = this.getJsObject(uriStr);
+            return model.getLineMaxColumn(lineNumber);
+        },
+
+        getLineFirstNonWhitespaceColumn: function (uriStr, lineNumber) {
+            let model = this.getJsObject(uriStr);
+            return model.getLineFirstNonWhitespaceColumn(lineNumber);
+        },
+
+        getLineLastNonWhitespaceColumn: function (uriStr, lineNumber) {
+            let model = this.getJsObject(uriStr);
+            return model.getLineLastNonWhitespaceColumn(lineNumber);
+        },
+
+        validatePosition: function (uriStr, position) {
+            let model = this.getJsObject(uriStr);
+            return model.validatePosition(position);
+        },
+
+        modifyPosition: function (uriStr, position, offset) {
+            let model = this.getJsObject(uriStr);
+            return model.modifyPosition(position, offset);
+        },
+
+        validateRange: function (uriStr, range) {
+            let model = this.getJsObject(uriStr);
+            return model.validateRange(range);
+        },
+
+        getOffsetAt: function (uriStr, position) {
+            let model = this.getJsObject(uriStr);
+            return model.getOffsetAt(position);
+        },
+
+        getPositionAt: function (uriStr, offset) {
+            let model = this.getJsObject(uriStr);
+            return model.getPositionAt(offset);
+        },
+
+        getFullModelRange: function (uriStr) {
+            let model = this.getJsObject(uriStr);
+            return model.getFullModelRange();
+        },
+
+        isDisposed: function (uriStr) {
+            let model = this.getJsObject(uriStr);
+            return model.isDisposed();
+        },
+
+        findMatches: function (uriStr, searchString, searchScope_or_searchOnlyEditableRange, isRegex, matchCase, wordSeparators, captureMatches, limitResultCount) {
+            let model = this.getJsObject(uriStr);
+            return model.findMatches(searchString, searchScope_or_searchOnlyEditableRange, isRegex, matchCase, wordSeparators, captureMatches, limitResultCount);
+        },
+
+        findNextMatch: function (uriStr, searchString, searchStart, isRegex, matchCase, wordSeparators, captureMatches) {
+            let model = this.getJsObject(uriStr);
+            return model.findNextMatch(searchString, searchStart, isRegex, matchCase, wordSeparators, captureMatches);
+        },
+
+        findPreviousMatch: function (uriStr, searchString, searchStart, isRegex, matchCase, wordSeparators, captureMatches) {
+            let model = this.getJsObject(uriStr);
+            return model.findPreviousMatch(searchString, searchStart, isRegex, matchCase, wordSeparators, captureMatches);
+        },
+
+        getModeId: function (uriStr) {
+            let model = this.getJsObject(uriStr);
+            return model.getModeId();
+        },
+
+        getWordAtPosition: function (uriStr, position) {
+            let model = this.getJsObject(uriStr);
+            return model.getWordAtPosition(position);
+        },
+
+        getWordUntilPosition: function (uriStr, position) {
+            let model = this.getJsObject(uriStr);
+            return model.getWordUntilPosition(position);
+        },
+
+        deltaDecorations: function (uriStr, oldDecorations, newDecorations, ownerId) {
+            let model = this.getJsObject(uriStr);
+            return model.deltaDecorations(oldDecorations, newDecorations, ownerId);
+        },
+
+        getDecorationOptions: function (uriStr, id) {
+            let model = this.getJsObject(uriStr);
+            return model.getDecorationOptions(id);
+        },
+
+        getDecorationRange: function (uriStr, id) {
+            let model = this.getJsObject(uriStr);
+            return model.getDecorationRange(id);
+        },
+
+        getLineDecorations: function (uriStr, lineNumber, ownerId, filterOutValidation) {
+            let model = this.getJsObject(uriStr);
+            return model.getLineDecorations(lineNumber, ownerId, filterOutValidation);
+        },
+
+        getLinesDecorations: function (uriStr, startLineNumber, endLineNumber, ownerId, filterOutValidation) {
+            let model = this.getJsObject(uriStr);
+            return model.getLinesDecorations(startLineNumber, endLineNumber, ownerId, filterOutValidation);
+        },
+
+        getDecorationsInRange: function (uriStr, range, ownerId, filterOutValidation) {
+            let model = this.getJsObject(uriStr);
+            return model.getDecorationsInRange(range, ownerId, filterOutValidation);
+        },
+
+        getAllDecorations: function (uriStr, ownerId, filterOutValidation) {
+            let model = this.getJsObject(uriStr);
+            return model.getAllDecorations(ownerId, filterOutValidation);
+        },
+
+        getOverviewRulerDecorations: function (uriStr, ownerId, filterOutValidation) {
+            let model = this.getJsObject(uriStr);
+            return model.getOverviewRulerDecorations(ownerId, filterOutValidation);
+        },
+
+        normalizeIndentation: function (uriStr, str) {
+            let model = this.getJsObject(uriStr);
+            return model.normalizeIndentation(str);
+        },
+
+        updateOptions: function (uriStr, newOpts) {
+            let model = this.getJsObject(uriStr);
+            return model.updateOptions(newOpts);
+        },
+
+        detectIndentation: function (uriStr, defaultInsertSpaces, defaultTabSize) {
+            let model = this.getJsObject(uriStr);
+            return model.detectIndentation(defaultInsertSpaces, defaultTabSize);
+        },
+
+        pushStackElement: function (uriStr) {
+            let model = this.getJsObject(uriStr);
+            return model.pushStackElement();
+        },
+
+        popStackElement: function (uriStr) {
+            let model = this.getJsObject(uriStr);
+            return model.popStackElement();
+        },
+
+        pushEOL: function (uriStr, eol) {
+            let model = this.getJsObject(uriStr);
+            return model.pushEOL(eol);
+        },
+
+        applyEdits: function (uriStr, operations) {
+            let model = this.getJsObject(uriStr);
+            return model.applyEdits(operations);
+        },
+
+        applyEdits: function (uriStr, operations, computeUndoEdits) {
+            let model = this.getJsObject(uriStr);
+            return model.applyEdits(operations, computeUndoEdits);
+        },
+
+        setEOL: function (uriStr, eol) {
+            let model = this.getJsObject(uriStr);
+            return model.setEOL(eol);
+        },
+
+        dispose: function (uriStr) {
+            let model = this.getJsObject(uriStr);
+            return model.dispose();
+        }
     }
 
     //#endregion
