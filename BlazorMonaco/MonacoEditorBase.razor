@@ -155,7 +155,8 @@
         if (staticJsRuntime == null)
             return default;
         var model = await staticJsRuntime.InvokeAsync<TextModel>("blazorMonaco.editor.createModel", value, language, uri);
-        model.jsRuntime = staticJsRuntime;
+        if (model != null)
+            model.jsRuntime = staticJsRuntime;
         return model;
     }
 
@@ -173,7 +174,8 @@
         if (staticJsRuntime == null)
             return default;
         var model = await staticJsRuntime.InvokeAsync<TextModel>("blazorMonaco.editor.getModel", uri);
-        model.jsRuntime = staticJsRuntime;
+        if (model != null)
+            model.jsRuntime = staticJsRuntime;
         return model;
     }
 
@@ -184,7 +186,7 @@
         if (staticJsRuntime == null)
             return default;
         var models = await staticJsRuntime.InvokeAsync<List<TextModel>>("blazorMonaco.editor.getModels");
-        models.ForEach(m => m.jsRuntime = staticJsRuntime);
+        models?.ForEach(m => m.jsRuntime = staticJsRuntime);
         return models;
     }
 

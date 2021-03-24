@@ -228,7 +228,8 @@
         if (jsRuntime == null)
             return default;
         var model = await jsRuntime.InvokeAsync<TextModel>("blazorMonaco.editor.getInstanceModel", Id);
-        model.jsRuntime = jsRuntime;
+        if (model != null)
+            model.jsRuntime = jsRuntime;
         return model;
     }
 
