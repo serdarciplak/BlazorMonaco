@@ -297,11 +297,11 @@ namespace BlazorMonaco
             return await jsRuntime.InvokeAsync<ModelDecoration>("blazorMonaco.editor.model.getDecorationsInRange", Uri, range, ownerId, filterOutValidation);
         }
 
-        public async Task<ModelDecoration> GetAllDecorations(int? ownerId, bool? filterOutValidation)
+        public async Task<List<ModelDecoration>> GetAllDecorations(int? ownerId, bool? filterOutValidation)
         {
             if (jsRuntime == null)
                 return null;
-            return await jsRuntime.InvokeAsync<ModelDecoration>("blazorMonaco.editor.model.getAllDecorations", Uri, ownerId, filterOutValidation);
+            return await jsRuntime.InvokeAsync<List<ModelDecoration>>("blazorMonaco.editor.model.getAllDecorations", Uri, ownerId, filterOutValidation);
         }
 
         public async Task<ModelDecoration> GetOverviewRulerDecorations(int? ownerId, bool? filterOutValidation)
