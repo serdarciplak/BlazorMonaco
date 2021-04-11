@@ -456,11 +456,13 @@
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setSelections", Id, selections);
     }
 
-    public async Task Trigger(string source, string handlerId, JsonElement payload)
+    public async Task Trigger(string source, string handlerId, object payload = null)
     {
         if (jsRuntime == null)
             return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.trigger", Id, source, handlerId, payload);
+
+        var payloadJsonElement = JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(payload));
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.trigger", Id, source, handlerId, payloadJsonElement);
     }
 
     #endregion
