@@ -145,6 +145,8 @@ namespace BlazorMonaco
 
     public class DiffEditorConstructionOptions : DiffEditorOptions
     {
+        public string Theme { get; set; }
+        public bool? AutoDetectHighContrast { get; set; }
         public Dimension Dimension { get; set; }
         // overflowWidgetsDomNode?: HTMLElement;
     }
