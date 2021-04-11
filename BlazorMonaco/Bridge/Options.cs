@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace BlazorMonaco
 {
@@ -62,6 +63,7 @@ namespace BlazorMonaco
         public string LineDecorationsWidth { get; set; }
         public int? LineHeight { get; set; }
         public string LineNumbers { get; set; }
+        public Func<int, string> LineNumbersLambda { get; set; }
         public int? LineNumbersMinChars { get; set; }
         public bool? LinkedEditing { get; set; }
         public bool? Links { get; set; }

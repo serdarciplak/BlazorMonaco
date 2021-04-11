@@ -82,9 +82,19 @@
     {
         if (firstRender)
         {
-            // Create the editor
+            // Get options
             var options = ConstructionOptions?.Invoke(this);
-            await MonacoDiffEditor.CreateDiffEditor(Id, options);
+
+            // Prepare the line numbers callback
+            LineNumbersLambda = options.LineNumbersLambda;
+            if (LineNumbersLambda != null)
+            {
+                options.LineNumbers = "function";
+                options.LineNumbersLambda = null;
+            }
+
+            // Create the editor
+            await MonacoDiffEditor.CreateDiffEditor(Id, options, jsObjectRef);
 
             // Create the bridges for the inner editors
 #pragma warning disable BL0005

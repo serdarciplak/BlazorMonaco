@@ -76,6 +76,13 @@
         command?.Invoke(this, keyCode);
     }
 
+    protected Func<int, string> LineNumbersLambda { get; set; }
+    [JSInvokable]
+    public string LineNumbersCallback(int lineNumber)
+    {
+        return LineNumbersLambda?.Invoke(lineNumber) ?? lineNumber.ToString();
+    }
+
     #region Static Methods
 
     public static async Task<string> Colorize(string text, string languageId, ColorizerOptions options)
@@ -99,7 +106,7 @@
         return await staticJsRuntime.InvokeAsync<string>("blazorMonaco.editor.colorizeModelLine", model.Uri, lineNumber, tabSize);
     }
 
-    protected static async Task Create(string id, StandaloneEditorConstructionOptions options)
+    protected static async Task Create(string id, StandaloneEditorConstructionOptions options, DotNetObjectReference<MonacoEditorBase> jsObjectRef)
     {
         if (staticJsRuntime == null)
             return;
@@ -121,10 +128,10 @@
         var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
 
         // Create the editor
-        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.editor.create", id, optionsDict);
+        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.editor.create", id, optionsDict, jsObjectRef);
     }
 
-    protected static async Task CreateDiffEditor(string id, DiffEditorConstructionOptions options)
+    protected static async Task CreateDiffEditor(string id, DiffEditorConstructionOptions options, DotNetObjectReference<MonacoEditorBase> jsObjectRef)
     {
         if (staticJsRuntime == null)
             return;
@@ -145,7 +152,7 @@
         var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
 
         // Create the editor
-        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.editor.createDiffEditor", id, optionsDict);
+        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.editor.createDiffEditor", id, optionsDict, jsObjectRef);
     }
 
     // createDiffNavigator
@@ -237,7 +244,7 @@
             return;
 
         actions[string.Join(";", keyCodes)] = action;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.addAction", Id, actionId, label, keyCodes, precondition, keybindingContext, contextMenuGroupId, contextMenuOrder, jsObjectRef);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.addAction", Id, actionId, label, keyCodes, precondition, keybindingContext, contextMenuGroupId, contextMenuOrder);
     }
 
     public async Task AddCommand(int keyCode, Action<MonacoEditorBase, int> action)
@@ -246,7 +253,7 @@
             return;
 
         commands[keyCode.ToString()] = action;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.addCommand", Id, keyCode, jsObjectRef);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.addCommand", Id, keyCode);
     }
 
     // createContextKey
@@ -432,7 +439,7 @@
     {
         if (jsRuntime == null)
             return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setEventListener", Id, eventName, jsObjectRef);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setEventListener", Id, eventName);
     }
 
     public async Task SetSelection(Range selection)

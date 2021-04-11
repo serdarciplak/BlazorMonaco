@@ -22,7 +22,7 @@ window.blazorMonaco.editor = {
         return monaco.editor.colorizeModelLine(model, lineNumber, tabSize);
     },
 
-    create: function (id, options) {
+    create: function (id, options, dotnetRef) {
         if (options == null)
             options = {};
 
@@ -36,11 +36,17 @@ window.blazorMonaco.editor = {
         if (typeof monaco === 'undefined')
             console.log("WARNING : Please check that you have the script tag for editor.main.js in your index.html file");
 
+        if (options.lineNumbers == "function") {
+            options.lineNumbers = function (lineNumber) {
+                return dotnetRef.invokeMethod("LineNumbersCallback", lineNumber);
+            }
+        }
+
         var editor = monaco.editor.create(document.getElementById(id), options);
-        window.blazorMonaco.editors.push({ id: id, editor: editor });
+        window.blazorMonaco.editors.push({ id: id, editor: editor, dotnetRef: dotnetRef });
     },
 
-    createDiffEditor: function (id, options) {
+    createDiffEditor: function (id, options, dotnetRef) {
         if (options == null)
             options = {};
 
@@ -58,8 +64,14 @@ window.blazorMonaco.editor = {
         if (typeof monaco === 'undefined')
             console.log("WARNING : Please check that you have the script tag for editor.main.js in your index.html file");
 
+        if (options.lineNumbers == "function") {
+            options.lineNumbers = function (lineNumber) {
+                return dotnetRef.invokeMethod("LineNumbersCallback", lineNumber);
+            }
+        }
+
         var editor = monaco.editor.createDiffEditor(document.getElementById(id), options);
-        window.blazorMonaco.editors.push({ id: id, editor: editor });
+        window.blazorMonaco.editors.push({ id: id, editor: editor, dotnetRef: dotnetRef });
         window.blazorMonaco.editors.push({ id: id + "_original", editor: editor.getOriginalEditor() });
         window.blazorMonaco.editors.push({ id: id + "_modified", editor: editor.getModifiedEditor() });
 
@@ -141,9 +153,22 @@ window.blazorMonaco.editor = {
         return editorHolder.editor;
     },
 
-    addAction: function (id, actionId, label, keybindings, precondition, keybindingContext, contextMenuGroupId, contextMenuOrder, handler) {
-        let editor = this.getEditorById(id);
-        editor.addAction({
+    getEditorHolderById: function (id, unobstrusive = false) {
+        let editorHolder = window.blazorMonaco.editors.find(e => e.id === id);
+        if (!editorHolder) {
+            if (unobstrusive) return null;
+            throw "Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length;
+        }
+        else if (!editorHolder.editor) {
+            if (unobstrusive) return null;
+            throw "editor is null for editorHolder: " + editorHolder;
+        }
+        return editorHolder;
+    },
+
+    addAction: function (id, actionId, label, keybindings, precondition, keybindingContext, contextMenuGroupId, contextMenuOrder) {
+        let editorHolder = this.getEditorHolderById(id);
+        editorHolder.editor.addAction({
             id: actionId,
             label: label,
             keybindings: keybindings,
@@ -152,15 +177,15 @@ window.blazorMonaco.editor = {
             contextMenuGroupId: contextMenuGroupId,
             contextMenuOrder: contextMenuOrder,
             run: function () {
-                handler.invokeMethodAsync("ActionCallback", keybindings.join(';'));
+                editorHolder.dotnetRef.invokeMethodAsync("ActionCallback", keybindings.join(';'));
             }
         });
     },
 
-    addCommand: function (id, keyCode, handler) {
-        let editor = this.getEditorById(id);
-        editor.addCommand(keyCode, function () {
-            handler.invokeMethodAsync("CommandCallback", keyCode);
+    addCommand: function (id, keyCode) {
+        let editorHolder = this.getEditorHolderById(id);
+        editorHolder.editor.addCommand(keyCode, function () {
+            editorHolder.dotnetRef.invokeMethodAsync("CommandCallback", keyCode);
         });
     },
 
@@ -419,8 +444,10 @@ window.blazorMonaco.editor = {
         editor.revealRangeInCenterIfOutsideViewport(range, scrollType);
     },
 
-    setEventListener: function (id, eventName, handler) {
-        let editor = this.getEditorById(id);
+    setEventListener: function (id, eventName) {
+        let editorHolder = this.getEditorHolderById(id);
+        let editor = editorHolder.editor;
+        let dotnetRef = editorHolder.dotnetRef;
 
         let listener = function (e) {
             var params = JSON.stringify(e);
@@ -430,7 +457,7 @@ window.blazorMonaco.editor = {
                     newModelUri: e.newModelUrl == null ? null : e.newModelUrl.toString(),
                 });
             }
-            handler.invokeMethodAsync("EventCallback", eventName, params);
+            dotnetRef.invokeMethodAsync("EventCallback", eventName, params);
         };
 
         switch (eventName) {
