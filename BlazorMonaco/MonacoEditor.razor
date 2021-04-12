@@ -197,7 +197,28 @@
 
     // executeCommands
 
-    // executeEdits
+    public async Task<bool> ExecuteEdits(string source, List<IdentifiedSingleEditOperation> edits, List<Selection> endCursorState)
+    {
+        if (jsRuntime == null)
+            return default;
+        return await jsRuntime.InvokeAsync<bool>("blazorMonaco.editor.executeEdits", Id, source, edits, endCursorState);
+    }
+
+    public async Task<bool> ExecuteEdits(string source, List<IdentifiedSingleEditOperation> edits, Func<List<ValidEditOperation>, List<Selection>> endCursorState)
+    {
+        if (jsRuntime == null)
+            return default;
+        ExecuteEditsLambda = endCursorState;
+        return await jsRuntime.InvokeAsync<bool>("blazorMonaco.editor.executeEdits", Id, source, edits, "function");
+    }
+
+    private Func<List<ValidEditOperation>, List<Selection>> ExecuteEditsLambda { get; set; }
+    [JSInvokable]
+    public List<Selection> ExecuteEditsCallback(List<ValidEditOperation> inverseEditOperations)
+    {
+        Console.WriteLine("ExecuteEditsCallback is called : " + JsonSerializer.Serialize(inverseEditOperations));
+        return ExecuteEditsLambda?.Invoke(inverseEditOperations);
+    }
 
     // getAction
 

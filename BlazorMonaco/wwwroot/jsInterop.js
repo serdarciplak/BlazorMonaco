@@ -204,6 +204,16 @@ window.blazorMonaco.editor = {
         editor.focus();
     },
 
+    executeEdits: function (id, source, edits, endCursorState) {
+        let editorHolder = this.getEditorHolderById(id);
+        if (endCursorState == "function") {
+            endCursorState = (inverseEditOperations) => {
+                return editorHolder.dotnetRef.invokeMethod("ExecuteEditsCallback", inverseEditOperations);
+            }
+        }
+        return editorHolder.editor.executeEdits(source, edits, endCursorState);
+    },
+
     getContainerDomNodeId: function (id) {
         let editor = this.getEditorById(id);
         let containerNode = editor.getContainerDomNode();
