@@ -1,5 +1,13 @@
 # Change Log
 
+## 2.1.0
+* Added ExecuteEdits method.
+* Added missing properties to DiffEditorConstructionOptions.
+* Added LineNumbersLambda property to editor construction options to set line numbers via a lambda.
+* Changed the type of the payload parameter from JsomElement to Object in Editor.Trigger method for convenience.
+* Fixed the return type of GetAllDecorations method.
+* Fixed a null pointer exception that occurs when TextModels are null.
+
 ## 2.0.0
 * Updated to Monaco Editor v0.22.3
 * Added TextModel methods.
