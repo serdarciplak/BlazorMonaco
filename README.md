@@ -47,6 +47,22 @@ Install-Package BlazorMonaco
 </body>
 ```
 
+* Add to the CSS
+```css
+.monaco-editor-container {
+    height: 200px;
+    border: 1px solid gray;
+}
+
+.decorationGlyphMarginClass {
+    background: red;
+}
+
+.decorationContentClass {
+    background: lightblue;
+}
+```
+
 ## Code Editor
 
 * Add a `MonacoEditor` component in your .razor file and configure it as you need.
