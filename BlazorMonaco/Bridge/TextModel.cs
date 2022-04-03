@@ -301,7 +301,7 @@ namespace BlazorMonaco
         {
             if (jsRuntime == null)
                 return null;
-            return await jsRuntime.InvokeAsync<ModelDecoration>("blazorMonaco.editor.model.getDecorationsInRange", Uri, range);
+            return await jsRuntime.InvokeAsync<ModelDecoration>("blazorMonaco.editor.model.getDecorationsInRange2", Uri, range);
         }
 
         public async Task<List<ModelDecoration>> GetAllDecorations(int? ownerId, bool? filterOutValidation)
