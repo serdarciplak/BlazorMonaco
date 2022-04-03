@@ -103,4 +103,30 @@ namespace BlazorMonaco
         public double Top { get; set; }
         public double Right { get; set; }
     }
+
+    public class UriComponents
+    {
+        public string Scheme { get; set; }
+        public string Authority { get; set; }
+        public string Path { get; set; }
+        public string Query { get; set; }
+        public string Fragment { get; set; }
+    }
+    
+
+    public class InjectedTextOptions {
+
+        public string Content { get; set; }
+        public string InlineClassName { get; set; }
+        public bool InlineClassNameAffectsLetterSpacing { get; set; }
+        // readonly attachedData?: unknown;
+        public  InjectedTextCursorStops? CursorStops { get; set; }
+    }
+
+    public enum InjectedTextCursorStops {
+        Both = 0,
+        Right = 1,
+        Left = 2,
+        None = 3
+    }
 }

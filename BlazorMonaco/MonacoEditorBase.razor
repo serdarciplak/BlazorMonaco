@@ -131,14 +131,14 @@
         await staticJsRuntime.InvokeVoidAsync("blazorMonaco.editor.create", id, optionsDict, jsObjectRef);
     }
 
-    protected static async Task CreateDiffEditor(string id, DiffEditorConstructionOptions options, DotNetObjectReference<MonacoEditorBase> jsObjectRef)
+    protected static async Task CreateDiffEditor(string id, StandaloneDiffEditorConstructionOptions options, DotNetObjectReference<MonacoEditorBase> jsObjectRef)
     {
         if (staticJsRuntime == null)
             return;
 
         if (options == null)
         {
-            options = new DiffEditorConstructionOptions
+            options = new StandaloneDiffEditorConstructionOptions
             {
             };
         }
@@ -428,11 +428,11 @@
 
     // revealRangeNearTopIfOutsideViewport(range: IRange, scrollType?: ScrollType) : void;
 
-    public async Task SetPosition(Position position)
+    public async Task SetPosition(Position position, string source)
     {
         if (jsRuntime == null)
             return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setPosition", Id, position);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setPosition", Id, position, source);
     }
 
     internal async Task SetEventListener(string eventName)
@@ -442,25 +442,25 @@
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setEventListener", Id, eventName);
     }
 
-    public async Task SetSelection(Range selection)
+    public async Task SetSelection(Range selection, string source)
     {
         if (jsRuntime == null)
             return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setSelection", Id, selection);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setSelection", Id, selection, source);
     }
 
-    public async Task SetSelection(Selection selection)
+    public async Task SetSelection(Selection selection, string source)
     {
         if (jsRuntime == null)
             return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setSelection", Id, selection);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setSelection", Id, selection, source);
     }
 
-    public async Task SetSelections(List<Selection> selections)
+    public async Task SetSelections(List<Selection> selections, string source)
     {
         if (jsRuntime == null)
             return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setSelections", Id, selections);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setSelections", Id, selections, source);
     }
 
     public async Task Trigger(string source, string handlerId, object payload = null)

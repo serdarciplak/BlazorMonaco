@@ -234,11 +234,11 @@ namespace BlazorMonaco
             return await jsRuntime.InvokeAsync<FindMatch>("blazorMonaco.editor.model.findPreviousMatch", Uri, searchString, searchStart, isRegex, matchCase, wordSeparators, captureMatches);
         }
 
-        public async Task<string> GetModeId()
+        public async Task<string> GetLanguageId()
         {
             if (jsRuntime == null)
                 return null;
-            return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.model.getModeId", Uri);
+            return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.model.getLanguageId", Uri);
         }
 
         public async Task<WordAtPosition> GetWordAtPosition(Position position)
@@ -290,11 +290,18 @@ namespace BlazorMonaco
             return await jsRuntime.InvokeAsync<ModelDecoration>("blazorMonaco.editor.model.getLinesDecorations", Uri, startLineNumber, endLineNumber, ownerId, filterOutValidation);
         }
 
-        public async Task<ModelDecoration> GetDecorationsInRange(Range range, int? ownerId, bool? filterOutValidation)
+        public async Task<ModelDecoration[]> GetDecorationsInRange(Range range, int? ownerId, bool? filterOutValidation)
         {
             if (jsRuntime == null)
                 return null;
-            return await jsRuntime.InvokeAsync<ModelDecoration>("blazorMonaco.editor.model.getDecorationsInRange", Uri, range, ownerId, filterOutValidation);
+            return await jsRuntime.InvokeAsync<ModelDecoration[]>("blazorMonaco.editor.model.getDecorationsInRange", Uri, range, ownerId, filterOutValidation);
+        }
+
+        public async Task<ModelDecoration> GetDecorationsInRange(Range range)
+        {
+            if (jsRuntime == null)
+                return null;
+            return await jsRuntime.InvokeAsync<ModelDecoration>("blazorMonaco.editor.model.getDecorationsInRange", Uri, range);
         }
 
         public async Task<List<ModelDecoration>> GetAllDecorations(int? ownerId, bool? filterOutValidation)
@@ -310,6 +317,15 @@ namespace BlazorMonaco
                 return null;
             return await jsRuntime.InvokeAsync<ModelDecoration>("blazorMonaco.editor.model.getOverviewRulerDecorations", Uri, ownerId, filterOutValidation);
         }
+
+        public async Task<ModelDecoration[]> GetInjectedTextDecorations(int? ownerId)
+        {
+            if (jsRuntime == null)
+                return null;
+            return await jsRuntime.InvokeAsync<ModelDecoration[]>("blazorMonaco.editor.model.getInjectedTextDecorations", Uri, ownerId);
+        }
+
+        
 
         public async Task<string> NormalizeIndentation(string str)
         {
