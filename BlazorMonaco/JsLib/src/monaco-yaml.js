@@ -1,6 +1,6 @@
 import { setDiagnosticsOptions } from 'monaco-yaml';
 
-export function setYamlDiagnosticsOptions(schemaUriStr) {
+export function setYamlDiagnosticsOptions(schemas) {
     window.MonacoEnvironment = {};
     window.MonacoEnvironment = {
         getWorker(moduleId, label) {
@@ -21,11 +21,6 @@ export function setYamlDiagnosticsOptions(schemaUriStr) {
         completion: true,
         validate: true,
         format: true,
-        schemas: [
-            {
-                uri: schemaUriStr,
-                fileMatch: ['*.yml']
-            }
-        ],
+        schemas: schemas,
     });
 }

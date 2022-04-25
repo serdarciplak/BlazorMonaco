@@ -106,6 +106,14 @@
         return await staticJsRuntime.InvokeAsync<string>("blazorMonaco.editor.colorizeModelLine", model.Uri, lineNumber, tabSize);
     }
 
+    public static async Task SetYamlDiagnosticOptionsAsync(YamlDiagnosticSchema[] schemas)
+    {
+        if (staticJsRuntime == null)
+            return;
+
+        await staticJsRuntime.InvokeVoidAsync("window.MonacoEditor.SetYamlDiagnosticsOptions", (object)schemas);
+    }
+
     protected static async Task Create(string id, StandaloneEditorConstructionOptions options, DotNetObjectReference<MonacoEditorBase> jsObjectRef)
     {
         if (staticJsRuntime == null)

@@ -3,6 +3,6 @@ import { setYamlDiagnosticsOptions } from './monaco-yaml.js'
 
 initializeMonacoEditor();
 
-export function SetYamlDiagnosticsOptions(schemaUriStr) {
-    setYamlDiagnosticsOptions(schemaUriStr);
+export function SetYamlDiagnosticsOptions(schemas) {
+    setYamlDiagnosticsOptions(schemas);
 }
