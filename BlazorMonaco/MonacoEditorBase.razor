@@ -472,5 +472,37 @@
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.trigger", Id, source, handlerId, payloadJsonElement);
     }
 
+    public static async Task RegisterCodeActionProvider(string language, CodeActionProviderFunc func)
+    {
+        if (staticJsRuntime == null)
+            return;
+
+        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.languages.registerCodeActionProvider", language, DotNetObjectReference.Create(new CodeActionProvider(func)));
+    }
+
+    public static async Task RegisterCodeActionProvider(string language, CodeActionProviderAsyncFunc func)
+    {
+        if (staticJsRuntime == null)
+            return;
+
+        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.languages.registerCodeActionProvider", language, DotNetObjectReference.Create(new CodeActionProvider(func)));
+    }
+
+    public static async Task RegisterCompletionItemProvider(string language, CompletionItemProviderFunc func)
+    {
+        if (staticJsRuntime == null)
+            return;
+
+        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.languages.registerCompletionItemProvider", language, DotNetObjectReference.Create(new CompletionItemProvider(func)));
+    }
+
+    public static async Task RegisterCompletionItemProvider(string language, CompletionItemProviderAsyncFunc func)
+    {
+        if (staticJsRuntime == null)
+            return;
+
+        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.languages.registerCompletionItemProvider", language, DotNetObjectReference.Create(new CompletionItemProvider(func)));
+    }
+
     #endregion
 }

@@ -2,6 +2,7 @@ if (!require.getConfig().paths.vs)  // for lte v1.2.0
     require.config({ paths: { 'vs': '_content/BlazorMonaco/lib/monaco-editor/min/vs' } });
 window.blazorMonaco = window.blazorMonaco || {};
 window.blazorMonaco.editors = [];
+window.blazorMonaco.languages = [];
 
 window.blazorMonaco.editor = {
 
@@ -835,10 +836,72 @@ window.blazorMonaco.editor = {
             return model.setEOL(eol);
         },
 
+        getMarkers: function (uriStr, owner, take) {
+            return monaco.editor.getModelMarkers({ owner: owner, resource: uriStr, take: take });
+        },
+
+        setMarkers: function (uriStr, owner, markers) {
+            let model = this.getJsObject(uriStr);
+            monaco.editor.setModelMarkers(model, owner, markers);
+        },
+
         dispose: function (uriStr) {
             let model = this.getJsObject(uriStr);
             return model.dispose();
         }
+    }
+
+    //#endregion
+}
+
+window.blazorMonaco.languages = {
+
+    //#region Static methods
+
+    registerCodeActionProvider: function (language, provider) {
+        monaco.languages.registerCodeActionProvider(language, {
+            provideCodeActions: (model, range, context, token) => {
+                let task = provider.invokeMethodAsync("Invoke", decodeURI(model.uri.toString()), range, context.markers, context.only);
+                return new Promise(resolve => {
+                    task.then(result => {
+                        resolve({
+                            actions: result.actions.map(x => {
+                                console.log(x.edit.edits);
+                                return {
+                                    title: x.title,
+                                    diagnostics: x.diagnostics,
+                                    kind: x.kind,
+                                    edit: {
+                                        edits: x.edit.edits.map(y => {
+                                            return {
+                                                resource: monaco.Uri.parse(y.resource),
+                                                edit: y.edit
+                                            };
+                                        })
+                                    }
+                                };
+                            }),
+                            dispose: () => { }
+                        });
+                    });
+                });
+            }
+        });
+    },
+
+    registerCompletionItemProvider: function (language, provider) {
+        monaco.languages.registerCompletionItemProvider(language, {
+            provideCompletionItems: (model, position, context, token) => {
+                let task = provider.invokeMethodAsync("Invoke", decodeURI(model.uri.toString()), position);
+                return new Promise(resolve => {
+                    task.then(result => {
+                        resolve({
+                            suggestions: result.suggestions
+                        });
+                    });
+                });
+            }
+        });
     }
 
     //#endregion

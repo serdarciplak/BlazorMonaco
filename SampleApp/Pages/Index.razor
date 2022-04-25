@@ -75,6 +75,78 @@
 
         decorationIds = await _editor.DeltaDecorations(null, newDecorations);
         // You can now use 'decorationIds' to change or remove the decorations
+
+        // Set sample marker
+        var model = await _editor.GetModel();
+        await model.SetMarkers("default", new[]
+        {
+            new Marker
+            {
+                Code = "SAMPLE01",
+                Message = "Marker sample",
+                Severity = MarkerSeverity.Warning,
+                StartLineNumber = 4,
+                StartColumn = 3,
+                EndLineNumber = 4,
+                EndColumn = 7
+            }
+        });
+
+        // Register quick fix for marker
+        await MonacoEditorBase.RegisterCodeActionProvider("javascript", (uri, range, markers, kind) =>
+        {
+            if (markers.Length == 0 || kind != "quickfix")
+                return Array.Empty<CodeAction>();
+
+            return new[]
+            {
+                new CodeAction
+                {
+                    Title = "Fix sample",
+                    Kind = "quickfix",
+                    Diagnostics = markers,
+                    Edit =
+                    {
+                        Edits = new[]
+                        {
+                            new WorkspaceTextEdit
+                            {
+                                Resource = uri,
+                                Edit =
+                                {
+                                    Range = range,
+                                    Text = "THIS"
+                                }
+                            }
+                        }
+                    },
+                    IsPreferred = true
+                }
+            };
+        });
+
+        // Register completion item to replace warning item
+        await MonacoEditorBase.RegisterCompletionItemProvider("javascript", (uri, position) =>
+        {
+            return new[]
+            {
+                new CompletionItem
+                {
+                    Label = "Replace by THIS",
+                    Kind = CompletionItemKind.Variable,
+                    Detail = "PRESS ENTER",
+                    InsertText = "THIS",
+                    Preselect = true,
+                    Range = new BlazorMonaco.Range
+                    {
+                        StartLineNumber = 4,
+                        StartColumn = 3,
+                        EndLineNumber = 4,
+                        EndColumn = 7
+                    }
+                }
+            };
+        });
     }
 
     private string[] decorationIds;

@@ -376,6 +376,22 @@ namespace BlazorMonaco
             await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.model.setEOL", Uri, eol);
         }
 
+        public async Task<Marker[]> GetMarkers(string owner, int? take = null)
+        {
+            if (jsRuntime == null)
+                return null;
+
+            return await jsRuntime.InvokeAsync<Marker[]>("blazorMonaco.editor.model.getMarkers", Uri, owner, take);
+        }
+
+        public async Task SetMarkers(string owner, Marker[] markers)
+        {
+            if (jsRuntime == null)
+                return;
+
+            await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.model.setMarkers", Uri, owner, markers);
+        }
+
         // onDidChangeContent(listener: (e: IModelContentChangedEvent) => void): IDisposable;
 
         // onDidChangeDecorations(listener: (e: IModelDecorationsChangedEvent) => void): IDisposable;

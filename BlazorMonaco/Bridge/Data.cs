@@ -103,4 +103,81 @@ namespace BlazorMonaco
         public double Top { get; set; }
         public double Right { get; set; }
     }
+
+    public class Marker
+    {
+        public object Code { get; set; }
+
+        public string Message { get; set; }
+
+        public MarkerSeverity Severity { get; set; }
+
+        public int StartLineNumber { get; set; }
+
+        public int StartColumn { get; set; }
+
+        public int EndLineNumber { get; set; }
+
+        public int EndColumn { get; set; }
+
+        public string Source { get; set; }
+
+        public MarkerTag[] Tags { get; set; } = Array.Empty<MarkerTag>();
+    }
+
+    public class MarkerCode
+    {
+        public Uri Target { get; set; }
+
+        public string Value { get; set; }
+    }
+
+    public class CodeAction
+    {
+        public string Title { get; set; }
+
+        public string Kind { get; set; }
+
+        public Marker[] Diagnostics { get; set; } = Array.Empty<Marker>();
+
+        public WorkspaceEdit Edit { get; } = new WorkspaceEdit();
+
+        public bool IsPreferred { get; set; }
+    }
+
+    public class WorkspaceEdit
+    {
+        public WorkspaceTextEdit[] Edits { get; set; } = Array.Empty<WorkspaceTextEdit>();
+    }
+
+    public class WorkspaceTextEdit
+    {
+        public string Resource { get; set; }
+
+        public TextEdit Edit { get; } = new TextEdit();
+    }
+
+    public class TextEdit
+    {
+        public string Text { get; set; }
+
+        public Range Range { get; set; }
+
+        public EndOfLineSequence? Eol { get; set; }
+    }
+
+    public class CompletionItem
+    {
+        public string Label { get; set; }
+
+        public Range Range { get; set; }
+
+        public string Detail { get; set; }
+
+        public CompletionItemKind Kind { get; set; }
+
+        public string InsertText { get; set; }
+
+        public bool Preselect { get; set; }
+    }
 }
