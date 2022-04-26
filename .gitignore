@@ -341,4 +341,4 @@ healthchecksdb
 
 # Node
 **/node_modules/
-**/wwwroot/*js*/
+**/wwwroot/*lib*/
