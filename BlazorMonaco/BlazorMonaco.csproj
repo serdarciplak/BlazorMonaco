@@ -13,16 +13,15 @@
     <PackageReleaseNotes>See the change log for release notes:
 https://github.com/serdarciplak/BlazorMonaco/blob/master/CHANGELOG.md</PackageReleaseNotes>
     <PackageIcon>icon.png</PackageIcon>
-	  <JsLibRoot>JsLib\</JsLibRoot>
-	  <DefaultItemExcludes>$(DefaultItemExcludes);$(JsLibRoot)node_modules\**</DefaultItemExcludes>
+	<JsLibRoot>JsLib\</JsLibRoot>
+	<DefaultItemExcludes>$(DefaultItemExcludes);$(JsLibRoot)node_modules/**</DefaultItemExcludes>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="wwwroot\lib\**" />
-    <Content Remove="wwwroot\lib\**" />
-    <EmbeddedResource Remove="wwwroot\lib\**" />
-    <None Remove="wwwroot\lib\**" />
-  </ItemGroup>
+	<ItemGroup>
+		<Content Remove="$(JsLibRoot)**" />
+		<None Remove="$(JsLibRoot)**" />
+		<None Include="$(JsLibRoot)**" Exclude="$(JsLibRoot)node_modules/**" />
+	</ItemGroup>
 
   <ItemGroup>
     <None Include="icon.png">
