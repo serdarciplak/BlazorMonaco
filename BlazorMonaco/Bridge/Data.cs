@@ -1,9 +1,81 @@
-﻿using System;
+﻿using BlazorMonaco.Extensions;
 using System.Collections.Generic;
-using System.Text;
 
 namespace BlazorMonaco
 {
+    public interface IMonarchToken
+    {
+
+    }
+
+    public class MonarchCase
+    {
+        public string Token { get; set; }
+        public string Type { get; set; }
+
+        public MonarchCase(string token, string type)
+        {
+            Token = token;
+            Type = type.ToMonarchType();
+        }
+    }
+
+    public class MonarchTokenValue : IMonarchToken
+    {
+        public object Value { get; set; }
+
+        public MonarchTokenValue(object value)
+        {
+            Value = value;
+        }
+
+        public static implicit operator string(MonarchTokenValue monarchRuleValue) => monarchRuleValue.Value.ToString();
+        public static implicit operator CaseToken(MonarchTokenValue monarchRuleValue) => monarchRuleValue.Value as CaseToken;
+        public static implicit operator ConditionToken(MonarchTokenValue monarchRuleValue) => monarchRuleValue.Value as ConditionToken;
+        public static explicit operator MonarchTokenValue(string b) => new(b);
+        public static explicit operator MonarchTokenValue(CaseToken b) => new(b);
+        public static explicit operator MonarchTokenValue(ConditionToken b) => new(b);
+
+        public override string ToString() => $"{Value}";
+    }
+
+    public class CaseToken : IMonarchToken
+    {
+        public List<MonarchCase> Cases { get; set; }
+    }
+
+    public class ConditionToken : IMonarchToken
+    {
+        public string Token { get; set; }
+        public string Log { get; set; }
+        public string Bracket { get; set; }
+        public string Next { get; set; }
+    }
+
+    public class MonarchRoot
+    {
+        public string Pattern { get; set; }
+        public MonarchTokenValue Token { get; set; }
+    }
+
+    public class TokenizerData
+    {
+        public List<MonarchRoot> Root { get; set; }
+    }
+
+    public class MonarchLanguage
+    {
+        public string Id { get; set; }
+    }
+
+    public class MonarchLanguageRules
+    {
+        public List<string> Keywords { get; set; }
+        public List<string> TypeKeywords { get; set; }
+        public List<string> Operators { get; set; }
+        public TokenizerData Tokenizer { get; set; }
+    }
+
     public class Position
     {
         public int LineNumber { get; set; }

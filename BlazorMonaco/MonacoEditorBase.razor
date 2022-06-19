@@ -1,6 +1,7 @@
 ﻿@implements IDisposable
 @using Microsoft.JSInterop
 @using System.Text.Json
+@using System.Dynamic
 
 @code {
     [Parameter]
@@ -470,6 +471,79 @@
 
         var payloadJsonElement = JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(payload));
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.trigger", Id, source, handlerId, payloadJsonElement);
+    }
+
+    public static async Task CreateLanguage(MonarchLanguage language)
+    {
+        if (staticJsRuntime == null)
+            return;
+
+        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.languages.register", language);
+    }
+
+    public static async Task SetMonarchTokensProvider(string language, MonarchLanguageRules monarchLanguageRules)
+    {
+        if (staticJsRuntime == null)
+            return;
+
+        var newRoots = new List<List<dynamic>>();
+
+        foreach (var root in monarchLanguageRules.Tokenizer.Root)
+        {
+            switch (root.Token.Value)
+            {
+                case string value:
+                    newRoots.Add(new()
+                    {
+                        $"{root.Pattern}", value
+                    });
+                    break;
+                case CaseToken value:
+                    var cases = value.Cases.ToDictionary(@case => @case.Type, @case => @case.Token);
+
+                    newRoots.Add(new()
+                    {
+                        $"{root.Pattern}", new
+                        {
+                            cases
+                        }
+                    });
+                    break;
+                case ConditionToken value:
+                    dynamic obj = new ExpandoObject();
+
+                    if (!string.IsNullOrEmpty(value.Token))
+                        obj.token = value.Token;
+
+                    if (!string.IsNullOrEmpty(value.Bracket))
+                        obj.bracket = value.Bracket;
+
+                    if (!string.IsNullOrEmpty(value.Log))
+                        obj.log = value.Log;
+
+                    if (!string.IsNullOrEmpty(value.Next))
+                        obj.next = value.Next;
+
+                    newRoots.Add(new()
+                    {
+                        $"{root.Pattern}", obj
+                    });
+                    break;
+            }
+
+            var newMonarchLanguageRules = new
+            {
+                keywords = monarchLanguageRules.Keywords,
+                typeKeywords = monarchLanguageRules.TypeKeywords,
+                operators = monarchLanguageRules.Operators,
+                tokenizer = new
+                {
+                    root = newRoots
+                }
+            };
+
+            await staticJsRuntime.InvokeVoidAsync("blazorMonaco.languages.setMonarchTokensProvider", language, newMonarchLanguageRules);
+        }
     }
 
     #endregion

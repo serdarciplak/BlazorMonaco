@@ -75,6 +75,134 @@
 
         decorationIds = await _editor.DeltaDecorations(null, newDecorations);
         // You can now use 'decorationIds' to change or remove the decorations
+        
+        #region Usage example or MonarchTokens
+        await MonacoEditorBase.CreateLanguage(new MonarchLanguage
+        {
+            Id = "customCsharp"
+        });
+
+        await MonacoEditorBase.SetMonarchTokensProvider("customCsharp", new MonarchLanguageRules
+        {
+            Keywords = new List<string>
+            {
+                "abstract", "continue", "for", "new", "switch", "assert", "goto", "do",
+                "if", "private", "this", "break", "protected", "throw", "else", "public",
+                "enum", "return", "catch", "try", "interface", "static", "class",
+                "finally", "const", "while", "true", "false", "using", "namespace", "override",
+                "async", "base", "await", "default", "where", "in", "from", "select", "and", "or",
+            },
+            TypeKeywords = new List<string>
+            {
+                "bool", "double", "uint", "int", "float", "short", "ushort", "char", "long",
+                "ulong", "void", "var"
+            },
+            Operators = new List<string>
+            {
+                "=", ">", "<", "!", "~", "?", ":", "==", "<=", ">=", "!=",
+                "&&", "||", "++", "--", "+", "-", "*", "/", "&", "|", "^", "%",
+                "<<", ">>", ">>>", "+=", "-=", "*=", "/=", "&=", "|=", "^=",
+                "%=", "<<=", ">>=", ">>>="
+            },
+            Tokenizer = new TokenizerData
+            {
+                Root = new List<MonarchRoot>
+                {
+                    /* Notes:
+                    Order is important, top have priority for highlighting.
+                    If you have two regex with approximately the same pattern,
+                    one of this can be not highlighted */ 
+                    new()
+                    {
+                        Pattern = @"my-custom-keyword",
+                        Token = new MonarchTokenValue("myKeyword")
+                    },
+                    new()
+                    {
+                        Pattern = @"// *(\S+)? *",
+                        Token = new MonarchTokenValue("comment")
+                    },
+                    new()
+                    {
+                        Pattern = @"\/\* *(?:\n+)?(\S+)? *(?:\n+)?\*\/",
+                        Token = new MonarchTokenValue("comment")
+                    },
+                    new()
+                    {
+                        Pattern = @"@\s*[a-zA-Z_\$][\w\$]*",
+                        Token = new MonarchTokenValue(new ConditionToken
+                        {
+                            Token = "annotation",
+                            Log = "annotation token: $0"
+                        })
+                    },
+                    new()
+                    {
+                        Pattern = @"[a-z_$][\w$]*",
+                        Token = new MonarchTokenValue(new CaseToken
+                        {
+                            Cases = new List<MonarchCase>
+                            {
+                                // Import from a list created in MonarchLanguageRules class.
+                                
+                                /* By example, if you add: new("keyword", nameof(MonarchLanguageRules.MyCustomListOfKeyword))
+                                 ou need to create a list of string with name MyCustomListOfKeyword in MonarchLanguageRules class,
+                                // without this an error is occurred*/
+                                
+                                new("keyword", nameof(MonarchLanguageRules.TypeKeywords)),
+                                new("keyword", nameof(MonarchLanguageRules.Keywords)),
+                            }
+                        })
+                    },
+                    new()
+                    {
+                        Pattern = @"[=><!~?:&|+\-*\/\^%]+",
+                        Token = new MonarchTokenValue(new CaseToken
+                        {
+                            Cases = new List<MonarchCase>
+                            {
+                                new("operator", nameof(MonarchLanguageRules.Operators)),
+                            }
+                        })
+                    },
+                    new()
+                    {
+                        Pattern = @"[{}()\[\]]",
+                        Token = new MonarchTokenValue("brackets")
+                    }
+                }
+            }
+        });
+
+        await MonacoEditorBase.DefineTheme("my-custom-theme", new StandaloneThemeData
+        {
+            Base = "vs-dark",
+            Inherit = true,
+            Rules = new List<TokenThemeRule>
+            {
+                new TokenThemeRule { Background = "363636", Foreground = "E0E0E0" },
+                new TokenThemeRule { Token = "operator.sql", Foreground = "59ADFF" },
+                new TokenThemeRule { Token = "number", Foreground = "cc6672" },
+                new TokenThemeRule { Token = "string.sql", Foreground = "E65C5C" },
+                new TokenThemeRule { Token = "variable", Foreground = "4287f5" },
+
+                // Dot not miss to add tokens created in SetMonarchTokensProviderToken
+                new TokenThemeRule { Token = "keyword", Foreground = "6b6bff" },
+                new TokenThemeRule { Token = "brackets", Foreground = "6b6bff" },
+                new TokenThemeRule { Token = "operator", Foreground = "ff7a6b" },
+                new TokenThemeRule { Token = "comment", Foreground = "7A7A7A" },
+                new TokenThemeRule { Token = "myKeyword", Foreground = "42f593" },
+            },
+            Colors = new Dictionary<string, string>
+            {
+                ["editor.background"] = "#121218",
+                ["editorCursor.foreground"] = "#E0E0E0",
+                ["editorLineNumber.foreground"] = "#7A7A7A"
+            }
+        });
+
+        await MonacoEditorBase.SetTheme("my-custom-theme");
+        #endregion
     }
 
     private string[] decorationIds;
