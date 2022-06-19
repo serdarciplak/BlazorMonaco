@@ -735,9 +735,9 @@ window.blazorMonaco.editor = {
             return model.findPreviousMatch(searchString, searchStart, isRegex, matchCase, wordSeparators, captureMatches);
         },
 
-        getModeId: function (uriStr) {
+        getLanguageId: function (uriStr) {
             let model = this.getJsObject(uriStr);
-            return model.getModeId();
+            return model.getLanguageId();
         },
 
         getWordAtPosition: function (uriStr, position) {
@@ -780,9 +780,19 @@ window.blazorMonaco.editor = {
             return model.getDecorationsInRange(range, ownerId, filterOutValidation);
         },
 
+        getDecorationsInRange2: function (uriStr, range) {
+            let model = this.getJsObject(uriStr);
+            return model.getDecorationsInRange(range);
+        },
+
         getAllDecorations: function (uriStr, ownerId, filterOutValidation) {
             let model = this.getJsObject(uriStr);
             return model.getAllDecorations(ownerId, filterOutValidation);
+        },
+
+        getInjectedTextDecorations: function (uriStr, ownerId) {
+            let model = this.getJsObject(uriStr);
+            return model.getInjectedTextDecorations(ownerId);
         },
 
         getOverviewRulerDecorations: function (uriStr, ownerId, filterOutValidation) {

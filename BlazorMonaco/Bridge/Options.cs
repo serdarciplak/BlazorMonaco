@@ -13,7 +13,8 @@ namespace BlazorMonaco
         public string AccessibilitySupport { get; set; }
         public string AriaLabel { get; set; }
         public string AutoClosingBrackets { get; set; }
-        public string AutoClosingOvertype { get; set; }
+        public string AutoClosingDelete { get; set; }
+        public string AutoClosingOvertype { get; set; } //'always' | 'auto' | 'never';
         public string AutoClosingQuotes { get; set; }
         public bool? AutoIndent { get; set; }
         public string AutoSurround { get; set; }
@@ -36,6 +37,7 @@ namespace BlazorMonaco
         public bool? DefinitionLinkOpensInPeek { get; set; }
         public bool? DisableLayerHinting { get; set; }
         public bool? DisableMonospaceOptimizations { get; set; }
+        public bool? DomReadOnly { get; set; }
         public bool? DragAndDrop { get; set; }
         public bool? EmptySelectionClipboard { get; set; }
         public string ExtraEditorClassName { get; set; }
@@ -44,6 +46,8 @@ namespace BlazorMonaco
         public bool? FixedOverflowWidgets { get; set; }
         public bool? Folding { get; set; }
         public bool? FoldingHighlight { get; set; }
+        public bool? FoldingImportsByDefault { get; set; }
+        public bool? FoldingMaximumRegions { get; set; }
         public string FoldingStrategy { get; set; }
         public string FontFamily { get; set; }
         public bool? FontLigatures { get; set; }
@@ -53,11 +57,13 @@ namespace BlazorMonaco
         public bool? FormatOnType { get; set; }
         public bool? GlyphMargin { get; set; }
         public GotoLocationOptions GotoLocation { get; set; }
+        public GuidesOptions Guides { get; set; }
         public bool? HideCursorInOverviewRuler { get; set; }
-        public bool? HighlightActiveIndentGuide { get; set; }
+        public bool? RenderControlCharacters { get; set; }
         public EditorHoverOptions Hover { get; set; }
         public bool? InDiffEditor { get; set; }
-        public EditorInlineHintsOptions InlineHints { get; set; }
+        public EditorInlayHintsOptions InlayHints { get; set; }
+        public InlineSuggestOptions InlineSuggest { get; set; }
         public int? LetterSpacing { get; set; }
         public EditorLightbulbOptions Lightbulb { get; set; }
         public string LineDecorationsWidth { get; set; }
@@ -85,9 +91,7 @@ namespace BlazorMonaco
         public int? QuickSuggestionsDelay { get; set; }
         public bool? ReadOnly { get; set; }
         public bool? RenameOnType { get; set; }
-        public bool? RenderControlCharacters { get; set; }
         public bool? RenderFinalNewline { get; set; }
-        public bool? RenderIndentGuides { get; set; }
         public string RenderLineHighlight { get; set; }
         public bool? RenderLineHighlightOnlyWhenFocus { get; set; }
         public string RenderValidationDecorations { get; set; }
@@ -129,6 +133,10 @@ namespace BlazorMonaco
         public string WordWrapOverride2 { get; set; }
         public string WrappingIndent { get; set; }
         public string WrappingStrategy { get; set; }
+
+        public bool? UseShadowDOM { get; set; }
+        public object UnicodeHighlight { get; set; }
+        public BracketPairColorizationOptions BracketPairColorization { get; set; }
     }
 
     public class DiffEditorOptions : EditorOptions
@@ -143,14 +151,27 @@ namespace BlazorMonaco
         public bool? IsInEmbeddedEditor { get; set; }
         public bool? RenderOverviewRuler { get; set; }
         public string DiffWordWrap { get; set; }
+
+        public int? MaxFileSize { get; set; }
     }
 
     public class DiffEditorConstructionOptions : DiffEditorOptions
     {
         public string Theme { get; set; }
         public bool? AutoDetectHighContrast { get; set; }
+
         public Dimension Dimension { get; set; }
         // overflowWidgetsDomNode?: HTMLElement;
+        public string OriginalAriaLabel { get; set; }
+        public string ModifiedAriaLabel { get; set; }
+        public bool? IsInEmbeddedEditor { get; set; }
+
+    }
+
+    public class StandaloneDiffEditorConstructionOptions : DiffEditorConstructionOptions
+    {
+        public string Theme { get; set; }
+        public bool AutoDetectHighContrast { get; set; }
     }
 
     public class GlobalEditorOptions : EditorOptions
@@ -166,6 +187,7 @@ namespace BlazorMonaco
         public bool? StablePeek { get; set; }
         public int? MaxTokenizationLineLength { get; set; }
         public string Theme { get; set; }
+        public bool? AutoDetectHighContrast { get; set; }
     }
 
     public class EditorConstructionOptions : GlobalEditorOptions
@@ -180,6 +202,7 @@ namespace BlazorMonaco
         public string Value { get; set; }
         public string Language { get; set; }
         public string AccessibilityHelpUrl { get; set; }
+        // ariaContainerElement?: HTMLElement;
     }
 
     // Individual Options
@@ -204,7 +227,7 @@ namespace BlazorMonaco
     {
         public bool? AddExtraSpaceOnTop { get; set; }
         public bool? AutoFindInSelection { get; set; }
-        public bool? SeedSearchStringFromSelection { get; set; }
+        public string SeedSearchStringFromSelection { get; set; } //'never' | 'always' | 'selection';
     }
 
     public class EditorHoverOptions
@@ -212,9 +235,10 @@ namespace BlazorMonaco
         public int? Delay { get; set; } = 300;
         public bool? Enabled { get; set; } = true;
         public bool? Sticky { get; set; } = true;
+        public bool? Above { get; set; }
     }
 
-    public class EditorInlineHintsOptions
+    public class EditorInlayHintsOptions
     {
         public bool? Enabled { get; set; }
         public int? FontSize { get; set; }
@@ -330,6 +354,19 @@ namespace BlazorMonaco
         public bool? ShowVariables { get; set; }
         public bool? ShowWords { get; set; }
         public bool? SnippetsPreventQuickSuggestions { get; set; }
+        public  bool? Preview { get; set; }
+        public string PreviewModel { get; set; } //'prefix' | 'subword' | 'subwordSmart';
+        public bool? ShowDeprecated { get; set; }
+    }
+
+
+    public class GuidesOptions
+    {
+        public string BracketPairs { get; set; } //?: boolean | 'active';
+        public string BracketPairsHorizontal { get; set; } = "active"; //?: boolean | 'active';
+        public bool? HighlightActiveBracketPair { get; set; } = true;
+        public bool? Indentation { get; set; } = true;
+        public bool? HighlightActiveIndentation { get; set; } = true;
     }
 
     public class ModelDeltaDecoration
@@ -370,6 +407,8 @@ namespace BlazorMonaco
     {
         public bool? IsTrusted { get; set; }
         public bool? SupportThemeIcons { get; set; }
+        public bool? SupportHtml { get; set; }
+        public UriComponents BaseUri { get; set; }
         public string Uris { get; set; }
         public string Value { get; set; }
     }
@@ -401,14 +440,20 @@ namespace BlazorMonaco
         public bool? TrimAutoWhitespace { get; set; }
     }
 
+    public class BracketPairColorizationOptions
+    {
+        public bool Enabled { get; set; }
+    }
+
     public class TextModelUpdateOptions
     {
         public int? TabSize { get; set; }
         public int? IndentSize { get; set; }
         public bool? InsertSpaces { get; set; }
         public bool? TrimAutoWhitespace { get; set; }
+        public BracketPairColorizationOptions BracketColorizationOptions { get; set; }
     }
-
+    
     public class WordAtPosition
     {
         public string Word { get; set; }
@@ -416,13 +461,25 @@ namespace BlazorMonaco
         public int EndColumn { get; set; }
     }
 
+    public class InlineSuggestOptions
+    {
+        public bool? Enabled { get; set; }
+        public string Mode { get; set; } = "prefix"; //'prefix' | 'subword' | 'subwordSmart'
+    }
+
+
+
     public class FindMatch
     {
         public Range Range { get; set; }
         public List<string> Matches { get; set; }
     }
 
-    public class IdentifiedSingleEditOperation
+    public class IdentifiedSingleEditOperation : SingleEditOperation
+    {
+    }
+
+    public class SingleEditOperation
     {
         public Range Range { get; set; }
         public string Text { get; set; }
