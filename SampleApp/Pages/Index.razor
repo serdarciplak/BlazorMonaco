@@ -54,7 +54,7 @@
 
     private async Task EditorOnDidInit(MonacoEditorBase editor)
     {
-        await _editor.AddCommand((int)KeyMode.CtrlCmd | (int)KeyCode.KEY_H, (editor, keyCode) =>
+        await _editor.AddCommand((int)KeyMode.CtrlCmd | (int)KeyCode.KeyH, (editor, keyCode) =>
         {
             Console.WriteLine("Ctrl+H : Initial editor command is triggered.");
         });
@@ -184,7 +184,7 @@
 
     private async Task AddAction()
     {
-        await _editor.AddAction("testAction", "Test Action", new int[] { (int)KeyMode.CtrlCmd | (int)KeyCode.KEY_D, (int)KeyMode.CtrlCmd | (int)KeyCode.KEY_B }, null, null, "navigation", 1.5, (editor, keyCodes) =>
+        await _editor.AddAction("testAction", "Test Action", new int[] { (int)KeyMode.CtrlCmd | (int)KeyCode.KeyD, (int)KeyMode.CtrlCmd | (int)KeyCode.KeyB }, null, null, "navigation", 1.5, (editor, keyCodes) =>
         {
             Console.WriteLine("Ctrl+D : Editor action is triggered.");
         });
