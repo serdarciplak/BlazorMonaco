@@ -1,7 +1,6 @@
 ﻿@implements IDisposable
 @using Microsoft.JSInterop
 @using System.Text.Json
-@using System.Dynamic
 
 @code {
     [Parameter]
@@ -132,14 +131,14 @@
         await staticJsRuntime.InvokeVoidAsync("blazorMonaco.editor.create", id, optionsDict, jsObjectRef);
     }
 
-    protected static async Task CreateDiffEditor(string id, StandaloneDiffEditorConstructionOptions options, DotNetObjectReference<MonacoEditorBase> jsObjectRef)
+    protected static async Task CreateDiffEditor(string id, DiffEditorConstructionOptions options, DotNetObjectReference<MonacoEditorBase> jsObjectRef)
     {
         if (staticJsRuntime == null)
             return;
 
         if (options == null)
         {
-            options = new StandaloneDiffEditorConstructionOptions
+            options = new DiffEditorConstructionOptions
             {
             };
         }
@@ -429,11 +428,11 @@
 
     // revealRangeNearTopIfOutsideViewport(range: IRange, scrollType?: ScrollType) : void;
 
-    public async Task SetPosition(Position position, string source)
+    public async Task SetPosition(Position position)
     {
         if (jsRuntime == null)
             return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setPosition", Id, position, source);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setPosition", Id, position);
     }
 
     internal async Task SetEventListener(string eventName)
@@ -443,25 +442,25 @@
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setEventListener", Id, eventName);
     }
 
-    public async Task SetSelection(Range selection, string source)
+    public async Task SetSelection(Range selection)
     {
         if (jsRuntime == null)
             return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setSelection", Id, selection, source);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setSelection", Id, selection);
     }
 
-    public async Task SetSelection(Selection selection, string source)
+    public async Task SetSelection(Selection selection)
     {
         if (jsRuntime == null)
             return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setSelection", Id, selection, source);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setSelection", Id, selection);
     }
 
-    public async Task SetSelections(List<Selection> selections, string source)
+    public async Task SetSelections(List<Selection> selections)
     {
         if (jsRuntime == null)
             return;
-        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setSelections", Id, selections, source);
+        await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setSelections", Id, selections);
     }
 
     public async Task Trigger(string source, string handlerId, object payload = null)
@@ -473,77 +472,36 @@
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.trigger", Id, source, handlerId, payloadJsonElement);
     }
 
-    public static async Task CreateLanguage(MonarchLanguage language)
+    public static async Task RegisterCodeActionProvider(string language, CodeActionProviderFunc func)
     {
         if (staticJsRuntime == null)
             return;
 
-        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.languages.register", language);
+        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.languages.registerCodeActionProvider", language, DotNetObjectReference.Create(new CodeActionProvider(func)));
     }
 
-    public static async Task SetMonarchTokensProvider(string language, MonarchLanguageRules monarchLanguageRules)
+    public static async Task RegisterCodeActionProvider(string language, CodeActionProviderAsyncFunc func)
     {
         if (staticJsRuntime == null)
             return;
 
-        var newRoots = new List<List<dynamic>>();
+        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.languages.registerCodeActionProvider", language, DotNetObjectReference.Create(new CodeActionProvider(func)));
+    }
 
-        foreach (var root in monarchLanguageRules.Tokenizer.Root)
-        {
-            switch (root.Token.Value)
-            {
-                case string value:
-                    newRoots.Add(new()
-                    {
-                        $"{root.Pattern}", value
-                    });
-                    break;
-                case CaseToken value:
-                    var cases = value.Cases.ToDictionary(@case => @case.Type, @case => @case.Token);
+    public static async Task RegisterCompletionItemProvider(string language, CompletionItemProviderFunc func)
+    {
+        if (staticJsRuntime == null)
+            return;
 
-                    newRoots.Add(new()
-                    {
-                        $"{root.Pattern}", new
-                        {
-                            cases
-                        }
-                    });
-                    break;
-                case ConditionToken value:
-                    dynamic obj = new ExpandoObject();
+        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.languages.registerCompletionItemProvider", language, DotNetObjectReference.Create(new CompletionItemProvider(func)));
+    }
 
-                    if (!string.IsNullOrEmpty(value.Token))
-                        obj.token = value.Token;
+    public static async Task RegisterCompletionItemProvider(string language, CompletionItemProviderAsyncFunc func)
+    {
+        if (staticJsRuntime == null)
+            return;
 
-                    if (!string.IsNullOrEmpty(value.Bracket))
-                        obj.bracket = value.Bracket;
-
-                    if (!string.IsNullOrEmpty(value.Log))
-                        obj.log = value.Log;
-
-                    if (!string.IsNullOrEmpty(value.Next))
-                        obj.next = value.Next;
-
-                    newRoots.Add(new()
-                    {
-                        $"{root.Pattern}", obj
-                    });
-                    break;
-            }
-
-            var newMonarchLanguageRules = new
-            {
-                keywords = monarchLanguageRules.Keywords,
-                typeKeywords = monarchLanguageRules.TypeKeywords,
-                operators = monarchLanguageRules.Operators,
-                tokenizer = new
-                {
-                    root = newRoots
-                }
-            };
-
-            await staticJsRuntime.InvokeVoidAsync("blazorMonaco.languages.setMonarchTokensProvider", language, newMonarchLanguageRules);
-        }
+        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.languages.registerCompletionItemProvider", language, DotNetObjectReference.Create(new CompletionItemProvider(func)));
     }
 
     #endregion

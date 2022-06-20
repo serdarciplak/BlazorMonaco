@@ -1,81 +1,9 @@
-﻿using BlazorMonaco.Extensions;
+﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace BlazorMonaco
 {
-    public interface IMonarchToken
-    {
-
-    }
-
-    public class MonarchCase
-    {
-        public string Token { get; set; }
-        public string Type { get; set; }
-
-        public MonarchCase(string token, string type)
-        {
-            Token = token;
-            Type = type.ToMonarchType();
-        }
-    }
-
-    public class MonarchTokenValue : IMonarchToken
-    {
-        public object Value { get; set; }
-
-        public MonarchTokenValue(object value)
-        {
-            Value = value;
-        }
-
-        public static implicit operator string(MonarchTokenValue monarchRuleValue) => monarchRuleValue.Value.ToString();
-        public static implicit operator CaseToken(MonarchTokenValue monarchRuleValue) => monarchRuleValue.Value as CaseToken;
-        public static implicit operator ConditionToken(MonarchTokenValue monarchRuleValue) => monarchRuleValue.Value as ConditionToken;
-        public static explicit operator MonarchTokenValue(string b) => new(b);
-        public static explicit operator MonarchTokenValue(CaseToken b) => new(b);
-        public static explicit operator MonarchTokenValue(ConditionToken b) => new(b);
-
-        public override string ToString() => $"{Value}";
-    }
-
-    public class CaseToken : IMonarchToken
-    {
-        public List<MonarchCase> Cases { get; set; }
-    }
-
-    public class ConditionToken : IMonarchToken
-    {
-        public string Token { get; set; }
-        public string Log { get; set; }
-        public string Bracket { get; set; }
-        public string Next { get; set; }
-    }
-
-    public class MonarchRoot
-    {
-        public string Pattern { get; set; }
-        public MonarchTokenValue Token { get; set; }
-    }
-
-    public class TokenizerData
-    {
-        public List<MonarchRoot> Root { get; set; }
-    }
-
-    public class MonarchLanguage
-    {
-        public string Id { get; set; }
-    }
-
-    public class MonarchLanguageRules
-    {
-        public List<string> Keywords { get; set; }
-        public List<string> TypeKeywords { get; set; }
-        public List<string> Operators { get; set; }
-        public TokenizerData Tokenizer { get; set; }
-    }
-
     public class Position
     {
         public int LineNumber { get; set; }
@@ -176,29 +104,80 @@ namespace BlazorMonaco
         public double Right { get; set; }
     }
 
-    public class UriComponents
+    public class Marker
     {
-        public string Scheme { get; set; }
-        public string Authority { get; set; }
-        public string Path { get; set; }
-        public string Query { get; set; }
-        public string Fragment { get; set; }
+        public object Code { get; set; }
+
+        public string Message { get; set; }
+
+        public MarkerSeverity Severity { get; set; }
+
+        public int StartLineNumber { get; set; }
+
+        public int StartColumn { get; set; }
+
+        public int EndLineNumber { get; set; }
+
+        public int EndColumn { get; set; }
+
+        public string Source { get; set; }
+
+        public MarkerTag[] Tags { get; set; } = Array.Empty<MarkerTag>();
     }
-    
 
-    public class InjectedTextOptions {
+    public class MarkerCode
+    {
+        public Uri Target { get; set; }
 
-        public string Content { get; set; }
-        public string InlineClassName { get; set; }
-        public bool InlineClassNameAffectsLetterSpacing { get; set; }
-        // readonly attachedData?: unknown;
-        public  InjectedTextCursorStops? CursorStops { get; set; }
+        public string Value { get; set; }
     }
 
-    public enum InjectedTextCursorStops {
-        Both = 0,
-        Right = 1,
-        Left = 2,
-        None = 3
+    public class CodeAction
+    {
+        public string Title { get; set; }
+
+        public string Kind { get; set; }
+
+        public Marker[] Diagnostics { get; set; } = Array.Empty<Marker>();
+
+        public WorkspaceEdit Edit { get; } = new WorkspaceEdit();
+
+        public bool IsPreferred { get; set; }
+    }
+
+    public class WorkspaceEdit
+    {
+        public WorkspaceTextEdit[] Edits { get; set; } = Array.Empty<WorkspaceTextEdit>();
+    }
+
+    public class WorkspaceTextEdit
+    {
+        public string Resource { get; set; }
+
+        public TextEdit Edit { get; } = new TextEdit();
+    }
+
+    public class TextEdit
+    {
+        public string Text { get; set; }
+
+        public Range Range { get; set; }
+
+        public EndOfLineSequence? Eol { get; set; }
+    }
+
+    public class CompletionItem
+    {
+        public string Label { get; set; }
+
+        public Range Range { get; set; }
+
+        public string Detail { get; set; }
+
+        public CompletionItemKind Kind { get; set; }
+
+        public string InsertText { get; set; }
+
+        public bool Preselect { get; set; }
     }
 }
