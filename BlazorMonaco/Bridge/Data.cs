@@ -11,8 +11,8 @@ namespace BlazorMonaco
         public string? WordPattern { get; set; }
         public IndentationRule? IndentationRules { get; set; }
         public OnEnterRule[]? OnEnterRules { get; set; }
-        public IAutoClosingPairConditional[]? AutoClosingPairs { get; set; }
-        public IAutoClosingPair[]? SurroundingPairs { get; set; } // CharacterPair[]? -> [string, string];
+        public AutoClosingPairConditional[]? AutoClosingPairs { get; set; }
+        public AutoClosingPair[]? SurroundingPairs { get; set; } // CharacterPair[]? -> [string, string];
         public string[][]? ColorizedBracketPairs { get; set; }
         public string? AutoCloseBefore { get; set; }
         public FoldingRules? Folding { get; set; }
@@ -46,9 +46,17 @@ namespace BlazorMonaco
         public string? Close { get; set; }
     }
     
-    public interface IAutoClosingPairConditional : IAutoClosingPair
+    public class AutoClosingPairConditional : IAutoClosingPair
     {
         public string[]? NotIn { get; set; }
+        public string Open { get; set; }
+        public string? Close { get; set; }
+    }
+    
+    public class AutoClosingPair : IAutoClosingPair
+    {
+        public string Open { get; set; }
+        public string? Close { get; set; }
     }
 
     public class FoldingMarkers
