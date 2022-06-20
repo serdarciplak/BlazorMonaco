@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using BlazorMonaco.Extensions;
 
 namespace BlazorMonaco
 {
@@ -77,80 +76,58 @@ namespace BlazorMonaco
         public string? AppendText { get; set; }
         public int? RemoveText { get; set; }
     }
-
-    public interface IMonarchToken
-    {
-
-    }
-
-    public class MonarchCase
-    {
-        public string Token { get; set; }
-        public string Type { get; set; }
-
-        public MonarchCase(string token, string type)
-        {
-            Token = token;
-            Type = type.ToMonarchType();
-        }
-    }
-
-    public class MonarchTokenValue : IMonarchToken
-    {
-        public object Value { get; set; }
-
-        public MonarchTokenValue(object value)
-        {
-            Value = value;
-        }
-
-        public static implicit operator string(MonarchTokenValue monarchRuleValue) => monarchRuleValue.Value.ToString();
-        public static implicit operator CaseToken(MonarchTokenValue monarchRuleValue) => monarchRuleValue.Value as CaseToken;
-        public static implicit operator ConditionToken(MonarchTokenValue monarchRuleValue) => monarchRuleValue.Value as ConditionToken;
-        public static explicit operator MonarchTokenValue(string b) => new(b);
-        public static explicit operator MonarchTokenValue(CaseToken b) => new(b);
-        public static explicit operator MonarchTokenValue(ConditionToken b) => new(b);
-
-        public override string ToString() => $"{Value}";
-    }
-
-    public class CaseToken : IMonarchToken
-    {
-        public List<MonarchCase> Cases { get; set; }
-    }
-
-    public class ConditionToken : IMonarchToken
-    {
-        public string Token { get; set; }
-        public string Log { get; set; }
-        public string Bracket { get; set; }
-        public string Next { get; set; }
-    }
-
-    public class MonarchRoot
-    {
-        public string Pattern { get; set; }
-        public MonarchTokenValue Token { get; set; }
-    }
-
-    public class TokenizerData
-    {
-        public List<MonarchRoot> Root { get; set; }
-    }
-
-    public class MonarchLanguage
+    
+    public class LanguageExtensionPoint
     {
         public string Id { get; set; }
+        public string[]? Extensions { get; set; }
+        public string[]? Filenames { get; set; }
+        public string[]? FilenamePatterns { get; set; }
+        public string? FirstLine { get; set; }
+        public string[]? Aliases { get; set; }
+        public string[]? Mimetypes { get; set; }
+        public string? Configuration { get; set; } // -> Uri?
     }
 
-    public class MonarchLanguageRules
+    public class IMonarchLanguage
     {
+        public Dictionary<string, List<object[]>> Tokenizer { get; set; }
+        public bool? IgnoreCase { get; set; }
+        public bool? Unicode { get; set; }
+        public string? DefaultToken { get; set; }
+        public MonarchLanguageBracket[]? Brackets { get; set; }
+        public string? Start { get; set; }
+        public string? TokenPostfix { get; set; }
+        public bool? IncludeLF { get; set; }
+    }
+    
+    public class CustomCsharpMonarchLanguage : IMonarchLanguage
+    {
+        // You can add multiple list like this and
+        // call this lists from Tokenizer
         public List<string> Keywords { get; set; }
-        public List<string> TypeKeywords { get; set; }
-        public List<string> Operators { get; set; }
-        public TokenizerData Tokenizer { get; set; }
+    }
+    
+    public class ExpandedMonarchLanguageAction
+    {
+        public ExpandedMonarchLanguageAction[]? Group { get; set; }
+        public Dictionary<string, dynamic>? Cases { get; set; }
+        public string? Token { get; set; }
+        public string? Next { get; set; }
+        public string? SwitchTo { get; set; }
+        public int? GoBack { get; set; }
+        public string? Bracket { get; set; }
+        public string? NextEmbedded { get; set; }
+        public string? Log { get; set; }
     }
 
+    public class MonarchLanguageBracket
+    {
+        public string Open { get; set; }
+        public string Close { get; set; }
+        public string Token { get; set; }
+    }
+    
     public class Position
     {
         public int LineNumber { get; set; }
