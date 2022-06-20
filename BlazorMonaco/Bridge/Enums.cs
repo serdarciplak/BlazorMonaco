@@ -1,35 +1,45 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace BlazorMonaco
+﻿namespace BlazorMonaco
 {
+    public enum IndentAction
+    {
+        None = 0,
+        Indent = 1,
+        IndentOutdent = 2,
+        Outdent = 3
+    }
+
     public enum CursorChangeReason
     {
         /**
          * Unknown or not set.
          */
         NotSet = 0,
+
         /**
          * A `model.setValue()` was called.
          */
         ContentFlush = 1,
+
         /**
          * The `model` has been changed outside of this cursor and the cursor recovers its position from associated markers.
          */
         RecoverFromMarkers = 2,
+
         /**
          * There was an explicit user gesture.
          */
         Explicit = 3,
+
         /**
          * There was a Paste.
          */
         Paste = 4,
+
         /**
          * There was an Undo.
          */
         Undo = 5,
+
         /**
          * There was a Redo.
          */
@@ -184,6 +194,7 @@ namespace BlazorMonaco
     public enum KeyCode
     {
         DependsOnKbLayout = -1,
+
         /**
          * Placed first to cover the 0 value of the enum.
          */
@@ -267,65 +278,78 @@ namespace BlazorMonaco
         F19 = 77,
         NumLock = 78,
         ScrollLock = 79,
+
         /**
          * Used for miscellaneous characters; it can vary by keyboard.
          * For the US standard keyboard, the ';:' key
          */
-         Semicolon = 80,
+        Semicolon = 80,
+
         /**
          * For any country/region, the '+' key
          * For the US standard keyboard, the '=+' key
          */
         Equal = 81,
+
         /**
          * For any country/region, the ',' key
          * For the US standard keyboard, the ',<' key
          */
         Comma = 82,
+
         /**
          * For any country/region, the '-' key
          * For the US standard keyboard, the '-_' key
          */
         Minus = 83,
+
         /**
          * For any country/region, the '.' key
          * For the US standard keyboard, the '.>' key
          */
         Period = 84,
+
         /**
          * Used for miscellaneous characters; it can vary by keyboard.
          * For the US standard keyboard, the '/?' key
          */
         Slash = 85,
+
         /**
          * Used for miscellaneous characters; it can vary by keyboard.
          * For the US standard keyboard, the '`~' key
          */
         Backquote = 86,
+
         /**
          * Used for miscellaneous characters; it can vary by keyboard.
          * For the US standard keyboard, the '[{' key
          */
         BracketLeft = 87,
+
         /**
          * Used for miscellaneous characters; it can vary by keyboard.
          * For the US standard keyboard, the '\|' key
          */
         Backslash = 88,
+
         /**
          * Used for miscellaneous characters; it can vary by keyboard.
          * For the US standard keyboard, the ']}' key
          */
         BracketRight = 89,
+
         /**
          * Used for miscellaneous characters; it can vary by keyboard.
          * For the US standard keyboard, the ''"' key
          */
         Quote = 90,
+
         /**
          * Used for miscellaneous characters; it can vary by keyboard.
          */
         OEM_8 = 91,
+
         /**
          * Either the angle bracket key or the backslash key on the RT 102-key keyboard.
          */
@@ -346,6 +370,7 @@ namespace BlazorMonaco
         NumpadSubtract = 106,
         NumpadDecimal = 107,
         NumpadDivide = 108,
+
         /**
          * Cover all key codes when IME is processing input.
          */
@@ -366,6 +391,7 @@ namespace BlazorMonaco
         LaunchMediaPlayer = 123,
         LaunchMail = 124,
         LaunchApp2 = 125,
+
         /**
          * Placed last to cover the length of the enum.
          * Please do not depend on this value!
@@ -379,54 +405,67 @@ namespace BlazorMonaco
          * Mouse is on top of an unknown element.
          */
         UNKNOWN = 0,
+
         /**
          * Mouse is on top of the textarea used for input.
          */
         TEXTAREA = 1,
+
         /**
          * Mouse is on top of the glyph margin
          */
         GUTTER_GLYPH_MARGIN = 2,
+
         /**
          * Mouse is on top of the line numbers
          */
         GUTTER_LINE_NUMBERS = 3,
+
         /**
          * Mouse is on top of the line decorations
          */
         GUTTER_LINE_DECORATIONS = 4,
+
         /**
          * Mouse is on top of the whitespace left in the gutter by a view zone.
          */
         GUTTER_VIEW_ZONE = 5,
+
         /**
          * Mouse is on top of text in the content.
          */
         CONTENT_TEXT = 6,
+
         /**
          * Mouse is on top of empty space in the content (e.g. after line text or below last line)
          */
         CONTENT_EMPTY = 7,
+
         /**
          * Mouse is on top of a view zone in the content.
          */
         CONTENT_VIEW_ZONE = 8,
+
         /**
          * Mouse is on top of a content widget.
          */
         CONTENT_WIDGET = 9,
+
         /**
          * Mouse is on top of the decorations overview ruler.
          */
         OVERVIEW_RULER = 10,
+
         /**
          * Mouse is on top of a scrollbar.
          */
         SCROLLBAR = 11,
+
         /**
          * Mouse is on top of an overlay widget.
          */
         OVERLAY_WIDGET = 12,
+
         /**
          * Mouse is outside of the editor.
          */

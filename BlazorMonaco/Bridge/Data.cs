@@ -1,9 +1,148 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using BlazorMonaco.Extensions;
 
 namespace BlazorMonaco
 {
+    public class LanguageConfiguration
+    {
+        public CommentRule? Comments { get; set; }
+        public string[][]? Brackets { get; set; } // CharacterPair[]? -> [string, string];
+        public string? WordPattern { get; set; }
+        public IndentationRule? IndentationRules { get; set; }
+        public OnEnterRule[]? OnEnterRules { get; set; }
+        public IAutoClosingPairConditional[]? AutoClosingPairs { get; set; }
+        public IAutoClosingPair[]? SurroundingPairs { get; set; } // CharacterPair[]? -> [string, string];
+        public string[][]? ColorizedBracketPairs { get; set; }
+        public string? AutoCloseBefore { get; set; }
+        public FoldingRules? Folding { get; set; }
+    }
+
+    public class IndentationRule
+    {
+        public string DecreaseIndentPattern { get; set; }
+        public string IncreaseIndentPattern { get; set; }
+        public string? IndentNextLinePattern { get; set; }
+        public string? UnIndentedLinePattern { get; set; }
+    }
+
+    public class OnEnterRule
+    {
+        public string BeforeText { get; set; }   
+        public string? AfterText { get; set; }   
+        public string? PreviousLineText { get; set; }   
+        public EnterAction Action { get; set; }   
+    }
+
+    public class CommentRule
+    {
+        public string? LineComment { get; set; }
+        public string[]? BlockComment { get; set; }
+    }
+    
+    public interface IAutoClosingPair
+    {
+        public string Open { get; set; }
+        public string? Close { get; set; }
+    }
+    
+    public interface IAutoClosingPairConditional : IAutoClosingPair
+    {
+        public string[]? NotIn { get; set; }
+    }
+
+    public class FoldingMarkers
+    {
+        public string Start { get; set; }
+        public string End { get; set; }
+    }
+    
+    public class FoldingRules
+    {
+        public bool? OffSide { get; set; }
+        public FoldingMarkers? Markers { get; set; }
+    }
+
+    public class EnterAction
+    {
+        public IndentAction IndentAction { get; set; }
+        public string? AppendText { get; set; }
+        public int? RemoveText { get; set; }
+    }
+
+    public interface IMonarchToken
+    {
+
+    }
+
+    public class MonarchCase
+    {
+        public string Token { get; set; }
+        public string Type { get; set; }
+
+        public MonarchCase(string token, string type)
+        {
+            Token = token;
+            Type = type.ToMonarchType();
+        }
+    }
+
+    public class MonarchTokenValue : IMonarchToken
+    {
+        public object Value { get; set; }
+
+        public MonarchTokenValue(object value)
+        {
+            Value = value;
+        }
+
+        public static implicit operator string(MonarchTokenValue monarchRuleValue) => monarchRuleValue.Value.ToString();
+        public static implicit operator CaseToken(MonarchTokenValue monarchRuleValue) => monarchRuleValue.Value as CaseToken;
+        public static implicit operator ConditionToken(MonarchTokenValue monarchRuleValue) => monarchRuleValue.Value as ConditionToken;
+        public static explicit operator MonarchTokenValue(string b) => new(b);
+        public static explicit operator MonarchTokenValue(CaseToken b) => new(b);
+        public static explicit operator MonarchTokenValue(ConditionToken b) => new(b);
+
+        public override string ToString() => $"{Value}";
+    }
+
+    public class CaseToken : IMonarchToken
+    {
+        public List<MonarchCase> Cases { get; set; }
+    }
+
+    public class ConditionToken : IMonarchToken
+    {
+        public string Token { get; set; }
+        public string Log { get; set; }
+        public string Bracket { get; set; }
+        public string Next { get; set; }
+    }
+
+    public class MonarchRoot
+    {
+        public string Pattern { get; set; }
+        public MonarchTokenValue Token { get; set; }
+    }
+
+    public class TokenizerData
+    {
+        public List<MonarchRoot> Root { get; set; }
+    }
+
+    public class MonarchLanguage
+    {
+        public string Id { get; set; }
+    }
+
+    public class MonarchLanguageRules
+    {
+        public List<string> Keywords { get; set; }
+        public List<string> TypeKeywords { get; set; }
+        public List<string> Operators { get; set; }
+        public TokenizerData Tokenizer { get; set; }
+    }
+
     public class Position
     {
         public int LineNumber { get; set; }
