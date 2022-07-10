@@ -33,9 +33,9 @@
     private string ValueToSetOriginal { get; set; }
     private string ValueToSetModified { get; set; }
 
-    private DiffEditorConstructionOptions DiffEditorConstructionOptions(MonacoDiffEditor editor)
+    private StandaloneDiffEditorConstructionOptions DiffEditorConstructionOptions(MonacoDiffEditor editor)
     {
-        return new DiffEditorConstructionOptions
+        return new StandaloneDiffEditorConstructionOptions
         {
             OriginalEditable = true
         };
@@ -128,7 +128,7 @@
 
     private async Task AddAction()
     {
-        await _diffEditor.ModifiedEditor.AddAction("testAction", "Test Action", new int[] { (int)KeyMode.CtrlCmd | (int)KeyCode.KEY_D, (int)KeyMode.CtrlCmd | (int)KeyCode.KEY_B }, null, null, "navigation", 1.5, (editor, keyCodes) =>
+        await _diffEditor.ModifiedEditor.AddAction("testAction", "Test Action", new int[] { (int)KeyMode.CtrlCmd | (int)KeyCode.KeyD, (int)KeyMode.CtrlCmd | (int)KeyCode.KeyB }, null, null, "navigation", 1.5, (editor, keyCodes) =>
         {
             Console.WriteLine($"Ctrl+D : Modified Editor action is triggered. ({editor.Id})");
         });
