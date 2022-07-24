@@ -914,6 +914,22 @@ window.blazorMonaco.languages = {
 
     setLanguageConfiguration: function (language, languageConfiguration) {
         monaco.languages.setLanguageConfiguration(language, languageConfiguration);
+    },
+
+    registerDocumentFormattingEditProvider: function (language) {
+        monaco.languages.registerDocumentFormattingEditProvider(language, {
+            provideDocumentFormattingEdits(model, options) {
+                var formatted = format(model.getValue(), {
+                    indent: ' '.repeat(options.tabSize)
+                });
+                return [
+                    {
+                        range: model.getFullModelRange(),
+                        text: formatted
+                    }
+                ];
+            }
+        });
     }
     
     //#endregion

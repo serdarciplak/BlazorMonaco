@@ -91,7 +91,7 @@ namespace BlazorMonaco
 
     public class IMonarchLanguage
     {
-        public Dictionary<string, List<object[]>> Tokenizer { get; set; }
+        public Dictionary<string, List<object>> Tokenizer { get; set; }
         public bool? IgnoreCase { get; set; }
         public bool? Unicode { get; set; }
         public string? DefaultToken { get; set; }

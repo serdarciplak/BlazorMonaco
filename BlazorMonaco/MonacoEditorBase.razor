@@ -1,6 +1,7 @@
 ﻿@implements IDisposable
 @using System.Dynamic
 @using Microsoft.JSInterop
+@using Microsoft.JSInterop
 @using System.Text.Json
 
 @code {
@@ -527,6 +528,14 @@
             return;
 
         await staticJsRuntime.InvokeVoidAsync("blazorMonaco.languages.setLanguageConfiguration", languageId, languageConfiguration);
+    }
+    
+    public static async Task RegisterDocumentFormattingEditProvider(string languageId)
+    {
+        if (staticJsRuntime == null)
+            return;
+
+        await staticJsRuntime.InvokeVoidAsync("blazorMonaco.languages.registerDocumentFormattingEditProvider", languageId);
     }
     
     #endregion
