@@ -1,6 +1,12 @@
 ﻿@inherits MonacoEditorBase
+@using System.Reflection.Metadata.Ecma335
 @using Microsoft.JSInterop
 @using System.Text.Json
+@using BlazorMonaco.Bridge
+@using OmniSharp.Models
+@using OmniSharp.Models.Diagnostics
+@using OmniSharp.Models.SignatureHelp
+@using OmniSharp.Models.v1.Completion
 
 <div id="@Id" class="monaco-editor-container @CssClass"></div>
 
@@ -51,8 +57,12 @@
                 options.LineNumbersLambda = null;
             }
 
+            if (options.Language is null)
+                throw new Exception("StandaloneEditorOptions.Language must be set");
             // Create the editor
             await MonacoEditorBase.Create(Id, options, jsObjectRef);
+            
+            await MonacoEditorBase.RegisterMonacoProvidersAsync(Id, options.Language, jsObjectRef);
         }
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -147,7 +157,6 @@
             case "OnMouseLeave": if (eventJson != null) await OnMouseLeave.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
             case "OnMouseMove": if (eventJson != null) await OnMouseMove.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
             case "OnMouseUp": if (eventJson != null) await OnMouseUp.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
-            case "OnHover": if (eventJson != null) await OnMouseUp.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
         }
 
         await base.EventCallback(eventName, eventJson);
@@ -454,6 +463,64 @@
         var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
         await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
     }
+
+    #endregion
+
+    #region LanguageProviderCallbacks
+    
+    
+    [JSInvokable("GetQuickInfoAsync")]
+    public async Task<QuickInfoResponse> GetQuickInfoAsync(QuickInfoRequest request)
+    {
+        if (OnHoverRequest.HasDelegate) await OnHoverRequest.InvokeAsync(request);
+        
+        return HoverResponse;
+    }
+    [Parameter] public EventCallback<QuickInfoRequest> OnHoverRequest { get; set; }
+    [Parameter] public QuickInfoResponse HoverResponse { get; set; } = new();
+
+   
+    [JSInvokable("GetDiagnosticsAsync")]
+    public async Task<DiagnosticResponse> GetDiagnosticsAsync(DiagnosticsRequest request)
+    {
+        if (OnDiagnosticsRequest.HasDelegate) await OnDiagnosticsRequest.InvokeAsync(request);
+        
+        return DiagnosticsResponse;
+    }
+    [Parameter] public EventCallback<DiagnosticsRequest> OnDiagnosticsRequest { get; set; }
+    [Parameter] public DiagnosticResponse DiagnosticsResponse { get; set; } = new();
+
+    [JSInvokable("GetSignatureHelpAsync")]
+    public async Task<SignatureHelpResponse> GetSignatureHelpAsync(SignatureHelpRequest request)
+    {
+        if (OnSignatureHelpRequest.HasDelegate) await OnSignatureHelpRequest.InvokeAsync(request);
+        
+        return SignatureHelpResponse;
+            
+    }
+    [Parameter] public EventCallback<SignatureHelpRequest> OnSignatureHelpRequest { get; set; }
+    [Parameter] public SignatureHelpResponse SignatureHelpResponse { get; set; } = new();
+
+    [JSInvokable("GetCompletionAsync")]
+    public async Task<CompletionResponse> GetCompletionAsync(CompletionRequest request)
+    {
+        if (OnCompletionRequest.HasDelegate) await OnCompletionRequest.InvokeAsync(request);
+        
+        return CompletionResponse;
+    }
+    
+    [Parameter] public EventCallback<CompletionRequest> OnCompletionRequest { get; set; }
+    [Parameter] public CompletionResponse CompletionResponse { get; set; } = new();
+
+    [JSInvokable("GetCompletionResolveAsync")]
+    public async Task<CompletionResolveResponse> GetCompletionResolveAsync(CompletionResolveRequest request)
+    {
+        if (OnDiagnosticsRequest.HasDelegate) await OnCompletionResolveRequest.InvokeAsync(request);
+        
+        return CompletionResolveResponse;
+    }
+    [Parameter] public EventCallback<CompletionResolveRequest> OnCompletionResolveRequest { get; set; }
+    [Parameter] public CompletionResolveResponse CompletionResolveResponse { get; set; } = new();
 
     #endregion
 

@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 
 namespace BlazorMonaco
 {
@@ -147,28 +151,5 @@ namespace BlazorMonaco
         public bool ScrollHeightChanged { get; set; }
     }
 
-    public class QuickInfoRequest : Request
-    {
-    }
-    public class Request : SimpleFileRequest
-    {
-        [JsonConverter(typeof(ZeroBasedIndexConverter))]
-        public int Line { get; set; }
-        [JsonConverter(typeof(ZeroBasedIndexConverter))]
-        public int Column { get; set; }
-        public string Buffer { get; set; }
-        public IEnumerable<LinePositionSpanTextChange> Changes { get; set; }
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        public bool ApplyChangesTogether { get; set; }
-    }
-    public class SimpleFileRequest : IRequest
-    {
-        private string _fileName;
 
-        public string FileName
-        {
-            get => _fileName?.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-            set => _fileName = value;
-        }
-    }
 }
