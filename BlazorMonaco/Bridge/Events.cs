@@ -1,7 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.IO;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 
 namespace BlazorMonaco
 {
@@ -144,4 +150,6 @@ namespace BlazorMonaco
         public bool ScrollWidthChanged { get; set; }
         public bool ScrollHeightChanged { get; set; }
     }
+
+
 }

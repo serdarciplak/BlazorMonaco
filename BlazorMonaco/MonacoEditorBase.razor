@@ -43,6 +43,7 @@
         {
             await SetEventListeners();
             await OnDidInit.InvokeAsync(this);
+
         }
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -84,7 +85,12 @@
     }
 
     #region Static Methods
-
+    public static async Task RegisterMonacoProvidersAsync(string id, string language, DotNetObjectReference<MonacoEditorBase> runtime)
+    {
+        if (staticJsRuntime == null)
+            return;
+        await staticJsRuntime.InvokeVoidAsync("RegisterMonacoProviders", id, language, runtime);
+    }
     public static async Task<string> Colorize(string text, string languageId, ColorizerOptions options)
     {
         if (staticJsRuntime == null)
@@ -115,7 +121,7 @@
         {
             options = new StandaloneEditorConstructionOptions
             {
-                Language = "javascript"
+                Language = "csharp"
             };
         }
 

@@ -1,4 +1,14 @@
 ﻿@page "/"
+@using OmniSharp.Models
+@using OmniSharp.Models.Diagnostics
+@using OmniSharp.Models.SignatureHelp
+@using OmniSharp.Models.v1.Completion
+@using BlazorMonaco.Bridge
+@using Microsoft.CodeAnalysis
+@using Microsoft.CodeAnalysis.Text
+@using LinePositionSpan = BlazorMonaco.Bridge.LinePositionSpan
+@using System.Linq
+@using OmniSharp.Models.TypeLookup
 
 <h3>Code Editor</h3>
 
@@ -28,28 +38,36 @@
     </div>
 </div>
 
-<MonacoEditor @ref="_editor" Id="sample-code-editor-123" ConstructionOptions="EditorConstructionOptions" OnDidInit="EditorOnDidInit" OnContextMenu="OnContextMenu" />
+<MonacoEditor @ref="_editor" Id="sample-code-editor-123"
+              ConstructionOptions="EditorConstructionOptions"
+              OnDidInit="EditorOnDidInit"
+              OnContextMenu="OnContextMenu"
+              OnHoverRequest="OnHoverCallback" HoverResponse="_hoverInfoResponse"
+              OnDiagnosticsRequest="OnDiagnosticsCallback" DiagnosticsResponse="_diagnosticsResponse"
+              OnSignatureHelpRequest="OnSignatureCallback" SignatureHelpResponse="_signatureHelpResponse"
+              OnCompletionRequest="OnCompletionCallback" CompletionResponse="_completionResponse"
+              OnCompletionResolveRequest="OnCompletionResolveCallback" CompletionResolveResponse="_completionResolveResponse" />
 
 @code {
     private MonacoEditor _editor { get; set; }
+    private QuickInfoResponse _hoverInfoResponse = new();
+    private DiagnosticResponse _diagnosticsResponse = new();
+    private SignatureHelpResponse _signatureHelpResponse = new();
+    private CompletionResponse _completionResponse = new();
+    private CompletionResolveResponse _completionResolveResponse = new();
     private string ValueToSet { get; set; }
 
     private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
     {
         return new StandaloneEditorConstructionOptions
-        {
-            Language = "javascript",
-            GlyphMargin = true,
-            Value = "\"use strict\";\n" +
-                    "function Person(age) {\n" +
-                    "	if (age) {\n" +
-                    "		this.age = age;\n" +
-                    "	}\n" +
-                    "}\n" +
-                    "Person.prototype.getAge = function () {\n" +
-                    "	return this.age;\n" +
-                    "};\n"
-        };
+            {
+                Language = "csharp",
+                GlyphMargin = true,
+                Value = "using System;\n\n" +
+                                "var name = string.Empty;\n" +
+                                "//use your mouse to hover over WriteLine\n" +
+                                "Console.WriteLine(name);\n"
+            };
     }
 
     private async Task EditorOnDidInit(MonacoEditorBase editor)
@@ -117,4 +135,117 @@
             Console.WriteLine("Ctrl+D : Editor action is triggered.");
         });
     }
+    //hover with mouse over symbol to simulate
+    private async Task OnHoverCallback(QuickInfoRequest obj)
+    {
+        _hoverInfoResponse = new QuickInfoResponse()
+            {
+                Markdown = "Hello QuickInfo (NEXT: delete \".\" between Console.WriteLine and re-type"
+            };
+        await Task.CompletedTask;
+    }
+
+    //change any text in editor to see error underline under "var"
+    private async Task OnDiagnosticsCallback(DiagnosticsRequest obj)
+    {
+        _diagnosticsResponse = new DiagnosticResponse()
+            {
+                Diagnostics = new List<DiagnosticModel>()
+            {
+                new DiagnosticModel()
+                {
+                    Severity = DiagnosticSeverity.Error.GetSeverity(),
+                    LinePositionSpan = new LinePositionSpan(new LinePosition(2, 0), new LinePosition(2, 3)),
+                    Message = "\"var\" is now underlined - See index.razor - line 158"
+                }
+            }
+            };
+        await Task.CompletedTask;
+    }
+
+    //type "." or "ctrl spacebar" to simulate
+    private async Task OnSignatureCallback(SignatureHelpRequest obj)
+    {
+        _signatureHelpResponse = new SignatureHelpResponse()
+            {
+                ActiveSignature = 0,
+                ActiveParameter = 0,
+                Signatures = new List<SignatureHelpItem>()
+                {
+                    new SignatureHelpItem(){
+                        Name = "Fake0", 
+                        StructuredDocumentation = new DocumentationComment("Signature documentation 1"),
+                        Label = "Method",
+                        Parameters = new List<SignatureHelpParameter>()
+                        {
+                            new SignatureHelpParameter(){Name = "Signature1", Documentation = "This is sig 1", Label = "string"}
+                            }
+                    },
+                    new SignatureHelpItem(){
+                        Name = "Fake1",
+                        Label = "Method",
+                        StructuredDocumentation = new DocumentationComment("Signature documentation 2"),
+                        Parameters = new List<SignatureHelpParameter>()
+                        {
+                            new SignatureHelpParameter(){Name = "Signature2", Documentation = "This is sig 2", Label = "string"}
+                        }
+                    }
+                }
+            };
+        await Task.CompletedTask;
+    }
+
+    //type "." or "ctrl spacebar" to simulate, tab after to insert text
+    private async Task OnCompletionCallback(CompletionRequest obj)
+    {
+        _completionResponse = new CompletionResponse()
+            {
+                IsIncomplete = true,
+                Items = new List<CompletionItem>()
+                {
+                    new CompletionItem(){
+                        Label = "WriteLine (NEXT: type ctrl + spacebar)",
+                        Kind = CompletionItemKind.Function,
+                        CommitCharacters = new[]{'\t'}.ToList(),
+                        SortText = "",
+                        TextEdit = new LinePositionSpanTextChange()
+                        {
+                            StartColumn = obj.Column,
+                            EndColumn = obj.Column + "WriteLine".Length,
+                            EndLine = obj.Line,
+                            StartLine = obj.Line,
+                            NewText = "WriteLine"
+                        }
+
+                    },
+                    new CompletionItem(){
+                        Label = "WriteLine",
+                        Kind = CompletionItemKind.Function,
+                        CommitCharacters = new[]{'\t'}.ToList(),
+                        SortText = "",
+                        TextEdit = new LinePositionSpanTextChange()
+                            {
+                                StartColumn = obj.Column,
+                                EndColumn = obj.Column + "WriteLine".Length,
+                                EndLine = obj.Line,
+                                StartLine = obj.Line,
+                                NewText = "WriteLine"
+                            }
+
+                    }
+
+                }
+            };
+        await Task.CompletedTask;
+    }
+    //type "ctrl spacebar" to simulate detail after completion
+    private async Task OnCompletionResolveCallback(CompletionResolveRequest obj)
+    {
+        _completionResolveResponse = new CompletionResolveResponse()
+            {
+                Item = new CompletionItem() { Label = "CompletionItemHover", Documentation = "NEXT: delete the \"(\" after WriteLine and re-type" }
+            };
+        await Task.CompletedTask;
+    }
+
 }
