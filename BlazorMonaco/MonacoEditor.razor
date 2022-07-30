@@ -477,7 +477,7 @@
         return HoverResponse;
     }
     [Parameter] public EventCallback<QuickInfoRequest> OnHoverRequest { get; set; }
-    [Parameter] public QuickInfoResponse HoverResponse { get; set; } = new();
+    [Parameter] public QuickInfoResponse HoverResponse { get; set; }
 
    
     [JSInvokable("GetDiagnosticsAsync")]
@@ -488,7 +488,7 @@
         return DiagnosticsResponse;
     }
     [Parameter] public EventCallback<DiagnosticsRequest> OnDiagnosticsRequest { get; set; }
-    [Parameter] public DiagnosticResponse DiagnosticsResponse { get; set; } = new();
+    [Parameter] public DiagnosticResponse DiagnosticsResponse { get; set; }
 
     [JSInvokable("GetSignatureHelpAsync")]
     public async Task<SignatureHelpResponse> GetSignatureHelpAsync(SignatureHelpRequest request)
@@ -499,7 +499,7 @@
             
     }
     [Parameter] public EventCallback<SignatureHelpRequest> OnSignatureHelpRequest { get; set; }
-    [Parameter] public SignatureHelpResponse SignatureHelpResponse { get; set; } = new();
+    [Parameter] public SignatureHelpResponse SignatureHelpResponse { get; set; }
 
     [JSInvokable("GetCompletionAsync")]
     public async Task<CompletionResponse> GetCompletionAsync(CompletionRequest request)
@@ -510,7 +510,7 @@
     }
     
     [Parameter] public EventCallback<CompletionRequest> OnCompletionRequest { get; set; }
-    [Parameter] public CompletionResponse CompletionResponse { get; set; } = new();
+    [Parameter] public CompletionResponse CompletionResponse { get; set; }
 
     [JSInvokable("GetCompletionResolveAsync")]
     public async Task<CompletionResolveResponse> GetCompletionResolveAsync(CompletionResolveRequest request)
@@ -520,7 +520,7 @@
         return CompletionResolveResponse;
     }
     [Parameter] public EventCallback<CompletionResolveRequest> OnCompletionResolveRequest { get; set; }
-    [Parameter] public CompletionResolveResponse CompletionResolveResponse { get; set; } = new();
+    [Parameter] public CompletionResolveResponse CompletionResolveResponse { get; set; }
 
     #endregion
 

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace BlazorMonaco.Bridge
 {
-        /// <summary>
+    /// <summary>
     /// Immutable span represented by a pair of line number and index within the line.
     /// </summary>
     [DataContract]
@@ -25,7 +25,7 @@ namespace BlazorMonaco.Bridge
         /// <exception cref="ArgumentException"><paramref name="end"/> precedes <paramref name="start"/>.</exception>
         public LinePositionSpan(LinePosition start, LinePosition end)
         {
-          
+
             Start = start;
             End = end;
         }
@@ -39,7 +39,7 @@ namespace BlazorMonaco.Bridge
         /// <summary>
         /// Gets the end position of the span.
         /// </summary>
-        [DataMember(Order = 1)] 
+        [DataMember(Order = 1)]
         public LinePosition End { get; set; }
 
     }
@@ -56,7 +56,7 @@ namespace BlazorMonaco.Bridge
         public int WarningLevel { get; set; }
 
         [DataMember(Order = 3)]
-        public string? Message { get; set; }
+        public string Message { get; set; }
 
         [DataMember(Order = 4)]
         public LinePositionSpan LinePositionSpan { get; set; }
@@ -85,14 +85,12 @@ namespace BlazorMonaco.Bridge
         }
         public static int GetSeverity(this DiagnosticSeverity severity)
         {
-            return severity switch
-            {
-                DiagnosticSeverity.Hidden => 1,
-                DiagnosticSeverity.Info => 2,
-                DiagnosticSeverity.Warning => 4,
-                DiagnosticSeverity.Error => 8,
-                _ => throw new Exception("Unknown diagnostic severity.")
-            };
+
+            if (severity == DiagnosticSeverity.Hidden) return 1;
+            if (severity == DiagnosticSeverity.Info) return 2;
+            if (severity == DiagnosticSeverity.Warning) return 4;
+            if (severity == DiagnosticSeverity.Error) return 8;
+            throw new Exception("Unknown diagnostic severity.");
         }
         public static IEnumerable<DiagnosticModel> ToDiagnosticModels(this ImmutableArray<Diagnostic> diagnostics)
         {
@@ -109,10 +107,10 @@ namespace BlazorMonaco.Bridge
         }
 
         public static LinePosition ToLinePosition(this Microsoft.CodeAnalysis.Text.LinePosition value)
-            => new(value.Line, value.Character);
+            => new LinePosition(value.Line, value.Character);
 
         public static LinePositionSpan ToLinePositionSpan(this Microsoft.CodeAnalysis.Text.LinePositionSpan value)
-            => new(value.Start.ToLinePosition(), value.End.ToLinePosition());
+            => new LinePositionSpan(value.Start.ToLinePosition(), value.End.ToLinePosition());
     }
     [DataContract]
     public class DiagnosticResponse
