@@ -1,4 +1,5 @@
 ﻿@page "/diff-editor"
+@using BlazorMonaco.Editor
 
 <h3>Diff Editor</h3>
 
@@ -120,7 +121,7 @@
 
     private async Task AddCommand()
     {
-        await _diffEditor.ModifiedEditor.AddCommand((int)KeyMode.CtrlCmd | (int)KeyCode.Enter, (editor, keyCode) =>
+        await _diffEditor.ModifiedEditor.AddCommand((int)KeyMod.CtrlCmd | (int)KeyCode.Enter, (editor, keyCode) =>
         {
             Console.WriteLine($"Ctrl+Enter : Original Editor command is triggered. ({editor.Id})");
         });
@@ -128,7 +129,7 @@
 
     private async Task AddAction()
     {
-        await _diffEditor.ModifiedEditor.AddAction("testAction", "Test Action", new int[] { (int)KeyMode.CtrlCmd | (int)KeyCode.KeyD, (int)KeyMode.CtrlCmd | (int)KeyCode.KeyB }, null, null, "navigation", 1.5, (editor, keyCodes) =>
+        await _diffEditor.ModifiedEditor.AddAction("testAction", "Test Action", new int[] { (int)KeyMod.CtrlCmd | (int)KeyCode.KeyD, (int)KeyMod.CtrlCmd | (int)KeyCode.KeyB }, null, null, "navigation", 1.5, (editor, keyCodes) =>
         {
             Console.WriteLine($"Ctrl+D : Modified Editor action is triggered. ({editor.Id})");
         });

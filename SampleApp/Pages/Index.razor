@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using BlazorMonaco.Editor
 
 <h3>Code Editor</h3>
 
@@ -54,7 +55,7 @@
 
     private async Task EditorOnDidInit(MonacoEditorBase editor)
     {
-        await _editor.AddCommand((int)KeyMode.CtrlCmd | (int)KeyCode.KeyH, (editor, keyCode) =>
+        await _editor.AddCommand((int)KeyMod.CtrlCmd | (int)KeyCode.KeyH, (editor, keyCode) =>
         {
             Console.WriteLine("Ctrl+H : Initial editor command is triggered.");
         });
@@ -104,7 +105,7 @@
 
     private async Task AddCommand()
     {
-        await _editor.AddCommand((int)KeyMode.CtrlCmd | (int)KeyCode.Enter, (editor, keyCode) =>
+        await _editor.AddCommand((int)KeyMod.CtrlCmd | (int)KeyCode.Enter, (editor, keyCode) =>
         {
             Console.WriteLine("Ctrl+Enter : Editor command is triggered.");
         });
@@ -112,7 +113,7 @@
 
     private async Task AddAction()
     {
-        await _editor.AddAction("testAction", "Test Action", new int[] { (int)KeyMode.CtrlCmd | (int)KeyCode.KeyD, (int)KeyMode.CtrlCmd | (int)KeyCode.KeyB }, null, null, "navigation", 1.5, (editor, keyCodes) =>
+        await _editor.AddAction("testAction", "Test Action", new int[] { (int)KeyMod.CtrlCmd | (int)KeyCode.KeyD, (int)KeyMod.CtrlCmd | (int)KeyCode.KeyB }, null, null, "navigation", 1.5, (editor, keyCodes) =>
         {
             Console.WriteLine("Ctrl+D : Editor action is triggered.");
         });

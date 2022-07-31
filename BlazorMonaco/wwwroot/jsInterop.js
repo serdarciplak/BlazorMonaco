@@ -780,11 +780,6 @@ window.blazorMonaco.editor = {
             return model.getDecorationsInRange(range, ownerId, filterOutValidation);
         },
 
-        getDecorationsInRange2: function (uriStr, range) {
-            let model = this.getJsObject(uriStr);
-            return model.getDecorationsInRange(range);
-        },
-
         getAllDecorations: function (uriStr, ownerId, filterOutValidation) {
             let model = this.getJsObject(uriStr);
             return model.getAllDecorations(ownerId, filterOutValidation);
