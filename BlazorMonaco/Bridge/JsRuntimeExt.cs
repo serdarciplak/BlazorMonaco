@@ -1,0 +1,27 @@
+﻿using Microsoft.JSInterop;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BlazorMonaco.Bridge
+{
+    internal static class JsRuntimeExt
+    {
+        public static IJSRuntime Shared { get; set; }
+
+        public static async Task SafeInvokeAsync(this IJSRuntime jsRuntime, string identifier, params object[] args)
+        {
+            if (jsRuntime == null)
+                return;
+            await jsRuntime.InvokeVoidAsync(identifier, args);
+        }
+
+        public static async Task<T> SafeInvokeAsync<T>(this IJSRuntime jsRuntime, string identifier, params object[] args)
+        {
+            if (jsRuntime == null)
+                return default;
+            return await jsRuntime.InvokeAsync<T>(identifier, args);
+        }
+    }
+}

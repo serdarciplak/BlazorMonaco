@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using BlazorMonaco.Bridge;
+using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,8 @@ namespace BlazorMonaco.Editor
 {
     public partial class MonacoDiffEditor
     {
+        #region Blazor
+
         [Parameter] public Func<MonacoDiffEditor, StandaloneDiffEditorConstructionOptions> ConstructionOptions { get; set; }
         [Parameter] public EventCallback<MonacoDiffEditor> OnDidUpdateDiff { get; set; }
 
@@ -190,6 +193,8 @@ namespace BlazorMonaco.Editor
             await base.EventCallback(eventName, eventJson);
         }
 
+        #endregion
+
         #region Instance Methods
 
         // getDiffLineInformationForModified
@@ -198,23 +203,15 @@ namespace BlazorMonaco.Editor
 
         // getLineChanges
 
-        public async Task<DiffEditorModel> GetModel()
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<DiffEditorModel>("blazorMonaco.editor.getInstanceDiffModel", Id);
-        }
+        public Task<DiffEditorModel> GetModel()
+            => jsRuntime.SafeInvokeAsync<DiffEditorModel>("blazorMonaco.editor.getInstanceDiffModel", Id);
 
         // restoreViewState
 
         // saveViewState
 
-        public async Task SetModel(DiffEditorModel model)
-        {
-            if (jsRuntime == null)
-                return;
-            await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setInstanceDiffModel", Id, model);
-        }
+        public Task SetModel(DiffEditorModel model)
+            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.setInstanceDiffModel", Id, model);
 
         // updateOptions
 

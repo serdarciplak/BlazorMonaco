@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using BlazorMonaco.Bridge;
+using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,8 @@ namespace BlazorMonaco.Editor
 {
     public partial class MonacoEditor
     {
+        #region Blazor
+
         [Parameter] public Func<MonacoEditor, StandaloneEditorConstructionOptions> ConstructionOptions { get; set; }
         [Parameter] public EventCallback<MonacoEditor> OnDidCompositionEnd { get; set; }
         [Parameter] public EventCallback<MonacoEditor> OnDidCompositionStart { get; set; }
@@ -160,13 +163,17 @@ namespace BlazorMonaco.Editor
 
         public static MonacoEditor CreateVirtualEditor(string id, string cssClass = null)
         {
-            var virtual_editor = new MonacoEditor();
-            virtual_editor.Id = id;
-            virtual_editor.CssClass = cssClass;
-            virtual_editor.jsRuntime = staticJsRuntime;
+            var virtual_editor = new MonacoEditor
+            {
+                Id = id,
+                CssClass = cssClass,
+                jsRuntime = JsRuntimeExt.Shared
+            };
             virtual_editor.jsObjectRef = DotNetObjectReference.Create(virtual_editor as MonacoEditorBase);
             return virtual_editor;
         }
+
+        #endregion
 
         #region Instance Methods
 
@@ -180,11 +187,7 @@ namespace BlazorMonaco.Editor
 
         public async Task<string[]> DeltaDecorations(string[] oldDecorationIds, ModelDeltaDecoration[] newDecorations)
         {
-            if (jsRuntime == null)
-                return default;
-
-            if (oldDecorationIds == null)
-                oldDecorationIds = new string[] { };
+            oldDecorationIds = oldDecorationIds ?? new string[] { };
 
             // Convert the newDecorations object into a JsonElement to get rid of the properties with null values
             var newDecorationsJson = JsonSerializer.Serialize(newDecorations, new JsonSerializerOptions
@@ -193,7 +196,7 @@ namespace BlazorMonaco.Editor
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
             var newDecorationsElement = JsonSerializer.Deserialize<JsonElement>(newDecorationsJson);
-            var newDecorationIds = await jsRuntime.InvokeAsync<string[]>("blazorMonaco.editor.deltaDecorations", Id, oldDecorationIds, newDecorationsElement);
+            var newDecorationIds = await jsRuntime.SafeInvokeAsync<string[]>("blazorMonaco.editor.deltaDecorations", Id, oldDecorationIds, newDecorationsElement);
             deltaDecorationIds.RemoveAll(d => oldDecorationIds.Any(o => o == d));
             deltaDecorationIds.AddRange(newDecorationIds);
             return newDecorationIds;
@@ -203,22 +206,17 @@ namespace BlazorMonaco.Editor
 
         // executeCommands
 
-        public async Task<bool> ExecuteEdits(string source, List<IdentifiedSingleEditOperation> edits, List<Selection> endCursorState)
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<bool>("blazorMonaco.editor.executeEdits", Id, source, edits, endCursorState);
-        }
+        public Task<bool> ExecuteEdits(string source, List<IdentifiedSingleEditOperation> edits, List<Selection> endCursorState)
+            => jsRuntime.SafeInvokeAsync<bool>("blazorMonaco.editor.executeEdits", Id, source, edits, endCursorState);
 
-        public async Task<bool> ExecuteEdits(string source, List<IdentifiedSingleEditOperation> edits, Func<List<ValidEditOperation>, List<Selection>> endCursorState)
+        public Task<bool> ExecuteEdits(string source, List<IdentifiedSingleEditOperation> edits, Func<List<ValidEditOperation>, List<Selection>> endCursorState)
         {
-            if (jsRuntime == null)
-                return default;
             ExecuteEditsLambda = endCursorState;
-            return await jsRuntime.InvokeAsync<bool>("blazorMonaco.editor.executeEdits", Id, source, edits, "function");
+            return jsRuntime.SafeInvokeAsync<bool>("blazorMonaco.editor.executeEdits", Id, source, edits, "function");
         }
 
         private Func<List<ValidEditOperation>, List<Selection>> ExecuteEditsLambda { get; set; }
+
         [JSInvokable]
         public List<Selection> ExecuteEditsCallback(List<ValidEditOperation> inverseEditOperations)
         {
@@ -228,152 +226,69 @@ namespace BlazorMonaco.Editor
 
         // getAction
 
-        public async Task<string> GetContainerDomNodeId()
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getContainerDomNodeId", Id);
-        }
+        public Task<string> GetContainerDomNodeId()
+            => jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getContainerDomNodeId", Id);
 
-        public async Task<double> GetContentHeight()
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<double>("blazorMonaco.editor.getContentHeight", Id);
-        }
+        public Task<double> GetContentHeight()
+            => jsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getContentHeight", Id);
 
-        public async Task<double> GetContentWidth()
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<double>("blazorMonaco.editor.getContentWidth", Id);
-        }
+        public Task<double> GetContentWidth()
+            => jsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getContentWidth", Id);
 
         // getContribution
 
-        public async Task<EditorLayoutInfo> GetLayoutInfo()
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<EditorLayoutInfo>("blazorMonaco.editor.getLayoutInfo", Id);
-        }
+        public Task<EditorLayoutInfo> GetLayoutInfo()
+            => jsRuntime.SafeInvokeAsync<EditorLayoutInfo>("blazorMonaco.editor.getLayoutInfo", Id);
 
         // getLineDecorations
 
-        public async Task<TextModel> GetModel()
-        {
-            if (jsRuntime == null)
-                return default;
-            var model = await jsRuntime.InvokeAsync<TextModel>("blazorMonaco.editor.getInstanceModel", Id);
-            if (model != null)
-                model.jsRuntime = jsRuntime;
-            return model;
-        }
+        public Task<TextModel> GetModel()
+            => jsRuntime.SafeInvokeAsync<TextModel>("blazorMonaco.editor.getInstanceModel", Id);
 
-        public async Task<int> GetOffsetForColumn(int lineNumber, int column)
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<int>("blazorMonaco.editor.getOffsetForColumn", Id, lineNumber, column);
-        }
+        public Task<int> GetOffsetForColumn(int lineNumber, int column)
+            => jsRuntime.SafeInvokeAsync<int>("blazorMonaco.editor.getOffsetForColumn", Id, lineNumber, column);
 
-        public async Task<string> GetOption(EditorOption option)
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getOption", Id, (int)option);
-        }
+        public Task<string> GetOption(EditorOption option)
+            => jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getOption", Id, (int)option);
 
-        public async Task<List<string>> GetOptions()
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<List<string>>("blazorMonaco.editor.getOptions", Id);
-        }
+        public Task<List<string>> GetOptions()
+            => jsRuntime.SafeInvokeAsync<List<string>>("blazorMonaco.editor.getOptions", Id);
 
-        public async Task<EditorOptions> GetRawOptions()
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<EditorOptions>("blazorMonaco.editor.getRawOptions", Id);
-        }
+        public Task<EditorOptions> GetRawOptions()
+            => jsRuntime.SafeInvokeAsync<EditorOptions>("blazorMonaco.editor.getRawOptions", Id);
 
-        public async Task<double> GetScrollHeight()
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<double>("blazorMonaco.editor.getScrollHeight", Id);
-        }
+        public Task<double> GetScrollHeight()
+            => jsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getScrollHeight", Id);
 
-        public async Task<double> GetScrollLeft()
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<double>("blazorMonaco.editor.getScrollLeft", Id);
-        }
+        public Task<double> GetScrollLeft()
+            => jsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getScrollLeft", Id);
 
-        public async Task<double> GetScrollTop()
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<double>("blazorMonaco.editor.getScrollTop", Id);
-        }
+        public Task<double> GetScrollTop()
+            => jsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getScrollTop", Id);
 
-        public async Task<double> GetScrollWidth()
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<double>("blazorMonaco.editor.getScrollWidth", Id);
-        }
+        public Task<double> GetScrollWidth()
+            => jsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getScrollWidth", Id);
 
-        public async Task<Position> GetScrolledVisiblePosition(Position position)
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<Position>("blazorMonaco.editor.getScrolledVisiblePosition", Id, position);
-        }
+        public Task<Position> GetScrolledVisiblePosition(Position position)
+            => jsRuntime.SafeInvokeAsync<Position>("blazorMonaco.editor.getScrolledVisiblePosition", Id, position);
 
-        public async Task<BaseMouseTarget> GetTargetAtClientPoint(int clientX, int clientY)
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<BaseMouseTarget>("blazorMonaco.editor.getTargetAtClientPoint", Id, clientX, clientY);
-        }
+        public Task<BaseMouseTarget> GetTargetAtClientPoint(int clientX, int clientY)
+            => jsRuntime.SafeInvokeAsync<BaseMouseTarget>("blazorMonaco.editor.getTargetAtClientPoint", Id, clientX, clientY);
 
-        public async Task<double> GetTopForLineNumber(int lineNumber)
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<double>("blazorMonaco.editor.getTopForLineNumber", Id, lineNumber);
-        }
+        public Task<double> GetTopForLineNumber(int lineNumber)
+            => jsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getTopForLineNumber", Id, lineNumber);
 
-        public async Task<double> GetTopForPosition(int lineNumber, int column)
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<double>("blazorMonaco.editor.getTopForPosition", Id, lineNumber, column);
-        }
+        public Task<double> GetTopForPosition(int lineNumber, int column)
+            => jsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getTopForPosition", Id, lineNumber, column);
 
-        public async Task<string> GetValue()
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<string>("blazorMonaco.editor.getValue", Id);
-        }
+        public Task<string> GetValue()
+            => jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getValue", Id);
 
-        public async Task<List<Range>> GetVisibleRanges()
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<List<Range>>("blazorMonaco.editor.getVisibleRanges", Id);
-        }
+        public Task<List<Range>> GetVisibleRanges()
+            => jsRuntime.SafeInvokeAsync<List<Range>>("blazorMonaco.editor.getVisibleRanges", Id);
 
-        public async Task<bool> HasWidgetFocus()
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<bool>("blazorMonaco.editor.hasWidgetFocus", Id);
-        }
+        public Task<bool> HasWidgetFocus()
+            => jsRuntime.SafeInvokeAsync<bool>("blazorMonaco.editor.hasWidgetFocus", Id);
 
         // layoutContentWidget
 
@@ -381,75 +296,40 @@ namespace BlazorMonaco.Editor
 
         // popUndoStop(): boolean;
 
-        public async Task<bool> PushUndoStop()
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<bool>("blazorMonaco.editor.pushUndoStop", Id);
-        }
+        public Task<bool> PushUndoStop()
+            => jsRuntime.SafeInvokeAsync<bool>("blazorMonaco.editor.pushUndoStop", Id);
 
         // removeContentWidget
 
         // removeOverlayWidget
 
-        public async Task Render(bool? forceRedraw = null)
-        {
-            if (jsRuntime == null)
-                return;
-            await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.render", Id, forceRedraw);
-        }
+        public Task Render(bool? forceRedraw = null)
+            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.render", Id, forceRedraw);
 
-        public async Task ResetDeltaDecorations()
-        {
-            if (jsRuntime == null)
-                return;
-            await DeltaDecorations(deltaDecorationIds.ToArray(), new ModelDeltaDecoration[0]);
-        }
+        public Task ResetDeltaDecorations()
+            => DeltaDecorations(deltaDecorationIds.ToArray(), new ModelDeltaDecoration[0]);
 
         // restoreViewState
 
         // saveViewState
 
-        public async Task SetModel(TextModel model)
-        {
-            if (jsRuntime == null)
-                return;
-            await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setInstanceModel", Id, model.Uri);
-        }
+        public Task SetModel(TextModel model)
+            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.setInstanceModel", Id, model.Uri);
 
-        public async Task SetScrollLeft(int newScrollLeft, ScrollType? scrollType = null)
-        {
-            if (jsRuntime == null)
-                return;
-            await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setScrollLeft", Id, newScrollLeft, scrollType);
-        }
+        public Task SetScrollLeft(int newScrollLeft, ScrollType? scrollType = null)
+            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.setScrollLeft", Id, newScrollLeft, scrollType);
 
-        public async Task SetScrollPosition(int newScrollLeft, int newScrollTop, ScrollType? scrollType = null)
-        {
-            if (jsRuntime == null)
-                return;
-            await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setScrollPosition", Id, newScrollLeft, newScrollTop, scrollType);
-        }
+        public Task SetScrollPosition(int newScrollLeft, int newScrollTop, ScrollType? scrollType = null)
+            => jsRuntime?.SafeInvokeAsync("blazorMonaco.editor.setScrollPosition", Id, newScrollLeft, newScrollTop, scrollType);
 
-        public async Task SetScrollTop(int newScrollTop, ScrollType? scrollType = null)
-        {
-            if (jsRuntime == null)
-                return;
-            await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setScrollTop", Id, newScrollTop, scrollType);
-        }
+        public Task SetScrollTop(int newScrollTop, ScrollType? scrollType = null)
+            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.setScrollTop", Id, newScrollTop, scrollType);
 
-        public async Task SetValue(string newValue)
-        {
-            if (jsRuntime == null)
-                return;
-            await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.setValue", Id, newValue);
-        }
+        public Task SetValue(string newValue)
+            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.setValue", Id, newValue);
 
-        public async Task UpdateOptions(IGlobalEditorOptions options)
+        public Task UpdateOptions(IGlobalEditorOptions options)
         {
-            if (jsRuntime == null)
-                return;
-
             // Convert the options object into a JsonElement to get rid of the properties with null values
             var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
             {
@@ -457,7 +337,7 @@ namespace BlazorMonaco.Editor
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
-            await jsRuntime.InvokeVoidAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
+            return jsRuntime.SafeInvokeAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
         }
 
         #endregion
