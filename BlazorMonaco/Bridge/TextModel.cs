@@ -1,16 +1,11 @@
-﻿using Microsoft.JSInterop;
+﻿using BlazorMonaco.Editor;
+using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace BlazorMonaco
 {
-    public class DiffEditorModel
-    {
-        public TextModel Original { get; set; }
-        public TextModel Modified { get; set; }
-    }
-
     public class TextModel
     {
         public IJSRuntime jsRuntime { get; set; }
@@ -295,13 +290,6 @@ namespace BlazorMonaco
             if (jsRuntime == null)
                 return null;
             return await jsRuntime.InvokeAsync<ModelDecoration[]>("blazorMonaco.editor.model.getDecorationsInRange", Uri, range, ownerId, filterOutValidation);
-        }
-
-        public async Task<ModelDecoration> GetDecorationsInRange(Range range)
-        {
-            if (jsRuntime == null)
-                return null;
-            return await jsRuntime.InvokeAsync<ModelDecoration>("blazorMonaco.editor.model.getDecorationsInRange2", Uri, range);
         }
 
         public async Task<List<ModelDecoration>> GetAllDecorations(int? ownerId, bool? filterOutValidation)
