@@ -1,5 +1,5 @@
-﻿using BlazorMonaco.Bridge;
-using BlazorMonaco.Editor;
+﻿using BlazorMonaco.Editor;
+using BlazorMonaco.Helpers;
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;

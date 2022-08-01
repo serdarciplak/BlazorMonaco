@@ -7222,13 +7222,6 @@ namespace BlazorMonaco.Worker {
 
 }
 
-//dtsv=3
-
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-
 namespace BlazorMonaco.Languages.Css {
     /*export interface CSSFormatConfiguration {
         /** separate selectors with newline (e.g. "a,\nbr" or "a, br"): Default: true * /
@@ -7420,11 +7413,6 @@ namespace BlazorMonaco.Languages.Css {
     //export type MarkupKind = 'plaintext' | 'markdown';
 }
 
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-
 namespace BlazorMonaco.Languages.Html {
     /*export interface HTMLFormatConfiguration {
         readonly tabSize: number;
@@ -7587,11 +7575,6 @@ namespace BlazorMonaco.Languages.Html {
     //export type MarkupKind = 'plaintext' | 'markdown';
 }
 
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-
 namespace BlazorMonaco.Languages.Json {
     /*export interface DiagnosticsOptions {
         /**
@@ -7698,11 +7681,6 @@ namespace BlazorMonaco.Languages.Json {
     }*/
     //export const jsonDefaults: LanguageServiceDefaults;
 }
-
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
 
 namespace BlazorMonaco.Languages.Typescript {
     public enum ModuleKind {

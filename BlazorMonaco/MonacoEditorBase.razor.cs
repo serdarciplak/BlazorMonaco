@@ -1,4 +1,4 @@
-﻿using BlazorMonaco.Bridge;
+﻿using BlazorMonaco.Helpers;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System;
@@ -28,20 +28,20 @@ namespace BlazorMonaco.Editor
 
         [Inject]
         protected IJSRuntime jsRuntime { get; set; }
-        protected DotNetObjectReference<MonacoEditorBase> jsObjectRef { get; set; }
-        private Dictionary<string, Action<MonacoEditorBase, int[]>> actions { get; set; } = new Dictionary<string, Action<MonacoEditorBase, int[]>>();
-        private Dictionary<string, Action<MonacoEditorBase, int>> commands { get; set; } = new Dictionary<string, Action<MonacoEditorBase, int>>();
+        protected DotNetObjectReference<MonacoEditorBase> _dotnetObjectRef;
+        private readonly Dictionary<string, Action<MonacoEditorBase, int[]>> _actions = new Dictionary<string, Action<MonacoEditorBase, int[]>>();
+        private readonly Dictionary<string, Action<MonacoEditorBase, int>> _commands = new Dictionary<string, Action<MonacoEditorBase, int>>();
 
         protected override void OnInitialized()
         {
             base.OnInitialized();
             JsRuntimeExt.Shared = jsRuntime;
-            jsObjectRef = DotNetObjectReference.Create(this);
+            _dotnetObjectRef = DotNetObjectReference.Create(this);
         }
 
         public virtual void Dispose()
         {
-            jsObjectRef?.Dispose();
+            _dotnetObjectRef?.Dispose();
         }
 
         protected override void OnParametersSet()
@@ -78,15 +78,15 @@ namespace BlazorMonaco.Editor
         [JSInvokable]
         public void ActionCallback(string keyCodesStr)
         {
-            var keyCodes = keyCodesStr.Split(';').Select(k => Int32.Parse(k)).ToArray();
-            var action = actions[keyCodesStr];
+            var keyCodes = keyCodesStr.Split(';').Select(k => int.Parse(k)).ToArray();
+            var action = _actions[keyCodesStr];
             action?.Invoke(this, keyCodes);
         }
 
         [JSInvokable]
         public void CommandCallback(int keyCode)
         {
-            var command = commands[keyCode.ToString()];
+            var command = _commands[keyCode.ToString()];
             command?.Invoke(this, keyCode);
         }
 
@@ -194,13 +194,13 @@ namespace BlazorMonaco.Editor
 
         public Task AddAction(string actionId, string label, int[] keyCodes, string precondition, string keybindingContext, string contextMenuGroupId, double contextMenuOrder, Action<MonacoEditorBase, int[]> action)
         {
-            actions[string.Join(";", keyCodes)] = action;
+            _actions[string.Join(";", keyCodes)] = action;
             return jsRuntime.SafeInvokeAsync("blazorMonaco.editor.addAction", Id, actionId, label, keyCodes, precondition, keybindingContext, contextMenuGroupId, contextMenuOrder);
         }
 
         public Task AddCommand(int keyCode, Action<MonacoEditorBase, int> action)
         {
-            commands[keyCode.ToString()] = action;
+            _commands[keyCode.ToString()] = action;
             return jsRuntime.SafeInvokeAsync("blazorMonaco.editor.addCommand", Id, keyCode);
         }
 

@@ -1,4 +1,4 @@
-﻿using BlazorMonaco.Bridge;
+﻿using BlazorMonaco.Helpers;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System;
@@ -61,7 +61,7 @@ namespace BlazorMonaco.Editor
                 }
 
                 // Create the editor
-                await MonacoEditorBase.Create(Id, options, jsObjectRef);
+                await MonacoEditorBase.Create(Id, options, _dotnetObjectRef);
             }
             await base.OnAfterRenderAsync(firstRender);
         }
@@ -169,7 +169,7 @@ namespace BlazorMonaco.Editor
                 CssClass = cssClass,
                 jsRuntime = JsRuntimeExt.Shared
             };
-            virtual_editor.jsObjectRef = DotNetObjectReference.Create(virtual_editor as MonacoEditorBase);
+            virtual_editor._dotnetObjectRef = DotNetObjectReference.Create(virtual_editor as MonacoEditorBase);
             return virtual_editor;
         }
 

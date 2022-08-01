@@ -1,4 +1,4 @@
-﻿using BlazorMonaco.Bridge;
+﻿using BlazorMonaco.Helpers;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System;
@@ -102,7 +102,7 @@ namespace BlazorMonaco.Editor
                 }
 
                 // Create the editor
-                await MonacoDiffEditor.CreateDiffEditor(Id, options, jsObjectRef);
+                await MonacoDiffEditor.CreateDiffEditor(Id, options, _dotnetObjectRef);
 
                 // Create the bridges for the inner editors
 #pragma warning disable BL0005

@@ -16,7 +16,7 @@ window.blazorMonaco.editor = {
     },
 
     colorizeModelLine: function (uriStr, lineNumber, tabSize) {
-        var model = this.model.getJsObject(uriStr);
+        var model = this.model.getModel(uriStr);
         if (model == null)
             return null;
         return monaco.editor.colorizeModelLine(model, lineNumber, tabSize);
@@ -26,7 +26,7 @@ window.blazorMonaco.editor = {
         if (options == null)
             options = {};
 
-        var oldEditor = this.getEditorById(id, true);
+        var oldEditor = this.getEditor(id, true);
         if (oldEditor !== null) {
             options.value = oldEditor.getValue();
             window.blazorMonaco.editors.splice(window.blazorMonaco.editors.findIndex(item => item.id === id), 1);
@@ -50,7 +50,7 @@ window.blazorMonaco.editor = {
         if (options == null)
             options = {};
 
-        var oldEditor = this.getEditorById(id, true);
+        var oldEditor = this.getEditor(id, true);
         var oldModel = null;
         if (oldEditor !== null) {
             oldModel = oldEditor.getModel();
@@ -101,7 +101,7 @@ window.blazorMonaco.editor = {
     },
 
     getModel: function (uriStr) {
-        var model = this.model.getJsObject(uriStr);
+        var model = this.model.getModel(uriStr);
         if (model == null)
             return null;
 
@@ -125,7 +125,7 @@ window.blazorMonaco.editor = {
     },
 
     setModelLanguage: function (uriStr, languageId) {
-        var model = this.model.getJsObject(uriStr);
+        var model = this.model.getModel(uriStr);
         if (model == null)
             return null;
         return monaco.editor.setModelLanguage(model, languageId);
@@ -136,38 +136,36 @@ window.blazorMonaco.editor = {
         return true;
     },
 
-    //#endregion
-
-    //#region Instance methods
-
-    getEditorById: function (id, unobstrusive = false) {
+    getEditorHolder: function (id, unobstrusive = false) {
         let editorHolder = window.blazorMonaco.editors.find(e => e.id === id);
         if (!editorHolder) {
-            if (unobstrusive) return null;
+            if (unobstrusive) {
+                console.log("WARNING : Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length);
+                return null;
+            }
             throw "Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length;
         }
         else if (!editorHolder.editor) {
-            if (unobstrusive) return null;
-            throw "editor is null for editorHolder: " + editorHolder;
-        }
-        return editorHolder.editor;
-    },
-
-    getEditorHolderById: function (id, unobstrusive = false) {
-        let editorHolder = window.blazorMonaco.editors.find(e => e.id === id);
-        if (!editorHolder) {
-            if (unobstrusive) return null;
-            throw "Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length;
-        }
-        else if (!editorHolder.editor) {
-            if (unobstrusive) return null;
+            if (unobstrusive) {
+                console.log("WARNING : editor is null for editorHolder: " + editorHolder);
+                return null;
+            }
             throw "editor is null for editorHolder: " + editorHolder;
         }
         return editorHolder;
     },
 
+    getEditor: function (id, unobstrusive = false) {
+        let editorHolder = this.getEditorHolder(id, unobstrusive);
+        return editorHolder.editor;
+    },
+
+    //#endregion
+
+    //#region Instance methods
+
     addAction: function (id, actionId, label, keybindings, precondition, keybindingContext, contextMenuGroupId, contextMenuOrder) {
-        let editorHolder = this.getEditorHolderById(id);
+        let editorHolder = this.getEditorHolder(id);
         editorHolder.editor.addAction({
             id: actionId,
             label: label,
@@ -183,29 +181,29 @@ window.blazorMonaco.editor = {
     },
 
     addCommand: function (id, keyCode) {
-        let editorHolder = this.getEditorHolderById(id);
+        let editorHolder = this.getEditorHolder(id);
         editorHolder.editor.addCommand(keyCode, function () {
             editorHolder.dotnetRef.invokeMethodAsync("CommandCallback", keyCode);
         });
     },
 
     deltaDecorations: function (id, oldDecorations, newDecorations) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.deltaDecorations(oldDecorations, newDecorations);
     },
 
     dispose: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.dispose();
     },
 
     focus: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.focus();
     },
 
     executeEdits: function (id, source, edits, endCursorState) {
-        let editorHolder = this.getEditorHolderById(id);
+        let editorHolder = this.getEditorHolder(id);
         if (endCursorState == "function") {
             endCursorState = (inverseEditOperations) => {
                 return editorHolder.dotnetRef.invokeMethod("ExecuteEditsCallback", inverseEditOperations);
@@ -215,7 +213,7 @@ window.blazorMonaco.editor = {
     },
 
     getContainerDomNodeId: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         let containerNode = editor.getContainerDomNode();
         if (containerNode == null)
             return null;
@@ -223,22 +221,22 @@ window.blazorMonaco.editor = {
     },
 
     getContentHeight: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getContentHeight();
     },
 
     getContentWidth: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getContentWidth();
     },
 
     getEditorType: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getEditorType();
     },
 
     getInstanceModel: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         var model = editor.getModel();
         if (model == null)
             return null;
@@ -250,7 +248,7 @@ window.blazorMonaco.editor = {
     },
 
     getInstanceDiffModel: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         var model = editor.getModel();
         if (model == null)
             return null;
@@ -268,194 +266,194 @@ window.blazorMonaco.editor = {
     },
 
     getLayoutInfo: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getLayoutInfo();
     },
 
     getOffsetForColumn: function (id, lineNumber, column) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getOffsetForColumn(lineNumber, column);
     },
 
     getOption: function (id, optionId) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return JSON.stringify(editor.getOption(optionId));
     },
 
     getOptions: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getOptions()._values.map(function (value) {
             return JSON.stringify(value);
         });
     },
 
     getPosition: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getPosition();
     },
 
     getRawOptions: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getRawOptions();
     },
 
     getScrollHeight: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getScrollHeight();
     },
 
     getScrollLeft: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getScrollHeight();
     },
 
     getScrollTop: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getScrollHeight();
     },
 
     getScrollWidth: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getScrollHeight();
     },
 
     getScrolledVisiblePosition: function (id, position) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getScrolledVisiblePosition(position);
     },
 
     getSelection: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getSelection();
     },
 
     getSelections: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getSelections();
     },
 
     getTargetAtClientPoint: function (id, clientX, clientY) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getTargetAtClientPoint(clientX, clientY);
     },
 
     getTopForLineNumber: function (id, lineNumber) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getTopForLineNumber(lineNumber);
     },
 
     getTopForPosition: function (id, lineNumber, column) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getTopForPosition(lineNumber, column);
     },
 
     getValue: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getValue();
     },
 
     getVisibleColumnFromPosition: function (id, position) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getVisibleColumnFromPosition(position);
     },
 
     getVisibleRanges: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.getVisibleRanges();
     },
 
     hasTextFocus: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.hasTextFocus();
     },
 
     hasWidgetFocus: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.hasWidgetFocus();
     },
 
     layout: function (id, dimension) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.layout(dimension);
     },
 
     pushUndoStop: function (id) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         return editor.pushUndoStop();
     },
 
     render: function (id, forceRedraw) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.render(forceRedraw);
     },
 
     revealLine: function (id, lineNumber, scrollType) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.revealLine(lineNumber, scrollType);
     },
 
     revealLineInCenter: function (id, lineNumber, scrollType) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.revealLineInCenter(lineNumber, scrollType);
     },
 
     revealLineInCenterIfOutsideViewport: function (id, lineNumber, scrollType) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.revealLineInCenterIfOutsideViewport(lineNumber, scrollType);
     },
 
     revealLines: function (id, startLineNumber, endLineNumber, scrollType) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.revealLine(startLineNumber, endLineNumber, scrollType);
     },
 
     revealLinesInCenter: function (id, startLineNumber, endLineNumber, scrollType) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.revealLinesInCenter(startLineNumber, endLineNumber, scrollType);
     },
 
     revealLinesInCenterIfOutsideViewport: function (id, startLineNumber, endLineNumber, scrollType) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.revealLinesInCenterIfOutsideViewport(startLineNumber, endLineNumber, scrollType);
     },
 
     revealPosition: function (id, position, scrollType) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.revealPosition(position, scrollType);
     },
 
     revealPositionInCenter: function (id, position, scrollType) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.revealPositionInCenter(position, scrollType);
     },
 
     revealPositionInCenterIfOutsideViewport: function (id, position, scrollType) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.revealPositionInCenterIfOutsideViewport(position, scrollType);
     },
 
     revealRange: function (id, range, scrollType) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.revealRange(range, scrollType);
     },
 
     revealRangeAtTop: function (id, range, scrollType) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.revealRangeAtTop(range, scrollType);
     },
 
     revealRangeInCenter: function (id, range, scrollType) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.revealRangeInCenter(range, scrollType);
     },
 
     revealRangeInCenterIfOutsideViewport: function (id, range, scrollType) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.revealRangeInCenterIfOutsideViewport(range, scrollType);
     },
 
     setEventListener: function (id, eventName) {
-        let editorHolder = this.getEditorHolderById(id);
+        let editorHolder = this.getEditorHolder(id);
         let editor = editorHolder.editor;
         let dotnetRef = editorHolder.dotnetRef;
 
@@ -502,21 +500,21 @@ window.blazorMonaco.editor = {
     },
 
     setInstanceModel: function (id, uriStr) {
-        var model = this.model.getJsObject(uriStr);
+        var model = this.model.getModel(uriStr);
         if (model == null)
             return;
 
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.setModel(model);
     },
 
     setInstanceDiffModel: function (id, model) {
-        var original_model = this.model.getJsObject(model.original.uri);
-        var modified_model = this.model.getJsObject(model.modified.uri);
+        var original_model = this.model.getModel(model.original.uri);
+        var modified_model = this.model.getModel(model.modified.uri);
         if (original_model == null || modified_model == null)
             return;
 
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.setModel({
             original: original_model,
             modified: modified_model,
@@ -524,17 +522,17 @@ window.blazorMonaco.editor = {
     },
 
     setPosition: function (id, position) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.setPosition(position);
     },
 
     setScrollLeft: function (id, newScrollLeft, scrollType) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.setScrollLeft(newScrollLeft, scrollType);
     },
 
     setScrollPosition: function (id, newScrollLeft, newScrollTop, scrollType) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.setScrollPosition({
             scrollLeft: newScrollLeft,
             scrollTop: newScrollTop
@@ -542,32 +540,32 @@ window.blazorMonaco.editor = {
     },
 
     setScrollTop: function (id, newScrollTop, scrollType) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.setScrollTop(newScrollTop, scrollType);
     },
 
     setSelection: function (id, selection) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.setSelection(selection);
     },
 
     setSelections: function (id, selection) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.setSelections(selection);
     },
 
     setValue: function (id, value) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.setValue(value);
     },
 
     trigger: function (id, source, handlerId, payload) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.trigger(source, handlerId, payload);
     },
 
     updateOptions: function (id, options) {
-        let editor = this.getEditorById(id);
+        let editor = this.getEditor(id);
         editor.updateOptions(options);
     },
 
@@ -583,7 +581,7 @@ window.blazorMonaco.editor = {
     //#region TextModel methods
 
     model: {
-        getJsObject: function (uriStr) {
+        getModel: function (uriStr) {
             var uri = monaco.Uri.parse(uriStr);
             if (uri == null)
                 return null;
@@ -591,257 +589,257 @@ window.blazorMonaco.editor = {
         },
 
         getOptions: function (uriStr) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getOptions();
         },
 
         getVersionId: function (uriStr) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getVersionId();
         },
 
         getAlternativeVersionId: function (uriStr) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getAlternativeVersionId();
         },
 
         setValue: function (uriStr, newValue) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.setValue(newValue);
         },
 
         getValue: function (uriStr, eol, preserveBOM) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getValue(eol, preserveBOM);
         },
 
         getValueLength: function (uriStr, eol, preserveBOM) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getValueLength(eol, preserveBOM);
         },
 
         getValueInRange: function (uriStr, range, eol) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getValueInRange(range, eol);
         },
 
         getValueLengthInRange: function (uriStr, range) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getValueLengthInRange(range);
         },
 
         getCharacterCountInRange: function (uriStr, range) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getCharacterCountInRange(range);
         },
 
         getLineCount: function (uriStr) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getLineCount();
         },
 
         getLineContent: function (uriStr, lineNumber) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getLineContent(lineNumber);
         },
 
         getLineLength: function (uriStr, lineNumber) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getLineLength(lineNumber);
         },
 
         getLinesContent: function (uriStr) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getLinesContent();
         },
 
         getEOL: function (uriStr) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getEOL();
         },
 
         getEndOfLineSequence: function (uriStr) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getEndOfLineSequence();
         },
 
         getLineMinColumn: function (uriStr, lineNumber) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getLineMinColumn(lineNumber);
         },
 
         getLineMaxColumn: function (uriStr, lineNumber) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getLineMaxColumn(lineNumber);
         },
 
         getLineFirstNonWhitespaceColumn: function (uriStr, lineNumber) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getLineFirstNonWhitespaceColumn(lineNumber);
         },
 
         getLineLastNonWhitespaceColumn: function (uriStr, lineNumber) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getLineLastNonWhitespaceColumn(lineNumber);
         },
 
         validatePosition: function (uriStr, position) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.validatePosition(position);
         },
 
         modifyPosition: function (uriStr, position, offset) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.modifyPosition(position, offset);
         },
 
         validateRange: function (uriStr, range) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.validateRange(range);
         },
 
         getOffsetAt: function (uriStr, position) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getOffsetAt(position);
         },
 
         getPositionAt: function (uriStr, offset) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getPositionAt(offset);
         },
 
         getFullModelRange: function (uriStr) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getFullModelRange();
         },
 
         isDisposed: function (uriStr) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.isDisposed();
         },
 
         findMatches: function (uriStr, searchString, searchScope_or_searchOnlyEditableRange, isRegex, matchCase, wordSeparators, captureMatches, limitResultCount) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.findMatches(searchString, searchScope_or_searchOnlyEditableRange, isRegex, matchCase, wordSeparators, captureMatches, limitResultCount);
         },
 
         findNextMatch: function (uriStr, searchString, searchStart, isRegex, matchCase, wordSeparators, captureMatches) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.findNextMatch(searchString, searchStart, isRegex, matchCase, wordSeparators, captureMatches);
         },
 
         findPreviousMatch: function (uriStr, searchString, searchStart, isRegex, matchCase, wordSeparators, captureMatches) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.findPreviousMatch(searchString, searchStart, isRegex, matchCase, wordSeparators, captureMatches);
         },
 
         getLanguageId: function (uriStr) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getLanguageId();
         },
 
         getWordAtPosition: function (uriStr, position) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getWordAtPosition(position);
         },
 
         getWordUntilPosition: function (uriStr, position) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getWordUntilPosition(position);
         },
 
         deltaDecorations: function (uriStr, oldDecorations, newDecorations, ownerId) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.deltaDecorations(oldDecorations, newDecorations, ownerId);
         },
 
         getDecorationOptions: function (uriStr, id) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getDecorationOptions(id);
         },
 
         getDecorationRange: function (uriStr, id) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getDecorationRange(id);
         },
 
         getLineDecorations: function (uriStr, lineNumber, ownerId, filterOutValidation) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getLineDecorations(lineNumber, ownerId, filterOutValidation);
         },
 
         getLinesDecorations: function (uriStr, startLineNumber, endLineNumber, ownerId, filterOutValidation) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getLinesDecorations(startLineNumber, endLineNumber, ownerId, filterOutValidation);
         },
 
         getDecorationsInRange: function (uriStr, range, ownerId, filterOutValidation) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getDecorationsInRange(range, ownerId, filterOutValidation);
         },
 
         getAllDecorations: function (uriStr, ownerId, filterOutValidation) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getAllDecorations(ownerId, filterOutValidation);
         },
 
         getInjectedTextDecorations: function (uriStr, ownerId) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getInjectedTextDecorations(ownerId);
         },
 
         getOverviewRulerDecorations: function (uriStr, ownerId, filterOutValidation) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.getOverviewRulerDecorations(ownerId, filterOutValidation);
         },
 
         normalizeIndentation: function (uriStr, str) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.normalizeIndentation(str);
         },
 
         updateOptions: function (uriStr, newOpts) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.updateOptions(newOpts);
         },
 
         detectIndentation: function (uriStr, defaultInsertSpaces, defaultTabSize) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.detectIndentation(defaultInsertSpaces, defaultTabSize);
         },
 
         pushStackElement: function (uriStr) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.pushStackElement();
         },
 
         popStackElement: function (uriStr) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.popStackElement();
         },
 
         pushEOL: function (uriStr, eol) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.pushEOL(eol);
         },
 
         applyEdits: function (uriStr, operations) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.applyEdits(operations);
         },
 
         applyEdits: function (uriStr, operations, computeUndoEdits) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.applyEdits(operations, computeUndoEdits);
         },
 
         setEOL: function (uriStr, eol) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.setEOL(eol);
         },
 
         dispose: function (uriStr) {
-            let model = this.getJsObject(uriStr);
+            let model = this.getModel(uriStr);
             return model.dispose();
         }
     }
