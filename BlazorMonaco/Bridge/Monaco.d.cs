@@ -1,7 +1,11 @@
-﻿using System;
+﻿using BlazorMonaco.Helpers;
+using Microsoft.JSInterop;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 /*---------------------------------------------------------------------------------------------
 *  C# translation of the https://github.com/microsoft/monaco-editor/blob/main/website/typedoc/monaco.d.ts file
@@ -843,145 +847,196 @@ namespace BlazorMonaco.Editor {
         dispose(): void;
     }*/
 
-    /**
-     * Create a new editor under `domElement`.
-     * `domElement` should be empty (not contain other dom nodes).
-     * The editor will read the size of `domElement`.
-     */
-    //export function create(domElement: HTMLElement, options?: IStandaloneEditorConstructionOptions, override?: IEditorOverrideServices): IStandaloneCodeEditor;
+    internal partial class Globals
+    {
+        /**
+         * Create a new editor under `domElement`.
+         * `domElement` should be empty (not contain other dom nodes).
+         * The editor will read the size of `domElement`.
+         */
+        // TODO export function create(domElement: HTMLElement, options?: IStandaloneEditorConstructionOptions, override?: IEditorOverrideServices): IStandaloneCodeEditor;
+        internal static Task Create(string domElementId, StandaloneEditorConstructionOptions options, DotNetObjectReference<Editor> jsObjectRef)
+        {
+            options = options ?? new StandaloneEditorConstructionOptions
+            {
+                Language = "javascript"
+            };
 
-    /**
-     * Emitted when an editor is created.
-     * Creating a diff editor might cause this listener to be invoked with the two editors.
-     * @event
-     */
-    //export function onDidCreateEditor(listener: (codeEditor: ICodeEditor) => void): IDisposable;
+            // Convert the options object into a JsonElement to get rid of the properties with null values
+            var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
+            {
+                IgnoreNullValues = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+            var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
 
-    /**
-     * Create a new diff editor under `domElement`.
-     * `domElement` should be empty (not contain other dom nodes).
-     * The editor will read the size of `domElement`.
-     */
-    //export function createDiffEditor(domElement: HTMLElement, options?: IStandaloneDiffEditorConstructionOptions, override?: IEditorOverrideServices): IStandaloneDiffEditor;
+            // Create the editor
+            return JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.create", domElementId, optionsDict, jsObjectRef);
+        }
 
+        /**
+         * Emitted when an editor is created.
+         * Creating a diff editor might cause this listener to be invoked with the two editors.
+         * @event
+         */
+        //export function onDidCreateEditor(listener: (codeEditor: ICodeEditor) => void): IDisposable;
+
+        /**
+         * Create a new diff editor under `domElement`.
+         * `domElement` should be empty (not contain other dom nodes).
+         * The editor will read the size of `domElement`.
+         */
+        // TODO export function createDiffEditor(domElement: HTMLElement, options?: IStandaloneDiffEditorConstructionOptions, override?: IEditorOverrideServices): IStandaloneDiffEditor;
+        internal static Task CreateDiffEditor(string domElementId, StandaloneDiffEditorConstructionOptions options, DotNetObjectReference<Editor> jsObjectRef)
+        {
+            options = options ?? new StandaloneDiffEditorConstructionOptions();
+
+            // Convert the options object into a JsonElement to get rid of the properties with null values
+            var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
+            {
+                IgnoreNullValues = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+            var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
+
+            // Create the editor
+            return JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.createDiffEditor", domElementId, optionsDict, jsObjectRef);
+        }
+
+    }
     public class DiffNavigatorOptions {
         public bool? FollowsCaret { get; set; }
         public bool? IgnoreCharChanges { get; set; }
         public bool? AlwaysRevealFirst { get; set; }
     }
 
-    //export function createDiffNavigator(diffEditor: IStandaloneDiffEditor, opts?: IDiffNavigatorOptions): IDiffNavigator;
+    internal partial class Globals
+    {
 
-    /**
-     * Create a new editor model.
-     * You can specify the language that should be set for this model or let the language be inferred from the `uri`.
-     */
-    //export function createModel(value: string, language?: string, uri?: Uri): ITextModel;
+        //export function createDiffNavigator(diffEditor: IStandaloneDiffEditor, opts?: IDiffNavigatorOptions): IDiffNavigator;
 
-    /**
-     * Change the language for a model.
-     */
-    //export function setModelLanguage(model: ITextModel, languageId: string): void;
+        /**
+         * Create a new editor model.
+         * You can specify the language that should be set for this model or let the language be inferred from the `uri`.
+         */
+        public static Task<TextModel> CreateModel(string value, string language = null, string uri = null)
+            => JsRuntimeExt.Shared.SafeInvokeAsync<TextModel>("blazorMonaco.editor.createModel", value, language, uri);
 
-    /**
-     * Set the markers for a model.
-     */
-    //export function setModelMarkers(model: ITextModel, owner: string, markers: IMarkerData[]): void;
+        /**
+         * Change the language for a model.
+         */
+        public static Task SetModelLanguage(TextModel model, string languageId)
+            => JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.setModelLanguage", model.Uri, languageId);
 
-    /**
-     * Get markers for owner and/or resource
-     *
-     * @returns list of markers
-     */
-    /*export function getModelMarkers(filter: {
-        owner?: string;
-        resource?: Uri;
-        take?: number;
-    }): IMarker[];*/
+        /**
+         * Set the markers for a model.
+         */
+        //export function setModelMarkers(model: ITextModel, owner: string, markers: IMarkerData[]): void;
 
-    /**
-     * Emitted when markers change for a model.
-     * @event
-     */
-    //export function onDidChangeMarkers(listener: (e: readonly Uri[]) => void): IDisposable;
+        /**
+         * Get markers for owner and/or resource
+         *
+         * @returns list of markers
+         */
+        /*export function getModelMarkers(filter: {
+            owner?: string;
+            resource?: Uri;
+            take?: number;
+        }): IMarker[];*/
 
-    /**
-     * Get the model that has `uri` if it exists.
-     */
-    //export function getModel(uri: Uri): ITextModel | null;
+        /**
+         * Emitted when markers change for a model.
+         * @event
+         */
+        //export function onDidChangeMarkers(listener: (e: readonly Uri[]) => void): IDisposable;
 
-    /**
-     * Get all the created models.
-     */
-    //export function getModels(): ITextModel[];
+        /**
+         * Get the model that has `uri` if it exists.
+         */
+        public static Task<TextModel> GetModel(string uri)
+            => JsRuntimeExt.Shared.SafeInvokeAsync<TextModel>("blazorMonaco.editor.getModel", uri);
 
-    /**
-     * Emitted when a model is created.
-     * @event
-     */
-    //export function onDidCreateModel(listener: (model: ITextModel) => void): IDisposable;
+        /**
+         * Get all the created models.
+         */
+        public static Task<List<TextModel>> GetModels()
+            => JsRuntimeExt.Shared.SafeInvokeAsync<List<TextModel>>("blazorMonaco.editor.getModels");
 
-    /**
-     * Emitted right before a model is disposed.
-     * @event
-     */
-    //export function onWillDisposeModel(listener: (model: ITextModel) => void): IDisposable;
+        /**
+         * Emitted when a model is created.
+         * @event
+         */
+        //export function onDidCreateModel(listener: (model: ITextModel) => void): IDisposable;
 
-    /**
-     * Emitted when a different language is set to a model.
-     * @event
-     */
-    /*export function onDidChangeModelLanguage(listener: (e: {
-        readonly model: ITextModel;
-        readonly oldLanguage: string;
-    }) => void): IDisposable;*/
+        /**
+         * Emitted right before a model is disposed.
+         * @event
+         */
+        //export function onWillDisposeModel(listener: (model: ITextModel) => void): IDisposable;
 
-    /**
-     * Create a new web worker that has model syncing capabilities built in.
-     * Specify an AMD module to load that will `create` an object that will be proxied.
-     */
-    //export function createWebWorker<T>(opts: IWebWorkerOptions): MonacoWebWorker<T>;
+        /**
+         * Emitted when a different language is set to a model.
+         * @event
+         */
+        /*export function onDidChangeModelLanguage(listener: (e: {
+            readonly model: ITextModel;
+            readonly oldLanguage: string;
+        }) => void): IDisposable;*/
 
-    /**
-     * Colorize the contents of `domNode` using attribute `data-lang`.
-     */
-    //export function colorizeElement(domNode: HTMLElement, options: IColorizerElementOptions): Promise<void>;
+        /**
+         * Create a new web worker that has model syncing capabilities built in.
+         * Specify an AMD module to load that will `create` an object that will be proxied.
+         */
+        //export function createWebWorker<T>(opts: IWebWorkerOptions): MonacoWebWorker<T>;
 
-    /**
-     * Colorize `text` using language `languageId`.
-     */
-    //export function colorize(text: string, languageId: string, options: IColorizerOptions): Promise<string>;
+        /**
+         * Colorize the contents of `domNode` using attribute `data-lang`.
+         */
+        // TODO export function colorizeElement(domNode: HTMLElement, options: IColorizerElementOptions): Promise<void>;
+        public static Task ColorizeElement(string elementId, ColorizerElementOptions options)
+            => JsRuntimeExt.Shared.SafeInvokeAsync<string>("blazorMonaco.editor.colorizeElement", elementId, options);
 
-    /**
-     * Colorize a line in a model.
-     */
-    //export function colorizeModelLine(model: ITextModel, lineNumber: number, tabSize?: number): string;
+        /**
+         * Colorize `text` using language `languageId`.
+         */
+        // TODO export function colorize(text: string, languageId: string, options: IColorizerOptions): Promise<string>;
+        public static Task<string> Colorize(string text, string languageId, ColorizerOptions options)
+            => JsRuntimeExt.Shared.SafeInvokeAsync<string>("blazorMonaco.editor.colorize", text, languageId, options);
 
-    /**
-     * Tokenize `text` using language `languageId`
-     */
-    //export function tokenize(text: string, languageId: string): Token[][];
+        /**
+         * Colorize a line in a model.
+         */
+        public static Task<string> ColorizeModelLine(TextModel model, int lineNumber, int? tabSize = null)
+            => JsRuntimeExt.Shared.SafeInvokeAsync<string>("blazorMonaco.editor.colorizeModelLine", model.Uri, lineNumber, tabSize);
 
-    /**
-     * Define a new theme or update an existing theme.
-     */
-    //export function defineTheme(themeName: string, themeData: IStandaloneThemeData): void;
+        /**
+         * Tokenize `text` using language `languageId`
+         */
+        //export function tokenize(text: string, languageId: string): Token[][];
 
-    /**
-     * Switches to a theme.
-     */
-    //export function setTheme(themeName: string): void;
+        /**
+         * Define a new theme or update an existing theme.
+         */
+        public static Task DefineTheme(string themeName, StandaloneThemeData themeData)
+            => JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.defineTheme", themeName, themeData);
 
-    /**
-     * Clears all cached font measurements and triggers re-measurement.
-     */
-    //export function remeasureFonts(): void;
+        /**
+         * Switches to a theme.
+         */
+        public static Task SetTheme(string themeName)
+            => JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.setTheme", themeName);
 
-    /**
-     * Register a command.
-     */
-    //export function registerCommand(id: string, handler: (accessor: any, ...args: any[]) => void): IDisposable;
+        /**
+         * Clears all cached font measurements and triggers re-measurement.
+         */
+        public static Task RemeasureFonts()
+            => JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.remeasureFonts");
 
+        /**
+         * Register a command.
+         */
+        //export function registerCommand(id: string, handler: (accessor: any, ...args: any[]) => void): IDisposable;
+    }
     public class BuiltinTheme {
         const string Vs = "vs";
         const string VsDark = "vs-dark";
@@ -1052,27 +1107,27 @@ namespace BlazorMonaco.Editor {
     /**
      * Description of an action contribution
      */
-    /*export interface IActionDescriptor {
+    public class ActionDescriptor {
         /**
          * An unique identifier of the contributed action.
-         * /
-        id: string;
+         */
+        public string Id { get; set; }
         /**
          * A label of the action that will be presented to the user.
-         * /
-        label: string;
+         */
+        public string Label { get; set; }
         /**
          * Precondition rule.
-         * /
-        precondition?: string;
+         */
+        public string Precondition { get; set; }
         /**
          * An array of keybindings for the action.
-         * /
-        keybindings?: number[];
+         */
+        public int[] Keybindings { get; set; }
         /**
          * The keybinding rule (condition on top of precondition).
-         * /
-        keybindingContext?: string;
+         */
+        public string KeybindingContext { get; set; }
         /**
          * Control if the action should show up in the context menu and where.
          * The context menu of the editor has these default:
@@ -1081,18 +1136,18 @@ namespace BlazorMonaco.Editor {
          *   9_cutcopypaste - The last default group with the basic editing commands.
          * You can also create your own group.
          * Defaults to null (don't show in context menu).
-         * /
-        contextMenuGroupId?: string;
+         */
+        public string ContextMenuGroupId { get; set; }
         /**
          * Control the order in the context menu group.
-         * /
-        contextMenuOrder?: number;
+         */
+        public float ContextMenuOrder { get; set; }
         /**
          * Method that will be executed when the action is triggered.
          * @param editor The editor instance is passed in as a convenience
-         * /
-        run(editor: ICodeEditor, ...args: any[]): void | Promise<void>;
-    }*/
+         */
+        public Action<CodeEditor> Run { get; set; }
+    }
 
     /**
      * Options which apply for all editors.
@@ -1167,6 +1222,22 @@ namespace BlazorMonaco.Editor {
         bool? AutoDetectHighContrast { get; set; }
     }
 
+    // This class is not included in the monaco.d.ts file. It's added for translating the updateOptions method parameter
+    public class EditorUpdateOptions : EditorOptions, IGlobalEditorOptions
+    {
+        public int? TabSize { get; set; }
+        public bool? InsertSpaces { get; set; }
+        public bool? DetectIndentation { get; set; }
+        public bool? TrimAutoWhitespace { get; set; }
+        public bool? LargeFileOptimizations { get; set; }
+        public bool? WordBasedSuggestions { get; set; }
+        public bool? WordBasedSuggestionsOnlySameLanguage { get; set; }
+        public bool? StablePeek { get; set; }
+        public int? MaxTokenizationLineLength { get; set; }
+        public string Theme { get; set; }
+        public bool? AutoDetectHighContrast { get; set; }
+    }
+
     /**
      * The options to create an editor.
      */
@@ -1212,6 +1283,7 @@ namespace BlazorMonaco.Editor {
         */
         //ariaContainerElement?: HTMLElement;
 
+        // IGlobalEditorOptions implementation
         public int? TabSize { get; set; }
         public bool? InsertSpaces { get; set; }
         public bool? DetectIndentation { get; set; }
@@ -1242,6 +1314,7 @@ namespace BlazorMonaco.Editor {
         public bool? AutoDetectHighContrast { get; set; }
     }
 
+    // Translated in the StandaloneCodeEditor.razor.cs file
     /*export interface IStandaloneCodeEditor extends ICodeEditor {
         updateOptions(newOptions: IEditorOptions & IGlobalEditorOptions): void;
         addCommand(keybinding: number, handler: ICommandHandler, context?: string): string | null;
@@ -1249,6 +1322,7 @@ namespace BlazorMonaco.Editor {
         addAction(descriptor: IActionDescriptor): IDisposable;
     }*/
 
+    // Translated in the StandaloneDiffEditor.razor.cs file
     /*export interface IStandaloneDiffEditor extends IDiffEditor {
         addCommand(keybinding: number, handler: ICommandHandler, context?: string): string | null;
         createContextKey<T>(key: string, defaultValue: T): IContextKey<T>;
@@ -1256,10 +1330,8 @@ namespace BlazorMonaco.Editor {
         getOriginalEditor(): IStandaloneCodeEditor;
         getModifiedEditor(): IStandaloneCodeEditor;
     }*/
-    
-    /*export interface ICommandHandler {
-        (...args: any[]): void;
-    }*/
+
+    public delegate void CommandHandler(params object[] args);
 
     /*export interface IContextKey<T> {
         set(value: T): void;
@@ -1669,12 +1741,7 @@ namespace BlazorMonaco.Editor {
     /**
      * A callback that can compute the cursor state after applying a series of edit operations.
      */
-    /*export interface ICursorStateComputer {
-        /**
-         * A callback that can compute the resulting cursors state after some edit operations have been executed.
-         * /
-        (inverseEditOperations: IValidEditOperation[]): Selection[] | null;
-    }*/
+    public delegate List<Selection> CursorStateComputer(List<ValidEditOperation> inverseEditOperations);
 
     public class TextModelResolvedOptions
     {
@@ -1720,6 +1787,7 @@ namespace BlazorMonaco.Editor {
         GrowsOnlyWhenTypingAfter = 3
     }
 
+    // Translated in the TextModel.cs file
     /**
      * A model.
      */
@@ -2243,10 +2311,10 @@ namespace BlazorMonaco.Editor {
         public bool ContentHeightChanged { get; set; }
     }
 
-    /*export interface INewScrollPosition {
-        scrollLeft?: number;
-        scrollTop?: number;
-    }*/
+    public class NewScrollPosition {
+        public double ScrollLeft { get; set; }
+        public double ScrollTop { get; set; }
+    }
 
     /*export interface IEditorAction {
         readonly id: string;
@@ -2310,6 +2378,7 @@ namespace BlazorMonaco.Editor {
         Immediate = 1
     }
 
+    // Translated in the Editor.cs file
     /**
      * An editor.
      */
@@ -3448,31 +3517,42 @@ namespace BlazorMonaco.Editor {
     /**
      * An event describing that the configuration of the editor has changed.
      */
-    /*export class ConfigurationChangedEvent {
-        hasChanged(id: EditorOption): boolean;
-    }*/
+    public class ConfigurationChangedEvent {
+        public List<EditorOption> ChangedOptions { get; set; }  // TODO : this needs to be filled
+        public bool HasChanged(EditorOption id)
+        {
+            return ChangedOptions.Any(o => o == id);
+        }
+    }
 
     /**
      * All computed editor options.
      */
-    /*export interface IComputedEditorOptions {
-        get<T extends EditorOption>(id: T): FindComputedEditorOptionValueById<T>;
-    }*/
+    public class ComputedEditorOptions {
+        public T Get<T>(EditorOption id)
+        {
+            return default; // TODO
+        }
+    }
 
-    /*export interface IEditorOption<K extends EditorOption, V> {
-        readonly id: K;
-        readonly name: string;
-        defaultValue: V;
+    public class IEditorOption<V> {
+        public EditorOption Id { get; set; }
+        public string Name { get; set; }
+        public V DefaultValue { get; set; }
         /**
          * Might modify `value`.
-        * /
-        applyUpdate(value: V, update: V): ApplyUpdateResult<V>;
-    }*/
+        */
+        //applyUpdate(value: V | undefined, update: V) : ApplyUpdateResult<V>;
+    }
 
-    /*export class ApplyUpdateResult<T> {
-        readonly newValue: T;
-        readonly didChange: boolean;
-        constructor(newValue: T, didChange: boolean);
+    /*public class ApplyUpdateResult<T> {
+        public T NewValue { get; }
+        public bool DidChange { get; }
+        public ApplyUpdateResult(T newValue, bool didChange)
+        {
+            NewValue = newValue;
+            DidChange = didChange;
+        }
     }*/
 
     /**
@@ -4529,7 +4609,7 @@ namespace BlazorMonaco.Editor {
 
     //type ComputedEditorOptionValue<T extends IEditorOption<any, any>> = T extends IEditorOption<any, infer R> ? R : never;
 
-    //export type FindComputedEditorOptionValueById<T extends EditorOption> = NonNullable<ComputedEditorOptionValue<EditorOptionsType[FindEditorOptionsKeyById<T>]>>;
+    //export type FindComputedEditorOptionValueById<T extends EditorOption> = ComputedEditorOptionValue<EditorOptionsType[FindEditorOptionsKeyById<T>]>;
 
     public class EditorConstructionOptions : EditorOptions {
         /**
@@ -4954,10 +5034,10 @@ namespace BlazorMonaco.Editor {
         public BaseMouseTarget Target { get; set; }
     }
 
-    /*export interface IPartialEditorMouseEvent {
-        readonly event: IMouseEvent;
-        readonly target: IMouseTarget | null;
-    }*/
+    public class PartialEditorMouseEvent {
+        public MouseEvent Event { get; set; }
+        public BaseMouseTarget Target { get; set; }
+    }
 
     /**
      * A paste event originating from the editor.
@@ -4993,6 +5073,7 @@ namespace BlazorMonaco.Editor {
         public bool? IsInEmbeddedEditor { get; set; }
     }
 
+    // Translated in the StandaloneCodeEditor.razor.cs file
     /**
      * A rich code editor.
      */
@@ -5371,10 +5452,11 @@ namespace BlazorMonaco.Editor {
     /**
      * Information about a line in the diff editor
      */
-    /*export interface IDiffLineInformation {
-        readonly equivalentLineNumber: number;
-    }*/
+    public class DiffLineInformation {
+        public int EquivalentLineNumber { get; set; }
+    }
 
+    // Translated in the StandaloneDiffEditor.razor.cs file
     /**
      * A rich diff editor.
      */

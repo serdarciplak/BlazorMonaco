@@ -164,27 +164,29 @@ window.blazorMonaco.editor = {
 
     //#region Instance methods
 
-    addAction: function (id, actionId, label, keybindings, precondition, keybindingContext, contextMenuGroupId, contextMenuOrder) {
+    addAction: function (id, actionDescriptor) {
         let editorHolder = this.getEditorHolder(id);
         editorHolder.editor.addAction({
-            id: actionId,
-            label: label,
-            keybindings: keybindings,
-            precondition: precondition,
-            keybindingContext: keybindingContext,
-            contextMenuGroupId: contextMenuGroupId,
-            contextMenuOrder: contextMenuOrder,
+            id: actionDescriptor.id,
+            label: actionDescriptor.label,
+            keybindings: actionDescriptor.keybindings,
+            precondition: actionDescriptor.precondition,
+            keybindingContext: actionDescriptor.keybindingContext,
+            contextMenuGroupId: actionDescriptor.contextMenuGroupId,
+            contextMenuOrder: actionDescriptor.contextMenuOrder,
             run: function () {
-                editorHolder.dotnetRef.invokeMethodAsync("ActionCallback", keybindings.join(';'));
+                let editorHolder = this.getEditorHolder(id);
+                editorHolder.dotnetRef.invokeMethodAsync("ActionCallback", actionDescriptor.id);
             }
         });
     },
 
-    addCommand: function (id, keyCode) {
+    addCommand: function (id, keybinding, context) {
         let editorHolder = this.getEditorHolder(id);
-        editorHolder.editor.addCommand(keyCode, function () {
+        editorHolder.editor.addCommand(keybinding, function () {
+            let editorHolder = this.getEditorHolder(id);
             editorHolder.dotnetRef.invokeMethodAsync("CommandCallback", keyCode);
-        });
+        }, context);
     },
 
     deltaDecorations: function (id, oldDecorations, newDecorations) {
@@ -228,6 +230,14 @@ window.blazorMonaco.editor = {
     getContentWidth: function (id) {
         let editor = this.getEditor(id);
         return editor.getContentWidth();
+    },
+
+    getDomNodeId: function (id) {
+        let editor = this.getEditor(id);
+        let domeNode = editor.getDomNode();
+        if (domeNode == null)
+            return null;
+        return domeNode.id;
     },
 
     getEditorType: function (id) {
@@ -347,9 +357,16 @@ window.blazorMonaco.editor = {
         return editor.getTopForPosition(lineNumber, column);
     },
 
-    getValue: function (id) {
+    getValue: function (id, preserveBOM, lineEnding) {
         let editor = this.getEditor(id);
-        return editor.getValue();
+        let options = null;
+        if (preserveBOM != null && lineEnding != null) {
+            options = {
+                preserveBOM: preserveBOM,
+                lineEnding: lineEnding
+            };
+        }
+        return editor.getValue(options);
     },
 
     getVisibleColumnFromPosition: function (id, position) {
@@ -380,6 +397,11 @@ window.blazorMonaco.editor = {
     pushUndoStop: function (id) {
         let editor = this.getEditor(id);
         return editor.pushUndoStop();
+    },
+
+    popUndoStop: function (id) {
+        let editor = this.getEditor(id);
+        return editor.popUndoStop();
     },
 
     render: function (id, forceRedraw) {

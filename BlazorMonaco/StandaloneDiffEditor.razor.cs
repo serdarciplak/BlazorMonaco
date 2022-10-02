@@ -1,0 +1,369 @@
+﻿using BlazorMonaco.Helpers;
+using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+namespace BlazorMonaco.Editor
+{
+    public partial class StandaloneDiffEditor : DiffEditor
+    {
+        #region Blazor
+
+        [Parameter]
+        public Func<StandaloneDiffEditor, StandaloneDiffEditorConstructionOptions> ConstructionOptions { get; set; }
+
+        protected readonly Dictionary<string, ActionDescriptor> _actions = new Dictionary<string, ActionDescriptor>(); // TODO check what's sent from js as parameters
+        protected readonly Dictionary<string, CommandHandler> _commands = new Dictionary<string, CommandHandler>(); // TODO check what's sent from js as parameters
+
+        [JSInvokable]
+        public void ActionCallback(string actionId)
+        {
+            if (!_actions.TryGetValue(actionId, out var actionDescriptor))
+                return;
+            actionDescriptor?.Run?.Invoke(GetModifiedEditor());
+            // actions for a diff editor run for its modified editor only
+        }
+
+        [JSInvokable]
+        public void CommandCallback(int keyCode)
+        {
+            if (!_commands.TryGetValue(keyCode.ToString(), out var commandHandler))
+                return;
+            commandHandler?.Invoke(this, keyCode);
+        }
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+            {
+                // Get options
+                var options = ConstructionOptions?.Invoke(this);
+
+                // Prepare the line numbers callback
+                LineNumbersLambda = options.LineNumbersLambda;
+                if (LineNumbersLambda != null)
+                {
+                    options.LineNumbers = "function";
+                    options.LineNumbersLambda = null;
+                }
+
+                // Create the editor
+                await Globals.CreateDiffEditor(Id, options, _dotnetObjectRef);
+            }
+            await base.OnAfterRenderAsync(firstRender);
+        }
+
+        #endregion
+
+        [Obsolete("This method is deprecated. Use AddCommand(int keybinding, CommandHandler handler, string context = null) instead.")]
+        public Task AddCommand(int keybinding, Action<StandaloneDiffEditor, int> handler)
+        {
+            return AddCommand(keybinding, _ =>
+            {
+                handler?.Invoke(this, keybinding);
+            });
+        }
+        public Task<string> AddCommand(int keybinding, CommandHandler handler, string context = null)
+        {
+            _commands[keybinding.ToString()] = handler;
+            return jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.addCommand", Id, keybinding, context);
+        }
+
+        //createContextKey<T>(key: string, defaultValue: T): IContextKey<T>;
+        
+        [Obsolete("This method is deprecated. Use AddAction(ActionDescriptor actionDescriptor) instead.")]
+        public Task AddAction(string actionId, string label, int[] keybindings, string precondition, string keybindingContext, string contextMenuGroupId, double contextMenuOrder, Action<CodeEditor, int[]> action)
+        {
+            var actionDescriptor = new ActionDescriptor
+            {
+                Id = actionId,
+                Label = label,
+                Precondition = precondition,
+                Keybindings = keybindings,
+                KeybindingContext = keybindingContext,
+                ContextMenuGroupId = contextMenuGroupId,
+                ContextMenuOrder = (float)contextMenuOrder,
+                Run = (editor) => action(editor, keybindings)
+            };
+            return AddAction(actionDescriptor);
+        }
+        public Task AddAction(ActionDescriptor actionDescriptor)
+        {
+            _actions[actionDescriptor.Id] = actionDescriptor;
+            return jsRuntime.SafeInvokeAsync("blazorMonaco.editor.addAction", Id, actionDescriptor);
+        }
+
+        public new StandaloneCodeEditor GetOriginalEditor() => OriginalEditor;
+        public new StandaloneCodeEditor GetModifiedEditor() => ModifiedEditor;
+    }
+
+    /**
+     * A rich diff editor.
+     */
+    public class DiffEditor : Editor
+    {
+        #region Blazor
+
+        public StandaloneCodeEditor OriginalEditor { get; private set; }
+        public StandaloneCodeEditor ModifiedEditor { get; private set; }
+
+        #region Events for the original editor (left)
+        [Parameter] public EventCallback OnDidDisposeOriginal { get; set; }
+        [Parameter] public EventCallback OnDidInitOriginal { get; set; }
+        [Parameter] public EventCallback<ModelContentChangedEvent> OnDidChangeModelContentOriginal { get; set; }
+        [Parameter] public EventCallback<ModelLanguageChangedEvent> OnDidChangeModelLanguageOriginal { get; set; }
+        [Parameter] public EventCallback<ModelLanguageConfigurationChangedEvent> OnDidChangeModelLanguageConfigurationOriginal { get; set; }
+        [Parameter] public EventCallback<ModelOptionsChangedEvent> OnDidChangeModelOptionsOriginal { get; set; }
+        [Parameter] public EventCallback<ConfigurationChangedEvent> OnDidChangeConfigurationOriginal { get; set; }
+        [Parameter] public EventCallback<CursorPositionChangedEvent> OnDidChangeCursorPositionOriginal { get; set; }
+        [Parameter] public EventCallback<CursorSelectionChangedEvent> OnDidChangeCursorSelectionOriginal { get; set; }
+        [Parameter] public EventCallback<ModelChangedEvent> OnDidChangeModelOriginal { get; set; }
+        [Parameter] public EventCallback<ModelDecorationsChangedEvent> OnDidChangeModelDecorationsOriginal { get; set; }
+        [Parameter] public EventCallback OnDidFocusEditorTextOriginal { get; set; }
+        [Parameter] public EventCallback OnDidBlurEditorTextOriginal { get; set; }
+        [Parameter] public EventCallback OnDidFocusEditorWidgetOriginal { get; set; }
+        [Parameter] public EventCallback OnDidBlurEditorWidgetOriginal { get; set; }
+        [Parameter] public EventCallback OnDidCompositionStartOriginal { get; set; }
+        [Parameter] public EventCallback OnDidCompositionEndOriginal { get; set; }
+        //readonly onDidAttemptReadOnlyEdit: IEvent<void>;
+        [Parameter] public EventCallback<PasteEvent> OnDidPasteOriginal { get; set; }
+        [Parameter] public EventCallback<EditorMouseEvent> OnMouseUpOriginal { get; set; }
+        [Parameter] public EventCallback<EditorMouseEvent> OnMouseDownOriginal { get; set; }
+        [Parameter] public EventCallback<EditorMouseEvent> OnContextMenuOriginal { get; set; }
+        [Parameter] public EventCallback<EditorMouseEvent> OnMouseMoveOriginal { get; set; }
+        [Parameter] public EventCallback<PartialEditorMouseEvent> OnMouseLeaveOriginal { get; set; }
+        [Parameter] public EventCallback<KeyboardEvent> OnKeyUpOriginal { get; set; }
+        [Parameter] public EventCallback<KeyboardEvent> OnKeyDownOriginal { get; set; }
+        [Parameter] public EventCallback<EditorLayoutInfo> OnDidLayoutChangeOriginal { get; set; }
+        [Parameter] public EventCallback<ContentSizeChangedEvent> OnDidContentSizeChangeOriginal { get; set; }
+        [Parameter] public EventCallback<ScrollEvent> OnDidScrollChangeOriginal { get; set; }
+        //readonly onDidChangeHiddenAreas: IEvent<void>;
+
+        #endregion
+
+        #region Events for the modified editor (right)
+        [Parameter] public EventCallback OnDidDisposeModified { get; set; }
+        [Parameter] public EventCallback OnDidInitModified { get; set; }
+        [Parameter] public EventCallback<ModelContentChangedEvent> OnDidChangeModelContentModified { get; set; }
+        [Parameter] public EventCallback<ModelLanguageChangedEvent> OnDidChangeModelLanguageModified { get; set; }
+        [Parameter] public EventCallback<ModelLanguageConfigurationChangedEvent> OnDidChangeModelLanguageConfigurationModified { get; set; }
+        [Parameter] public EventCallback<ModelOptionsChangedEvent> OnDidChangeModelOptionsModified { get; set; }
+        [Parameter] public EventCallback<ConfigurationChangedEvent> OnDidChangeConfigurationModified { get; set; }
+        [Parameter] public EventCallback<CursorPositionChangedEvent> OnDidChangeCursorPositionModified { get; set; }
+        [Parameter] public EventCallback<CursorSelectionChangedEvent> OnDidChangeCursorSelectionModified { get; set; }
+        [Parameter] public EventCallback<ModelChangedEvent> OnDidChangeModelModified { get; set; }
+        [Parameter] public EventCallback<ModelDecorationsChangedEvent> OnDidChangeModelDecorationsModified { get; set; }
+        [Parameter] public EventCallback OnDidFocusEditorTextModified { get; set; }
+        [Parameter] public EventCallback OnDidBlurEditorTextModified { get; set; }
+        [Parameter] public EventCallback OnDidFocusEditorWidgetModified { get; set; }
+        [Parameter] public EventCallback OnDidBlurEditorWidgetModified { get; set; }
+        [Parameter] public EventCallback OnDidCompositionStartModified { get; set; }
+        [Parameter] public EventCallback OnDidCompositionEndModified { get; set; }
+        //readonly onDidAttemptReadOnlyEdit: IEvent<void>;
+        [Parameter] public EventCallback<PasteEvent> OnDidPasteModified { get; set; }
+        [Parameter] public EventCallback<EditorMouseEvent> OnMouseUpModified { get; set; }
+        [Parameter] public EventCallback<EditorMouseEvent> OnMouseDownModified { get; set; }
+        [Parameter] public EventCallback<EditorMouseEvent> OnContextMenuModified { get; set; }
+        [Parameter] public EventCallback<EditorMouseEvent> OnMouseMoveModified { get; set; }
+        [Parameter] public EventCallback<PartialEditorMouseEvent> OnMouseLeaveModified { get; set; }
+        [Parameter] public EventCallback<KeyboardEvent> OnKeyUpModified { get; set; }
+        [Parameter] public EventCallback<KeyboardEvent> OnKeyDownModified { get; set; }
+        [Parameter] public EventCallback<EditorLayoutInfo> OnDidLayoutChangeModified { get; set; }
+        [Parameter] public EventCallback<ContentSizeChangedEvent> OnDidContentSizeChangeModified { get; set; }
+        [Parameter] public EventCallback<ScrollEvent> OnDidScrollChangeModified { get; set; }
+        //readonly onDidChangeHiddenAreas: IEvent<void>;
+
+        #endregion
+
+        public override void Dispose()
+        {
+            OriginalEditor?.Dispose();
+            ModifiedEditor?.Dispose();
+            base.Dispose();
+        }
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+            {
+                // Create the bridges for the inner editors
+#pragma warning disable BL0005
+
+                #region Init Original Editor Placeholder
+
+                OriginalEditor = StandaloneCodeEditor.CreateVirtualEditor(Id + "_original");
+                OriginalEditor.OnDidDispose = OnDidDisposeOriginal;
+                OriginalEditor.OnDidInit = OnDidInitOriginal;
+                OriginalEditor.OnDidChangeModelContent = OnDidChangeModelContentOriginal;
+                OriginalEditor.OnDidChangeModelLanguage = OnDidChangeModelLanguageOriginal;
+                OriginalEditor.OnDidChangeModelLanguageConfiguration = OnDidChangeModelLanguageConfigurationOriginal;
+                OriginalEditor.OnDidChangeModelOptions = OnDidChangeModelOptionsOriginal;
+                OriginalEditor.OnDidChangeConfiguration = OnDidChangeConfigurationOriginal;
+                OriginalEditor.OnDidChangeCursorPosition = OnDidChangeCursorPositionOriginal;
+                OriginalEditor.OnDidChangeCursorSelection = OnDidChangeCursorSelectionOriginal;
+                OriginalEditor.OnDidChangeModel = OnDidChangeModelOriginal;
+                OriginalEditor.OnDidChangeModelDecorations = OnDidChangeModelDecorationsOriginal;
+                OriginalEditor.OnDidFocusEditorText = OnDidFocusEditorTextOriginal;
+                OriginalEditor.OnDidBlurEditorText = OnDidBlurEditorTextOriginal;
+                OriginalEditor.OnDidFocusEditorWidget = OnDidFocusEditorWidgetOriginal;
+                OriginalEditor.OnDidBlurEditorWidget = OnDidBlurEditorWidgetOriginal;
+                OriginalEditor.OnDidCompositionStart = OnDidCompositionStartOriginal;
+                OriginalEditor.OnDidCompositionEnd = OnDidCompositionEndOriginal;
+                //readonly onDidAttemptReadOnlyEdit: IEvent<void>;
+                OriginalEditor.OnDidPaste = OnDidPasteOriginal;
+                OriginalEditor.OnMouseUp = OnMouseUpOriginal;
+                OriginalEditor.OnMouseDown = OnMouseDownOriginal;
+                OriginalEditor.OnContextMenu = OnContextMenuOriginal;
+                OriginalEditor.OnMouseMove = OnMouseMoveOriginal;
+                OriginalEditor.OnMouseLeave = OnMouseLeaveOriginal;
+                OriginalEditor.OnKeyUp = OnKeyUpOriginal;
+                OriginalEditor.OnKeyDown = OnKeyDownOriginal;
+                OriginalEditor.OnDidLayoutChange = OnDidLayoutChangeOriginal;
+                OriginalEditor.OnDidContentSizeChange = OnDidContentSizeChangeOriginal;
+                OriginalEditor.OnDidScrollChange = OnDidScrollChangeOriginal;
+                //readonly onDidChangeHiddenAreas: IEvent<void>;
+                await OriginalEditor.SetEventListeners();
+                await OriginalEditor.OnDidInit.InvokeAsync(OriginalEditor);
+
+                #endregion
+
+                #region Init Modified Editor Placeholder
+
+                ModifiedEditor = StandaloneCodeEditor.CreateVirtualEditor(Id + "_modified");
+                ModifiedEditor.OnDidCompositionEnd = OnDidCompositionEndModified;
+                ModifiedEditor.OnDidDispose = OnDidDisposeModified;
+                ModifiedEditor.OnDidInit = OnDidInitModified;
+                ModifiedEditor.OnDidChangeModelContent = OnDidChangeModelContentModified;
+                ModifiedEditor.OnDidChangeModelLanguage = OnDidChangeModelLanguageModified;
+                ModifiedEditor.OnDidChangeModelLanguageConfiguration = OnDidChangeModelLanguageConfigurationModified;
+                ModifiedEditor.OnDidChangeModelOptions = OnDidChangeModelOptionsModified;
+                ModifiedEditor.OnDidChangeConfiguration = OnDidChangeConfigurationModified;
+                ModifiedEditor.OnDidChangeCursorPosition = OnDidChangeCursorPositionModified;
+                ModifiedEditor.OnDidChangeCursorSelection = OnDidChangeCursorSelectionModified;
+                ModifiedEditor.OnDidChangeModel = OnDidChangeModelModified;
+                ModifiedEditor.OnDidChangeModelDecorations = OnDidChangeModelDecorationsModified;
+                ModifiedEditor.OnDidFocusEditorText = OnDidFocusEditorTextModified;
+                ModifiedEditor.OnDidBlurEditorText = OnDidBlurEditorTextModified;
+                ModifiedEditor.OnDidFocusEditorWidget = OnDidFocusEditorWidgetModified;
+                ModifiedEditor.OnDidBlurEditorWidget = OnDidBlurEditorWidgetModified;
+                ModifiedEditor.OnDidCompositionStart = OnDidCompositionStartModified;
+                ModifiedEditor.OnDidCompositionEnd = OnDidCompositionEndModified;
+                //readonly onDidAttemptReadOnlyEdit: IEvent<void>;
+                ModifiedEditor.OnDidPaste = OnDidPasteModified;
+                ModifiedEditor.OnMouseUp = OnMouseUpModified;
+                ModifiedEditor.OnMouseDown = OnMouseDownModified;
+                ModifiedEditor.OnContextMenu = OnContextMenuModified;
+                ModifiedEditor.OnMouseMove = OnMouseMoveModified;
+                ModifiedEditor.OnMouseLeave = OnMouseLeaveModified;
+                ModifiedEditor.OnKeyUp = OnKeyUpModified;
+                ModifiedEditor.OnKeyDown = OnKeyDownModified;
+                ModifiedEditor.OnDidLayoutChange = OnDidLayoutChangeModified;
+                ModifiedEditor.OnDidContentSizeChange = OnDidContentSizeChangeModified;
+                ModifiedEditor.OnDidScrollChange = OnDidScrollChangeModified;
+                //readonly onDidChangeHiddenAreas: IEvent<void>;
+                await ModifiedEditor.SetEventListeners();
+                await ModifiedEditor.OnDidInit.InvokeAsync(ModifiedEditor);
+
+                #endregion
+
+#pragma warning restore BL0005
+            }
+            await base.OnAfterRenderAsync(firstRender);
+        }
+
+        internal override async Task SetEventListeners()
+        {
+            if (OnDidUpdateDiff.HasDelegate)
+                await SetEventListener("OnDidUpdateDiff");
+            await base.SetEventListeners();
+        }
+
+        [JSInvokable]
+        public override async Task EventCallback(string eventName, string eventJson)
+        {
+            switch (eventName)
+            {
+                case "OnDidUpdateDiff": await OnDidUpdateDiff.InvokeAsync(this); break;
+            }
+            await base.EventCallback(eventName, eventJson);
+        }
+
+        #endregion
+
+        /**
+         * @see {@link ICodeEditor.getContainerDomNode}
+         */
+        public Task<string> GetContainerDomNodeId()
+            => jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getContainerDomNodeId", Id);
+        /**
+         * An event emitted when the diff information computed by this diff editor has been updated.
+         * @event
+         */
+        [Parameter]
+        public EventCallback<DiffEditor> OnDidUpdateDiff { get; set; }
+        /**
+         * Saves current view state of the editor in a serializable object.
+         */
+        //saveViewState(): IDiffEditorViewState | null;
+        /**
+         * Restores the view state of the editor from a serializable object generated by `saveViewState`.
+         */
+        //restoreViewState(state: IDiffEditorViewState): void;
+        /**
+         * Type the getModel() of IEditor.
+         */
+        public Task<DiffEditorModel> GetModel()
+            => jsRuntime.SafeInvokeAsync<DiffEditorModel>("blazorMonaco.editor.getInstanceDiffModel", Id);
+        /**
+         * Sets the current model attached to this editor.
+         * If the previous model was created by the editor via the value key in the options
+         * literal object, it will be destroyed. Otherwise, if the previous model was set
+         * via setModel, or the model key in the options literal object, the previous model
+         * will not be destroyed.
+         * It is safe to call setModel(null) to simply detach the current model from the editor.
+         */
+        public Task SetModel(DiffEditorModel model)
+            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.setInstanceDiffModel", Id, model);
+        /**
+         * Get the `original` editor.
+         */
+        public StandaloneCodeEditor GetOriginalEditor() => OriginalEditor;
+        /**
+         * Get the `modified` editor.
+         */
+        public StandaloneCodeEditor GetModifiedEditor() => ModifiedEditor;
+        /**
+         * Get the computed diff information.
+         */
+        //getLineChanges(): ILineChange[] | null;
+        /**
+         * Get information based on computed diff about a line number from the original model.
+         * If the diff computation is not finished or the model is missing, will return null.
+         */
+        //getDiffLineInformationForOriginal(lineNumber: number): IDiffLineInformation | null;
+        /**
+         * Get information based on computed diff about a line number from the modified model.
+         * If the diff computation is not finished or the model is missing, will return null.
+         */
+        //getDiffLineInformationForModified(lineNumber: number): IDiffLineInformation | null;
+        /**
+         * Update the editor's options after the editor has been created.
+         */
+        public Task UpdateOptions(DiffEditorOptions newOptions)
+        {
+            // Convert the options object into a JsonElement to get rid of the properties with null values
+            var optionsJson = JsonSerializer.Serialize(newOptions, new JsonSerializerOptions
+            {
+                IgnoreNullValues = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+            var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
+            return jsRuntime.SafeInvokeAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
+        }
+    }
+}
