@@ -1,5 +1,3 @@
-if (!require.getConfig().paths.vs)  // for lte v1.2.0
-    require.config({ paths: { 'vs': '_content/BlazorMonaco/lib/monaco-editor/min/vs' } });
 window.blazorMonaco = window.blazorMonaco || {};
 window.blazorMonaco.editors = [];
 
@@ -157,7 +155,7 @@ window.blazorMonaco.editor = {
 
     getEditor: function (id, unobstrusive = false) {
         let editorHolder = this.getEditorHolder(id, unobstrusive);
-        return editorHolder.editor;
+        return editorHolder == null ? null : editorHolder.editor;
     },
 
     //#endregion
@@ -175,7 +173,6 @@ window.blazorMonaco.editor = {
             contextMenuGroupId: actionDescriptor.contextMenuGroupId,
             contextMenuOrder: actionDescriptor.contextMenuOrder,
             run: function () {
-                let editorHolder = this.getEditorHolder(id);
                 editorHolder.dotnetRef.invokeMethodAsync("ActionCallback", actionDescriptor.id);
             }
         });
@@ -184,8 +181,7 @@ window.blazorMonaco.editor = {
     addCommand: function (id, keybinding, context) {
         let editorHolder = this.getEditorHolder(id);
         editorHolder.editor.addCommand(keybinding, function () {
-            let editorHolder = this.getEditorHolder(id);
-            editorHolder.dotnetRef.invokeMethodAsync("CommandCallback", keyCode);
+            editorHolder.dotnetRef.invokeMethodAsync("CommandCallback", keybinding);
         }, context);
     },
 

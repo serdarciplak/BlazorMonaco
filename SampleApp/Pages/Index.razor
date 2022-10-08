@@ -22,20 +22,20 @@
         <button @onclick="AddCommand">Add Command (Ctrl+Enter)</button>
     </div>
     <div style="margin:10px 0;">
-        <button @onclick="AddAction">Add Action (Ctrl+D)</button>
+        <button @onclick="AddAction">Add Action (Ctrl+B)</button>
     </div>
     <div style="margin:10px 0;">
         See the console for results.
     </div>
 </div>
 
-<MonacoEditor @ref="_editor" Id="sample-code-editor-123" ConstructionOptions="EditorConstructionOptions" OnDidInit="EditorOnDidInit" OnContextMenu="OnContextMenu" />
+<StandaloneCodeEditor @ref="_editor" Id="sample-code-editor-123" ConstructionOptions="EditorConstructionOptions" OnDidInit="EditorOnDidInit" OnContextMenu="OnContextMenu" />
 
 @code {
-    private MonacoEditor _editor { get; set; }
+    private StandaloneCodeEditor _editor { get; set; }
     private string ValueToSet { get; set; }
 
-    private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
     {
         return new StandaloneEditorConstructionOptions
         {
@@ -53,9 +53,9 @@
         };
     }
 
-    private async Task EditorOnDidInit(MonacoEditorBase editor)
+    private async Task EditorOnDidInit()
     {
-        await _editor.AddCommand((int)KeyMod.CtrlCmd | (int)KeyCode.KeyH, (editor, keyCode) =>
+        await _editor.AddCommand((int)KeyMod.CtrlCmd | (int)KeyCode.KeyH, (args) =>
         {
             Console.WriteLine("Ctrl+H : Initial editor command is triggered.");
         });
@@ -88,7 +88,7 @@
     private async Task ChangeTheme(ChangeEventArgs e)
     {
         Console.WriteLine($"setting theme to: {e.Value.ToString()}");
-        await MonacoEditor.SetTheme(e.Value.ToString());
+        await Globals.SetTheme(e.Value.ToString());
     }
 
     private async Task SetValue()
@@ -105,7 +105,7 @@
 
     private async Task AddCommand()
     {
-        await _editor.AddCommand((int)KeyMod.CtrlCmd | (int)KeyCode.Enter, (editor, keyCode) =>
+        await _editor.AddCommand((int)KeyMod.CtrlCmd | (int)KeyCode.Enter, (args) =>
         {
             Console.WriteLine("Ctrl+Enter : Editor command is triggered.");
         });
@@ -113,9 +113,18 @@
 
     private async Task AddAction()
     {
-        await _editor.AddAction("testAction", "Test Action", new int[] { (int)KeyMod.CtrlCmd | (int)KeyCode.KeyD, (int)KeyMod.CtrlCmd | (int)KeyCode.KeyB }, null, null, "navigation", 1.5, (editor, keyCodes) =>
+        var actionDescriptor = new ActionDescriptor
         {
-            Console.WriteLine("Ctrl+D : Editor action is triggered.");
-        });
+            Id = "testAction",
+            Label = "Test Action",
+            Keybindings = new int[] { (int)KeyMod.CtrlCmd | (int)KeyCode.KeyB },
+            ContextMenuGroupId = "navigation",
+            ContextMenuOrder = 1.5f,
+            Run = (editor) =>
+            {
+                Console.WriteLine("Ctrl+B : Editor action is triggered.");
+            }
+        };
+        await _editor.AddAction(actionDescriptor);
     }
 }

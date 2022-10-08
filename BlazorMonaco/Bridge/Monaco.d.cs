@@ -847,7 +847,7 @@ namespace BlazorMonaco.Editor {
         dispose(): void;
     }*/
 
-    internal partial class Globals
+    public partial class Globals
     {
         /**
          * Create a new editor under `domElement`.
@@ -910,7 +910,7 @@ namespace BlazorMonaco.Editor {
         public bool? AlwaysRevealFirst { get; set; }
     }
 
-    internal partial class Globals
+    public partial class Globals
     {
 
         //export function createDiffNavigator(diffEditor: IStandaloneDiffEditor, opts?: IDiffNavigatorOptions): IDiffNavigator;
@@ -1146,6 +1146,7 @@ namespace BlazorMonaco.Editor {
          * Method that will be executed when the action is triggered.
          * @param editor The editor instance is passed in as a convenience
          */
+        [System.Text.Json.Serialization.JsonIgnore]
         public Action<CodeEditor> Run { get; set; }
     }
 

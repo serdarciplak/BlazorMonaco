@@ -20,21 +20,21 @@
         <button @onclick="AddCommand">Add Command Original (Ctrl+Enter)</button>
     </div>
     <div style="margin:10px 0;">
-        <button @onclick="AddAction">Add Action Modified (Ctrl+D)</button>
+        <button @onclick="AddAction">Add Action Modified (Ctrl+B)</button>
     </div>
     <div style="margin:10px 0;">
         See the console for results.
     </div>
 </div>
 
-<MonacoDiffEditor @ref="_diffEditor" Id="sample-diff-editor-123" ConstructionOptions="DiffEditorConstructionOptions" OnDidInit="EditorOnDidInit" OnKeyUpOriginal="EditorOnKeyUpOriginal" OnKeyUpModified="EditorOnKeyUpModified" />
+<StandaloneDiffEditor @ref="_diffEditor" Id="sample-diff-editor-123" ConstructionOptions="DiffEditorConstructionOptions" OnDidInit="EditorOnDidInit" OnKeyUpOriginal="EditorOnKeyUpOriginal" OnKeyUpModified="EditorOnKeyUpModified" />
 
 @code {
-    private MonacoDiffEditor _diffEditor { get; set; }
+    private StandaloneDiffEditor _diffEditor { get; set; }
     private string ValueToSetOriginal { get; set; }
     private string ValueToSetModified { get; set; }
 
-    private StandaloneDiffEditorConstructionOptions DiffEditorConstructionOptions(MonacoDiffEditor editor)
+    private StandaloneDiffEditorConstructionOptions DiffEditorConstructionOptions(StandaloneDiffEditor editor)
     {
         return new StandaloneDiffEditorConstructionOptions
         {
@@ -42,10 +42,10 @@
         };
     }
 
-    private async Task EditorOnDidInit(MonacoEditorBase editor)
+    private async Task EditorOnDidInit()
     {
         // Get or create the original model
-        TextModel original_model = await MonacoEditorBase.GetModel("sample-diff-editor-originalModel");
+        TextModel original_model = await Globals.GetModel("sample-diff-editor-originalModel");
         if (original_model == null)
         {
             var original_value = "\"use strict\";\n" +
@@ -57,11 +57,11 @@
                             "Person.prototype.getAge = function () {\n" +
                             "	return this.age;\n" +
                             "};\n";
-            original_model = await MonacoEditorBase.CreateModel(original_value, "javascript", "sample-diff-editor-originalModel");
+            original_model = await Globals.CreateModel(original_value, "javascript", "sample-diff-editor-originalModel");
         }
 
         // Get or create the modified model
-        TextModel modified_model = await MonacoEditorBase.GetModel("sample-diff-editor-modifiedModel");
+        TextModel modified_model = await Globals.GetModel("sample-diff-editor-modifiedModel");
         if (modified_model == null)
         {
             var modified_value = "\"don't use strict\";\n" +
@@ -74,7 +74,7 @@
                             "	return this.age_is_just_a_number;\n" +
                             "};\n" +
                             "//Really, it is just a number people!";
-            modified_model = await MonacoEditorBase.CreateModel(modified_value, "javascript", "sample-diff-editor-modifiedModel");
+            modified_model = await Globals.CreateModel(modified_value, "javascript", "sample-diff-editor-modifiedModel");
         }
 
         // Set the editor model
@@ -121,17 +121,26 @@
 
     private async Task AddCommand()
     {
-        await _diffEditor.ModifiedEditor.AddCommand((int)KeyMod.CtrlCmd | (int)KeyCode.Enter, (editor, keyCode) =>
+        await _diffEditor.ModifiedEditor.AddCommand((int)KeyMod.CtrlCmd | (int)KeyCode.Enter, (args) =>
         {
-            Console.WriteLine($"Ctrl+Enter : Original Editor command is triggered. ({editor.Id})");
+            Console.WriteLine($"Ctrl+Enter : Original Editor command is triggered. ({_diffEditor.Id})");
         });
     }
 
     private async Task AddAction()
     {
-        await _diffEditor.ModifiedEditor.AddAction("testAction", "Test Action", new int[] { (int)KeyMod.CtrlCmd | (int)KeyCode.KeyD, (int)KeyMod.CtrlCmd | (int)KeyCode.KeyB }, null, null, "navigation", 1.5, (editor, keyCodes) =>
+        var actionDescriptor = new ActionDescriptor
         {
-            Console.WriteLine($"Ctrl+D : Modified Editor action is triggered. ({editor.Id})");
-        });
+            Id = "testAction",
+            Label = "Test Action",
+            Keybindings = new int[] { (int)KeyMod.CtrlCmd | (int)KeyCode.KeyB },
+            ContextMenuGroupId = "navigation",
+            ContextMenuOrder = 1.5f,
+            Run = (editor) =>
+            {
+                Console.WriteLine($"Ctrl+B : Modified Editor action is triggered. ({editor.Id})");
+            }
+        };
+        await _diffEditor.ModifiedEditor.AddAction(actionDescriptor);
     }
 }
