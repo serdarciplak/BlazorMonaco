@@ -1,14 +1,13 @@
 ﻿@page "/diff-editor"
-@using BlazorMonaco.Editor
 
 <h3>Diff Editor</h3>
 
 <div>
     <div style="margin:10px 0;">
-        New Value: <input type="text" @bind="ValueToSetOriginal" style="width: 400px;" /> <button @onclick="SetValueOriginal">Set Value Original</button>
+        New Value: <input type="text" @bind="_valueToSetOriginal" style="width: 400px;" /> <button @onclick="SetValueOriginal">Set Value Original</button>
     </div>
     <div style="margin:10px 0;">
-        New Value: <input type="text" @bind="ValueToSetModified" style="width: 400px;" /> <button @onclick="SetValueModified">Set Value Modified</button>
+        New Value: <input type="text" @bind="_valueToSetModified" style="width: 400px;" /> <button @onclick="SetValueModified">Set Value Modified</button>
     </div>
     <div style="margin:10px 0;">
         <button @onclick="GetValueOriginal">Get Value Original</button>
@@ -30,9 +29,9 @@
 <StandaloneDiffEditor @ref="_diffEditor" Id="sample-diff-editor-123" ConstructionOptions="DiffEditorConstructionOptions" OnDidInit="EditorOnDidInit" OnKeyUpOriginal="EditorOnKeyUpOriginal" OnKeyUpModified="EditorOnKeyUpModified" />
 
 @code {
-    private StandaloneDiffEditor _diffEditor { get; set; }
-    private string ValueToSetOriginal { get; set; }
-    private string ValueToSetModified { get; set; }
+    private StandaloneDiffEditor _diffEditor = null!;
+    private string _valueToSetOriginal = "";
+    private string _valueToSetModified = "";
 
     private StandaloneDiffEditorConstructionOptions DiffEditorConstructionOptions(StandaloneDiffEditor editor)
     {
@@ -97,14 +96,14 @@
 
     private async Task SetValueOriginal()
     {
-        Console.WriteLine($"setting original value to: {ValueToSetOriginal}");
-        await _diffEditor.OriginalEditor.SetValue(ValueToSetOriginal);
+        Console.WriteLine($"setting original value to: {_valueToSetOriginal}");
+        await _diffEditor.OriginalEditor.SetValue(_valueToSetOriginal);
     }
 
     private async Task SetValueModified()
     {
-        Console.WriteLine($"setting modified value to: {ValueToSetModified}");
-        await _diffEditor.ModifiedEditor.SetValue(ValueToSetModified);
+        Console.WriteLine($"setting modified value to: {_valueToSetModified}");
+        await _diffEditor.ModifiedEditor.SetValue(_valueToSetModified);
     }
 
     private async Task GetValueOriginal()
