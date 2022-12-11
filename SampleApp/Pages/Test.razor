@@ -1,0 +1,346 @@
+﻿@page "/test"
+@using System.Runtime.CompilerServices;
+@inject ILogger<Test> logger
+@inject IJSRuntime jsRuntime
+
+<h3>Test</h3>
+
+<div>
+    <div style="margin:10px 0;">
+        <select @bind="_testName">
+            <option value="all">All</option>
+            @foreach (var test in _tests.Keys) {
+                <option value="@test">@test</option>
+            }
+        </select>
+        <button @onclick="RunTest">Test</button>
+    </div>
+    <div style="margin:10px 0;">
+        See the console for results.
+    </div>
+</div>
+
+<StandaloneCodeEditor @ref="_editor" Id="sample-code-editor-test" ConstructionOptions="EditorConstructionOptions" />
+
+@code {
+    private string _testName = "all";
+    private Dictionary<string, Func<Task>> _tests = new();
+    private string _defaultValue = "Default editor value.";
+    private string _loremIpsum = @"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean nec risus id sem interdum tempus. Proin blandit sodales metus a porttitor. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Suspendisse ac iaculis urna. Vestibulum suscipit blandit velit, sollicitudin consectetur libero sollicitudin sit amet. Sed suscipit metus quis massa placerat, a congue turpis volutpat. Quisque a suscipit nisl. Pellentesque eget porttitor mi. Phasellus non lorem sed lectus vestibulum malesuada.
+Curabitur eu mi sit amet lacus ultrices semper. Sed efficitur leo sapien, eget faucibus enim tempor vitae. Etiam sed tincidunt ex, at congue ipsum. Curabitur pretium nisi in nulla ornare, at viverra nisl dictum. Integer placerat a lectus in sagittis. Mauris at sapien odio. Vestibulum pharetra, sapien quis luctus pellentesque, mauris purus blandit nisl, egestas sodales eros risus in nisi. Praesent pellentesque dictum faucibus. Curabitur eu imperdiet nisi. Proin scelerisque eros vel tempor faucibus. Cras vestibulum sagittis diam, quis consequat turpis bibendum quis. Fusce iaculis lacus odio, in facilisis erat luctus et. Integer eget elit sed nulla commodo venenatis id a ante.
+Donec eget dolor mattis, malesuada arcu id, blandit lacus. In hac habitasse platea dictumst. Ut lacinia tellus at elit viverra porta. Donec lorem odio, ullamcorper at ultricies vitae, placerat nec risus. Nulla eget mi sollicitudin leo auctor ultricies. Integer rhoncus libero tellus, quis laoreet quam maximus id. Etiam semper, dui sed posuere fringilla, velit ipsum accumsan mauris, at rhoncus justo purus ut felis. Nam nunc lectus, placerat suscipit augue eget, consectetur tristique diam. Vivamus id velit magna. Maecenas pulvinar risus quam, in pharetra massa aliquet vitae.
+Integer sed diam justo. In efficitur semper vehicula. Ut a nibh at arcu vehicula dictum. Etiam lobortis enim ut neque interdum convallis. Mauris viverra pretium lacus, et ornare sem condimentum in. Nam tincidunt non nunc in dictum. Curabitur pretium nulla a vehicula placerat. Mauris sodales enim a enim interdum suscipit. Nulla facilisi.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat lorem magna, non scelerisque mi ultrices sed. Fusce tincidunt nunc at sodales rhoncus. Sed vehicula ligula eget purus euismod, blandit cursus nulla euismod. Sed diam orci, iaculis vitae molestie quis, malesuada vitae est. Nunc dictum finibus pretium. Fusce iaculis eleifend maximus. Donec lectus risus, tristique a turpis quis, sodales porta nulla. Fusce posuere lacus vitae purus accumsan, sit amet tempus ex tincidunt. Nam nec convallis turpis. Fusce diam turpis, consequat et congue non, posuere at neque. Sed massa mauris, consectetur sit amet volutpat non, tempus ac risus. Etiam hendrerit mauris non tincidunt fermentum. Quisque ligula dolor, tempus non diam id, bibendum scelerisque ligula.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean nec risus id sem interdum tempus. Proin blandit sodales metus a porttitor. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Suspendisse ac iaculis urna. Vestibulum suscipit blandit velit, sollicitudin consectetur libero sollicitudin sit amet. Sed suscipit metus quis massa placerat, a congue turpis volutpat. Quisque a suscipit nisl. Pellentesque eget porttitor mi. Phasellus non lorem sed lectus vestibulum malesuada.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean nec risus id sem interdum tempus. Proin blandit sodales metus a porttitor. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Suspendisse ac iaculis urna. Vestibulum suscipit blandit velit, sollicitudin consectetur libero sollicitudin sit amet. Sed suscipit metus quis massa placerat, a congue turpis volutpat. Quisque a suscipit nisl. Pellentesque eget porttitor mi. Phasellus non lorem sed lectus vestibulum malesuada.
+Curabitur eu mi sit amet lacus ultrices semper. Sed efficitur leo sapien, eget faucibus enim tempor vitae. Etiam sed tincidunt ex, at congue ipsum. Curabitur pretium nisi in nulla ornare, at viverra nisl dictum. Integer placerat a lectus in sagittis. Mauris at sapien odio. Vestibulum pharetra, sapien quis luctus pellentesque, mauris purus blandit nisl, egestas sodales eros risus in nisi. Praesent pellentesque dictum faucibus. Curabitur eu imperdiet nisi. Proin scelerisque eros vel tempor faucibus. Cras vestibulum sagittis diam, quis consequat turpis bibendum quis. Fusce iaculis lacus odio, in facilisis erat luctus et. Integer eget elit sed nulla commodo venenatis id a ante.
+Donec eget dolor mattis, malesuada arcu id, blandit lacus. In hac habitasse platea dictumst. Ut lacinia tellus at elit viverra porta. Donec lorem odio, ullamcorper at ultricies vitae, placerat nec risus. Nulla eget mi sollicitudin leo auctor ultricies. Integer rhoncus libero tellus, quis laoreet quam maximus id. Etiam semper, dui sed posuere fringilla, velit ipsum accumsan mauris, at rhoncus justo purus ut felis. Nam nunc lectus, placerat suscipit augue eget, consectetur tristique diam. Vivamus id velit magna. Maecenas pulvinar risus quam, in pharetra massa aliquet vitae.
+Integer sed diam justo. In efficitur semper vehicula. Ut a nibh at arcu vehicula dictum. Etiam lobortis enim ut neque interdum convallis. Mauris viverra pretium lacus, et ornare sem condimentum in. Nam tincidunt non nunc in dictum. Curabitur pretium nulla a vehicula placerat. Mauris sodales enim a enim interdum suscipit. Nulla facilisi.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat lorem magna, non scelerisque mi ultrices sed. Fusce tincidunt nunc at sodales rhoncus. Sed vehicula ligula eget purus euismod, blandit cursus nulla euismod. Sed diam orci, iaculis vitae molestie quis, malesuada vitae est. Nunc dictum finibus pretium. Fusce iaculis eleifend maximus. Donec lectus risus, tristique a turpis quis, sodales porta nulla. Fusce posuere lacus vitae purus accumsan, sit amet tempus ex tincidunt. Nam nec convallis turpis. Fusce diam turpis, consequat et congue non, posuere at neque. Sed massa mauris, consectetur sit amet volutpat non, tempus ac risus. Etiam hendrerit mauris non tincidunt fermentum. Quisque ligula dolor, tempus non diam id, bibendum scelerisque ligula.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean nec risus id sem interdum tempus. Proin blandit sodales metus a porttitor. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Suspendisse ac iaculis urna. Vestibulum suscipit blandit velit, sollicitudin consectetur libero sollicitudin sit amet. Sed suscipit metus quis massa placerat, a congue turpis volutpat. Quisque a suscipit nisl. Pellentesque eget porttitor mi. Phasellus non lorem sed lectus vestibulum malesuada.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean nec risus id sem interdum tempus. Proin blandit sodales metus a porttitor. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Suspendisse ac iaculis urna. Vestibulum suscipit blandit velit, sollicitudin consectetur libero sollicitudin sit amet. Sed suscipit metus quis massa placerat, a congue turpis volutpat. Quisque a suscipit nisl. Pellentesque eget porttitor mi. Phasellus non lorem sed lectus vestibulum malesuada.
+Curabitur eu mi sit amet lacus ultrices semper. Sed efficitur leo sapien, eget faucibus enim tempor vitae. Etiam sed tincidunt ex, at congue ipsum. Curabitur pretium nisi in nulla ornare, at viverra nisl dictum. Integer placerat a lectus in sagittis. Mauris at sapien odio. Vestibulum pharetra, sapien quis luctus pellentesque, mauris purus blandit nisl, egestas sodales eros risus in nisi. Praesent pellentesque dictum faucibus. Curabitur eu imperdiet nisi. Proin scelerisque eros vel tempor faucibus. Cras vestibulum sagittis diam, quis consequat turpis bibendum quis. Fusce iaculis lacus odio, in facilisis erat luctus et. Integer eget elit sed nulla commodo venenatis id a ante.
+Donec eget dolor mattis, malesuada arcu id, blandit lacus. In hac habitasse platea dictumst. Ut lacinia tellus at elit viverra porta. Donec lorem odio, ullamcorper at ultricies vitae, placerat nec risus. Nulla eget mi sollicitudin leo auctor ultricies. Integer rhoncus libero tellus, quis laoreet quam maximus id. Etiam semper, dui sed posuere fringilla, velit ipsum accumsan mauris, at rhoncus justo purus ut felis. Nam nunc lectus, placerat suscipit augue eget, consectetur tristique diam. Vivamus id velit magna. Maecenas pulvinar risus quam, in pharetra massa aliquet vitae.
+Integer sed diam justo. In efficitur semper vehicula. Ut a nibh at arcu vehicula dictum. Etiam lobortis enim ut neque interdum convallis. Mauris viverra pretium lacus, et ornare sem condimentum in. Nam tincidunt non nunc in dictum. Curabitur pretium nulla a vehicula placerat. Mauris sodales enim a enim interdum suscipit. Nulla facilisi.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat lorem magna, non scelerisque mi ultrices sed. Fusce tincidunt nunc at sodales rhoncus. Sed vehicula ligula eget purus euismod, blandit cursus nulla euismod. Sed diam orci, iaculis vitae molestie quis, malesuada vitae est. Nunc dictum finibus pretium. Fusce iaculis eleifend maximus. Donec lectus risus, tristique a turpis quis, sodales porta nulla. Fusce posuere lacus vitae purus accumsan, sit amet tempus ex tincidunt. Nam nec convallis turpis. Fusce diam turpis, consequat et congue non, posuere at neque. Sed massa mauris, consectetur sit amet volutpat non, tempus ac risus. Etiam hendrerit mauris non tincidunt fermentum. Quisque ligula dolor, tempus non diam id, bibendum scelerisque ligula.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean nec risus id sem interdum tempus. Proin blandit sodales metus a porttitor. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Suspendisse ac iaculis urna. Vestibulum suscipit blandit velit, sollicitudin consectetur libero sollicitudin sit amet. Sed suscipit metus quis massa placerat, a congue turpis volutpat. Quisque a suscipit nisl. Pellentesque eget porttitor mi. Phasellus non lorem sed lectus vestibulum malesuada.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean nec risus id sem interdum tempus. Proin blandit sodales metus a porttitor. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Suspendisse ac iaculis urna. Vestibulum suscipit blandit velit, sollicitudin consectetur libero sollicitudin sit amet. Sed suscipit metus quis massa placerat, a congue turpis volutpat. Quisque a suscipit nisl. Pellentesque eget porttitor mi. Phasellus non lorem sed lectus vestibulum malesuada.
+Curabitur eu mi sit amet lacus ultrices semper. Sed efficitur leo sapien, eget faucibus enim tempor vitae. Etiam sed tincidunt ex, at congue ipsum. Curabitur pretium nisi in nulla ornare, at viverra nisl dictum. Integer placerat a lectus in sagittis. Mauris at sapien odio. Vestibulum pharetra, sapien quis luctus pellentesque, mauris purus blandit nisl, egestas sodales eros risus in nisi. Praesent pellentesque dictum faucibus. Curabitur eu imperdiet nisi. Proin scelerisque eros vel tempor faucibus. Cras vestibulum sagittis diam, quis consequat turpis bibendum quis. Fusce iaculis lacus odio, in facilisis erat luctus et. Integer eget elit sed nulla commodo venenatis id a ante.
+Donec eget dolor mattis, malesuada arcu id, blandit lacus. In hac habitasse platea dictumst. Ut lacinia tellus at elit viverra porta. Donec lorem odio, ullamcorper at ultricies vitae, placerat nec risus. Nulla eget mi sollicitudin leo auctor ultricies. Integer rhoncus libero tellus, quis laoreet quam maximus id. Etiam semper, dui sed posuere fringilla, velit ipsum accumsan mauris, at rhoncus justo purus ut felis. Nam nunc lectus, placerat suscipit augue eget, consectetur tristique diam. Vivamus id velit magna. Maecenas pulvinar risus quam, in pharetra massa aliquet vitae.
+Integer sed diam justo. In efficitur semper vehicula. Ut a nibh at arcu vehicula dictum. Etiam lobortis enim ut neque interdum convallis. Mauris viverra pretium lacus, et ornare sem condimentum in. Nam tincidunt non nunc in dictum. Curabitur pretium nulla a vehicula placerat. Mauris sodales enim a enim interdum suscipit. Nulla facilisi.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat lorem magna, non scelerisque mi ultrices sed. Fusce tincidunt nunc at sodales rhoncus. Sed vehicula ligula eget purus euismod, blandit cursus nulla euismod. Sed diam orci, iaculis vitae molestie quis, malesuada vitae est. Nunc dictum finibus pretium. Fusce iaculis eleifend maximus. Donec lectus risus, tristique a turpis quis, sodales porta nulla. Fusce posuere lacus vitae purus accumsan, sit amet tempus ex tincidunt. Nam nec convallis turpis. Fusce diam turpis, consequat et congue non, posuere at neque. Sed massa mauris, consectetur sit amet volutpat non, tempus ac risus. Etiam hendrerit mauris non tincidunt fermentum. Quisque ligula dolor, tempus non diam id, bibendum scelerisque ligula.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean nec risus id sem interdum tempus. Proin blandit sodales metus a porttitor. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Suspendisse ac iaculis urna. Vestibulum suscipit blandit velit, sollicitudin consectetur libero sollicitudin sit amet. Sed suscipit metus quis massa placerat, a congue turpis volutpat. Quisque a suscipit nisl. Pellentesque eget porttitor mi. Phasellus non lorem sed lectus vestibulum malesuada.";
+    private int valueUpdateDelayMs = 250;
+
+    [System.Diagnostics.CodeAnalysis.AllowNull]
+    private StandaloneCodeEditor _editor;
+
+    public Test()
+    {
+        _tests = new()
+            {
+                // public void ActionCallback(string actionId)
+                // public void CommandCallback(int keyCode)
+                // public Task UpdateOptions(EditorUpdateOptions newOptions)
+                // public Task<string> AddCommand(int keybinding, CommandHandler handler, string context = null)
+                // public Task AddAction(ActionDescriptor actionDescriptor)
+                // public Task ResetDeltaDecorations()
+                // public override async Task EventCallback(string eventName, string eventJson)
+                // public List<Selection> ExecuteEditsCallback(List<ValidEditOperation> inverseEditOperations)
+
+                // [Parameter] public EventCallback<ModelContentChangedEvent> OnDidChangeModelContent { get; set; }
+                // [Parameter] public EventCallback<ModelLanguageChangedEvent> OnDidChangeModelLanguage { get; set; }
+                // [Parameter] public EventCallback<ModelLanguageConfigurationChangedEvent> OnDidChangeModelLanguageConfiguration { get; set; }
+                // [Parameter] public EventCallback<ModelOptionsChangedEvent> OnDidChangeModelOptions { get; set; }
+                // [Parameter] public EventCallback<ConfigurationChangedEvent> OnDidChangeConfiguration { get; set; }
+                // [Parameter] public EventCallback<CursorPositionChangedEvent> OnDidChangeCursorPosition { get; set; }
+                // [Parameter] public EventCallback<CursorSelectionChangedEvent> OnDidChangeCursorSelection { get; set; }
+                // [Parameter] public EventCallback<ModelChangedEvent> OnDidChangeModel { get; set; }
+                // [Parameter] public EventCallback<ModelDecorationsChangedEvent> OnDidChangeModelDecorations { get; set; }
+                // [Parameter] public EventCallback OnDidFocusEditorText { get; set; }
+                // [Parameter] public EventCallback OnDidBlurEditorText { get; set; }
+                // [Parameter] public EventCallback OnDidFocusEditorWidget { get; set; }
+                // [Parameter] public EventCallback OnDidBlurEditorWidget { get; set; }
+                // [Parameter] public EventCallback OnDidCompositionStart { get; set; }
+                // [Parameter] public EventCallback OnDidCompositionEnd { get; set; }
+                // [Parameter] public EventCallback<PasteEvent> OnDidPaste { get; set; }
+                // [Parameter] public EventCallback<EditorMouseEvent> OnMouseUp { get; set; }
+                // [Parameter] public EventCallback<EditorMouseEvent> OnMouseDown { get; set; }
+                // [Parameter] public EventCallback<EditorMouseEvent> OnContextMenu { get; set; }
+                // [Parameter] public EventCallback<EditorMouseEvent> OnMouseMove { get; set; }
+                // [Parameter] public EventCallback<PartialEditorMouseEvent> OnMouseLeave { get; set; }
+                // [Parameter] public EventCallback<KeyboardEvent> OnKeyUp { get; set; }
+                // [Parameter] public EventCallback<KeyboardEvent> OnKeyDown { get; set; }
+                // [Parameter] public EventCallback<EditorLayoutInfo> OnDidLayoutChange { get; set; }
+                // [Parameter] public EventCallback<ContentSizeChangedEvent> OnDidContentSizeChange { get; set; }
+                // [Parameter] public EventCallback<ScrollEvent> OnDidScrollChange { get; set; }
+
+                // public Task<bool> HasWidgetFocus()
+                // public Task<TextModel> GetModel()
+                // public Task SetModel(TextModel model)
+                // public Task<ComputedEditorOptions> GetOptions()
+                // public Task<string> GetOption(EditorOption option)
+                // public Task<EditorOptions> GetRawOptions()
+                ["GetValue"] = GetValue,
+                ["SetValue"] = SetValue,
+                ["GetContentWidth"] = GetContentWidth,
+                ["GetScrollWidth"] = GetScrollWidth,
+                ["GetScrollLeft"] = GetScrollLeft,
+                ["GetContentHeight"] = GetContentHeight,
+                ["GetScrollHeight"] = GetScrollHeight,
+                ["GetScrollTop"] = GetScrollTop,
+                ["SetScrollLeft"] = SetScrollLeft,
+                ["SetScrollTop"] = SetScrollTop,
+                ["SetScrollPosition"] = SetScrollPosition,
+                // public Task<bool> PushUndoStop()
+                // public Task<bool> PopUndoStop()
+                // public Task<bool> ExecuteEdits(string source, List<IdentifiedSingleEditOperation> edits, List<Selection> endCursorState)
+                // public Task<bool> ExecuteEdits(string source, List<IdentifiedSingleEditOperation> edits, CursorStateComputer endCursorState)
+                // public async Task<string[]> DeltaDecorations(string[] oldDecorationIds, ModelDeltaDecoration[] newDecorations)
+                // public Task<EditorLayoutInfo> GetLayoutInfo()
+                // public Task<List<Range>> GetVisibleRanges()
+                // public Task<double> GetTopForLineNumber(int lineNumber)
+                // public Task<double> GetTopForPosition(int lineNumber, int column)
+                // public Task<string> GetContainerDomNodeId()
+                // public Task<string> GetDomNodeId()
+                // public Task<int> GetOffsetForColumn(int lineNumber, int column)
+                // public Task Render(bool? forceRedraw = null)
+                // public Task<BaseMouseTarget> GetTargetAtClientPoint(int clientX, int clientY)
+                ["GetScrolledVisiblePosition"] = GetScrolledVisiblePosition,
+            };
+    }
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+            {
+                Language = "javascript",
+                GlyphMargin = true,
+                Value = _defaultValue,
+                ScrollBeyondLastLine = false
+            };
+    }
+
+    private async Task RunTest()
+    {
+        foreach (var testName in _tests.Keys)
+        {
+            if (_testName == testName || _testName == "all") {
+                if (_tests.TryGetValue(testName, out var test_method))
+                    await test_method();
+            }
+        }
+    }
+
+    private async Task GetValue()
+    {
+        // Arrange
+        await _editor.SetValue(_defaultValue);
+
+        // Act
+        var actual = await _editor.GetValue();
+
+        // Assert
+        AssertEquals(actual, _defaultValue);
+    }
+
+    private async Task SetValue()
+    {
+        // Arrange
+        var expected = "SetValue test value line 1\ntest line 2";
+
+        // Act
+        await _editor.SetValue(expected);
+
+        // Assert
+        var actual = await _editor.GetValue();
+        AssertEquals(actual, expected);
+    }
+
+    private async Task GetContentWidth()
+    {
+        // Arrange
+        var expected = 200;
+        await _editor.SetValue(_defaultValue);
+        await Task.Delay(valueUpdateDelayMs);
+
+        // Act
+        var actual = await _editor.GetContentWidth();
+
+        // Assert
+        AssertEquals(actual, expected);
+    }
+
+    private async Task GetScrollWidth()
+    {
+        // Arrange
+        await _editor.SetValue(_defaultValue);
+        await Task.Delay(valueUpdateDelayMs);
+
+        // Act
+        var actual = await _editor.GetScrollWidth();
+
+        // Assert
+        var expected = await jsRuntime.InvokeAsync<int>("getElementWidth", $"#{_editor.Id} .view-lines");
+        AssertEquals(actual, expected);
+    }
+
+    private async Task GetScrollLeft()
+    {
+        // Arrange
+        var expected = 50;
+        await _editor.SetValue(_loremIpsum);
+        await _editor.SetScrollLeft(expected, ScrollType.Immediate);
+        await Task.Delay(valueUpdateDelayMs);
+
+        // Act
+        var actual = await _editor.GetScrollLeft();
+
+        // Assert
+        AssertEquals(actual, expected);
+    }
+
+    private async Task GetContentHeight()
+    {
+        // Arrange
+        var expected = 38;
+        await _editor.SetValue(_defaultValue + "\n" + _defaultValue);
+        await Task.Delay(valueUpdateDelayMs);
+
+        // Act
+        var actual = await _editor.GetContentHeight();
+
+        // Assert
+        AssertEquals(actual, expected);
+    }
+
+    private async Task GetScrollHeight()
+    {
+        // Arrange
+        await _editor.SetValue(_loremIpsum);
+        await Task.Delay(valueUpdateDelayMs);
+
+        // Act
+        var actual = await _editor.GetScrollHeight();
+
+        // Assert
+        var expected = await jsRuntime.InvokeAsync<int>("getElementHeight", $"#{_editor.Id} .view-lines");
+        AssertEquals(actual, expected);
+    }
+
+    private async Task GetScrollTop()
+    {
+        // Arrange
+        var expected = 75;
+        await _editor.SetValue(_loremIpsum);
+        await _editor.SetScrollTop(expected);
+        await Task.Delay(valueUpdateDelayMs);
+
+        // Act
+        var actual = await _editor.GetScrollTop();
+
+        // Assert
+        AssertEquals(actual, expected);
+    }
+
+    private async Task SetScrollLeft()
+    {
+        // Arrange
+        var expected = 50;
+        await _editor.SetValue(_loremIpsum);
+
+        // Act
+        await _editor.SetScrollLeft(expected, ScrollType.Immediate);
+
+        // Assert
+        await Task.Delay(valueUpdateDelayMs);
+        var actual = await _editor.GetScrollLeft();
+        AssertEquals(actual, expected);
+    }
+
+    private async Task SetScrollTop()
+    {
+        // Arrange
+        var expected = 75;
+        await _editor.SetValue(_loremIpsum);
+
+        // Act
+        await _editor.SetScrollTop(expected, ScrollType.Immediate);
+
+        // Assert
+        await Task.Delay(valueUpdateDelayMs);
+        var actual = await _editor.GetScrollTop();
+        AssertEquals(actual, expected);
+    }
+
+    private async Task SetScrollPosition()
+    {
+        // Arrange
+        var expected = new NewScrollPosition
+            {
+                ScrollLeft = 50,
+                ScrollTop = 75
+            };
+        await _editor.SetValue(_loremIpsum);
+
+        // Act
+        await _editor.SetScrollPosition(expected, ScrollType.Immediate);
+
+        // Assert
+        await Task.Delay(valueUpdateDelayMs);
+        var actual_top = await _editor.GetScrollTop();
+        var actual_left = await _editor.GetScrollLeft();
+        AssertEquals(actual_top, expected.ScrollTop);
+        AssertEquals(actual_left, expected.ScrollLeft);
+    }
+
+    private async Task GetScrolledVisiblePosition()
+    {
+        // Arrange
+        var scroll_position = new NewScrollPosition
+            {
+                ScrollLeft = 50,
+                ScrollTop = 75
+            };
+        await _editor.SetValue(_loremIpsum);
+        await _editor.SetScrollPosition(scroll_position, ScrollType.Immediate);
+        await Task.Delay(valueUpdateDelayMs);
+
+        // Act
+        var position = new Position
+        {
+            LineNumber = 8,
+            Column = 15
+        };
+        var actual = await _editor.GetScrolledVisiblePosition(position);
+
+        // Assert
+        AssertEquals(actual.Left, 141);
+        AssertEquals(actual.Top, 58);
+        AssertEquals(actual.Height, 19);
+    }
+
+    private void AssertEquals<T>(T actual, T expected, [CallerMemberName] string caller = "") where T : IComparable
+    {
+        if (!actual.Equals(expected))
+            logger.LogError($"{caller} test failed :\n    actual is {actual}\n    expected is {expected}");
+        else
+            logger.LogInformation($"{caller} test succeeded :\n    actual is {actual}\n    expected is {expected}");
+    }
+}

@@ -36,7 +36,7 @@ namespace BlazorMonaco.Editor
             commandHandler?.Invoke(this, keyCode);
         }
 
-        public static StandaloneCodeEditor CreateVirtualEditor(string id, string cssClass = null)
+        internal static StandaloneCodeEditor CreateVirtualEditor(string id, string cssClass = null)
         {
             var virtual_editor = new StandaloneCodeEditor
             {

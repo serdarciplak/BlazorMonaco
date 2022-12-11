@@ -10,3 +10,11 @@
         </LayoutView>
     </NotFound>
 </Router>
+
+@code {
+#if DEBUG
+    internal static bool IsDebug => true;
+#else
+    internal static bool IsDebug => false;
+#endif
+}

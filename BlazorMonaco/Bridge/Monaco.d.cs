@@ -491,6 +491,14 @@ namespace BlazorMonaco
         public bool ScrollHeightChanged { get; set; }
     }
 
+    public class ScrolledVisiblePosition
+    {
+        public int Left { get; set; }
+        public int Top { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
+    }
+
     /**
      * A position in the editor. This interface is suitable for serialization.
      */
