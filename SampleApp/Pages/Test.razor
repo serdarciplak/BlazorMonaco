@@ -230,7 +230,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat lor
         AssertEquals(runIsCalled, true);
     }
 
-    private ConfigurationChangedEvent _configurationChangedEvent;
+    private ConfigurationChangedEvent? _configurationChangedEvent;
 
     private async Task ChangeConfiguration()
     {
@@ -244,8 +244,9 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat lor
         await _editor.UpdateOptions(options);
 
         // Assert
-        AssertEquals(_configurationChangedEvent.HasChanged(EditorOption.showFoldingControls), true, "showFoldingControls");
-        AssertEquals(_configurationChangedEvent.HasChanged(EditorOption.showDeprecated), false, "showDeprecated");
+        AssertNotNull(_configurationChangedEvent);
+        AssertEquals(_configurationChangedEvent?.HasChanged(EditorOption.showFoldingControls) ?? false, true, "showFoldingControls");
+        AssertEquals(_configurationChangedEvent?.HasChanged(EditorOption.showDeprecated) ?? false, false, "showDeprecated");
     }
 
     private void OnDidChangeConfiguration(ConfigurationChangedEvent configurationChangedEvent)
@@ -343,7 +344,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat lor
     private async Task GetContentWidth()
     {
         // Arrange
-        var expected = 200;
+        var expected = 206;
         await _editor.SetValue(_defaultValue);
         await Task.Delay(valueUpdateDelayMs);
 
