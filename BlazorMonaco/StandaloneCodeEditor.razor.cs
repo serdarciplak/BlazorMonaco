@@ -17,23 +17,23 @@ namespace BlazorMonaco.Editor
         [Parameter]
         public Func<StandaloneCodeEditor, StandaloneEditorConstructionOptions> ConstructionOptions { get; set; }
 
-        protected readonly Dictionary<string, ActionDescriptor> _actions = new Dictionary<string, ActionDescriptor>();
-        protected readonly Dictionary<string, CommandHandler> _commands = new Dictionary<string, CommandHandler>();
+        protected readonly Dictionary<string, List<ActionDescriptor>> _actions = new Dictionary<string, List<ActionDescriptor>>();
+        protected readonly Dictionary<string, List<CommandHandler>> _commands = new Dictionary<string, List<CommandHandler>>();
 
         [JSInvokable]
         public void ActionCallback(string actionId)
         {
-            if (!_actions.TryGetValue(actionId, out var actionDescriptor))
+            if (!_actions.TryGetValue(actionId, out var actionDescriptors))
                 return;
-            actionDescriptor?.Run?.Invoke(this);
+            actionDescriptors?.ForEach(descriptor => descriptor.Run.Invoke(this));
         }
 
         [JSInvokable]
         public void CommandCallback(int keyCode)
         {
-            if (!_commands.TryGetValue(keyCode.ToString(), out var commandHandler))
+            if (!_commands.TryGetValue(keyCode.ToString(), out var commandHandlers))
                 return;
-            commandHandler?.Invoke(this, keyCode);
+            commandHandlers.ForEach(handler => handler.Invoke(this, keyCode));
         }
 
         internal static StandaloneCodeEditor CreateVirtualEditor(string id, string cssClass = null)
@@ -94,9 +94,12 @@ namespace BlazorMonaco.Editor
         public Task<string> AddCommand(int keybinding, CommandHandler handler, string context = null)
         {
             if (_commands.ContainsKey(keybinding.ToString()))
+            {
+                _commands[keybinding.ToString()].Add(handler);
                 return Task.FromResult("");
+            }
 
-            _commands[keybinding.ToString()] = handler;
+            _commands[keybinding.ToString()] = new List<CommandHandler> { handler };
             return jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.addCommand", Id, keybinding, context);
         }
         
@@ -121,9 +124,12 @@ namespace BlazorMonaco.Editor
         public Task AddAction(ActionDescriptor actionDescriptor)
         {
             if (_actions.ContainsKey(actionDescriptor.Id))
+            {
+                _actions[actionDescriptor.Id].Add(actionDescriptor);
                 return Task.CompletedTask;
+            }
 
-            _actions[actionDescriptor.Id] = actionDescriptor;
+            _actions[actionDescriptor.Id] = new List<ActionDescriptor> { actionDescriptor };
             return jsRuntime.SafeInvokeAsync("blazorMonaco.editor.addAction", Id, actionDescriptor);
         }
     }
@@ -208,7 +214,7 @@ namespace BlazorMonaco.Editor
                 case "OnContextMenu": if (eventJson != null) await OnContextMenu.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
                 case "OnDidBlurEditorText": await OnDidBlurEditorText.InvokeAsync(this); break;
                 case "OnDidBlurEditorWidget": await OnDidBlurEditorWidget.InvokeAsync(this); break;
-                case "OnDidChangeConfiguration": await OnDidChangeConfiguration.InvokeAsync(JsonSerializer.Deserialize<ConfigurationChangedEvent>(eventJson, jsonOptions)); break;
+                case "OnDidChangeConfiguration": await OnDidChangeConfiguration.InvokeAsync(new ConfigurationChangedEvent(JsonSerializer.Deserialize<List<bool>>(eventJson, jsonOptions))); break;
                 case "OnDidChangeCursorPosition": await OnDidChangeCursorPosition.InvokeAsync(JsonSerializer.Deserialize<CursorPositionChangedEvent>(eventJson, jsonOptions)); break;
                 case "OnDidChangeCursorSelection": await OnDidChangeCursorSelection.InvokeAsync(JsonSerializer.Deserialize<CursorSelectionChangedEvent>(eventJson, jsonOptions)); break;
                 case "OnDidChangeModel": await OnDidChangeModel.InvokeAsync(JsonSerializer.Deserialize<ModelChangedEvent>(eventJson, jsonOptions)); break;
@@ -420,14 +426,19 @@ namespace BlazorMonaco.Editor
         /**
          * Gets all the editor computed options.
          */
-        public Task<ComputedEditorOptions> GetOptions()
-            => jsRuntime.SafeInvokeAsync<ComputedEditorOptions>("blazorMonaco.editor.getOptions", Id);
+        public async Task<ComputedEditorOptions> GetOptions()
+        {
+            var strList = await jsRuntime.SafeInvokeAsync<List<string>>("blazorMonaco.editor.getOptions", Id);
+            return new ComputedEditorOptions(strList);
+        }
         /**
          * Gets a specific editor option.
          */
-        // TODO getOption<T extends EditorOption>(id: T): FindComputedEditorOptionValueById<T>;
-        public Task<string> GetOption(EditorOption option)
-            => jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getOption", Id, (int)option);
+        public async Task<T> GetOption<T>(EditorOption option)
+        {
+            var strValue = await jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getOption", Id, (int)option);
+            return JsonSerializer.Deserialize<T>(strValue);
+        }
         /**
          * Returns the editor's configuration (without any validation or defaults).
          */

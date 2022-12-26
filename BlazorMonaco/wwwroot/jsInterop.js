@@ -485,6 +485,9 @@ window.blazorMonaco.editor = {
                     newModelUri: e.newModelUrl == null ? null : e.newModelUrl.toString(),
                 });
             }
+            else if (eventName == "OnDidChangeConfiguration") {
+                eventJson = JSON.stringify(e._values);
+            }
             dotnetRef.invokeMethodAsync("EventCallback", eventName, eventJson);
         };
 

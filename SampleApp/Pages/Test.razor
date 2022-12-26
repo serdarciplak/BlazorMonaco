@@ -20,12 +20,16 @@
     </div>
 </div>
 
-<StandaloneCodeEditor @ref="_editor" Id="sample-code-editor-test" ConstructionOptions="EditorConstructionOptions" />
+<StandaloneCodeEditor @ref="_editor"
+    Id="sample-code-editor-test"
+    ConstructionOptions="EditorConstructionOptions"
+    OnDidChangeConfiguration="OnDidChangeConfiguration" />
 
 @code {
     private string _testName = "all";
     private Dictionary<string, Func<Task>> _tests = new();
     private string _defaultValue = "Default editor value.";
+    private StandaloneEditorConstructionOptions _defaultOptions;
     private string _loremIpsum = @"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean nec risus id sem interdum tempus. Proin blandit sodales metus a porttitor. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Suspendisse ac iaculis urna. Vestibulum suscipit blandit velit, sollicitudin consectetur libero sollicitudin sit amet. Sed suscipit metus quis massa placerat, a congue turpis volutpat. Quisque a suscipit nisl. Pellentesque eget porttitor mi. Phasellus non lorem sed lectus vestibulum malesuada.
 Curabitur eu mi sit amet lacus ultrices semper. Sed efficitur leo sapien, eget faucibus enim tempor vitae. Etiam sed tincidunt ex, at congue ipsum. Curabitur pretium nisi in nulla ornare, at viverra nisl dictum. Integer placerat a lectus in sagittis. Mauris at sapien odio. Vestibulum pharetra, sapien quis luctus pellentesque, mauris purus blandit nisl, egestas sodales eros risus in nisi. Praesent pellentesque dictum faucibus. Curabitur eu imperdiet nisi. Proin scelerisque eros vel tempor faucibus. Cras vestibulum sagittis diam, quis consequat turpis bibendum quis. Fusce iaculis lacus odio, in facilisis erat luctus et. Integer eget elit sed nulla commodo venenatis id a ante.
 Donec eget dolor mattis, malesuada arcu id, blandit lacus. In hac habitasse platea dictumst. Ut lacinia tellus at elit viverra porta. Donec lorem odio, ullamcorper at ultricies vitae, placerat nec risus. Nulla eget mi sollicitudin leo auctor ultricies. Integer rhoncus libero tellus, quis laoreet quam maximus id. Etiam semper, dui sed posuere fringilla, velit ipsum accumsan mauris, at rhoncus justo purus ut felis. Nam nunc lectus, placerat suscipit augue eget, consectetur tristique diam. Vivamus id velit magna. Maecenas pulvinar risus quam, in pharetra massa aliquet vitae.
@@ -53,6 +57,16 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat lor
 
     public Test()
     {
+        _defaultOptions = new StandaloneEditorConstructionOptions
+            {
+                Language = "javascript",
+                GlyphMargin = true,
+                Value = _defaultValue,
+                ScrollBeyondLastLine = false,
+                RenderFinalNewline = true,
+                SelectOnLineNumbers = true
+            };
+
         _tests = new()
             {
                 // ------------------------
@@ -101,6 +115,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat lor
                 // [Parameter] public EventCallback<ModelLanguageConfigurationChangedEvent> OnDidChangeModelLanguageConfiguration { get; set; }
                 // [Parameter] public EventCallback<ModelOptionsChangedEvent> OnDidChangeModelOptions { get; set; }
                 // [Parameter] public EventCallback<ConfigurationChangedEvent> OnDidChangeConfiguration { get; set; }
+                ["OnDidChangeConfiguration"] = ChangeConfiguration,
                 // [Parameter] public EventCallback<CursorPositionChangedEvent> OnDidChangeCursorPosition { get; set; }
                 // [Parameter] public EventCallback<CursorSelectionChangedEvent> OnDidChangeCursorSelection { get; set; }
                 // [Parameter] public EventCallback<ModelChangedEvent> OnDidChangeModel { get; set; }
@@ -126,9 +141,9 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat lor
                 ["HasWidgetFocus"] = HasWidgetFocus,
                 // public Task<TextModel> GetModel()
                 // public Task SetModel(TextModel model)
-                // public Task<ComputedEditorOptions> GetOptions()
-                // public Task<string> GetOption(EditorOption option)
-                // public Task<EditorOptions> GetRawOptions()
+                ["GetOptions"] = GetOptions,
+                ["GetOption"] = GetOption,
+                ["GetRawOptions"] = GetRawOptions,
                 ["GetValue"] = GetValue,
                 ["SetValue"] = SetValue,
                 ["GetContentWidth"] = GetContentWidth,
@@ -160,13 +175,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat lor
 
     private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
     {
-        return new StandaloneEditorConstructionOptions
-            {
-                Language = "javascript",
-                GlyphMargin = true,
-                Value = _defaultValue,
-                ScrollBeyondLastLine = false
-            };
+        return _defaultOptions;
     }
 
     private async Task RunTest()
@@ -221,19 +230,89 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat lor
         AssertEquals(runIsCalled, true);
     }
 
+    private ConfigurationChangedEvent _configurationChangedEvent;
+
+    private async Task ChangeConfiguration()
+    {
+        // Arrange
+        var options = new EditorUpdateOptions()
+        {
+            ShowFoldingControls = "always"
+        };
+
+        // Act
+        await _editor.UpdateOptions(options);
+
+        // Assert
+        AssertEquals(_configurationChangedEvent.HasChanged(EditorOption.showFoldingControls), true, "showFoldingControls");
+        AssertEquals(_configurationChangedEvent.HasChanged(EditorOption.showDeprecated), false, "showDeprecated");
+    }
+
+    private void OnDidChangeConfiguration(ConfigurationChangedEvent configurationChangedEvent)
+    {
+        _configurationChangedEvent = configurationChangedEvent;
+    }
+
     private async Task HasWidgetFocus()
     {
         // Arrange
-        await jsRuntime.InvokeVoidAsync("focusElement", "h3");
+        await jsRuntime.InvokeVoidAsync("focusElement", "select");
+        await Task.Delay(valueUpdateDelayMs);
 
         // Act
-        var isBlurred = await _editor.HasWidgetFocus();
+        var focusBefore = await _editor.HasWidgetFocus();
         await _editor.Focus();
-        var isFocused = await _editor.HasWidgetFocus();
+        var focusAfter = await _editor.HasWidgetFocus();
 
         // Assert
-        AssertEquals(isBlurred, false);
-        AssertEquals(isFocused, true);
+        AssertEquals(focusBefore, false, "before");
+        AssertEquals(focusAfter, true, "after");
+    }
+
+    private async Task GetOptions()
+    {
+        // Arrange
+
+        // Act
+        var options = await _editor.GetOptions();
+        var option1 = options.Get<int>(EditorOption.foldingMaximumRegions);
+        var option2 = options.Get<string>(EditorOption.renderWhitespace);
+        var option3 = options.Get<bool>(EditorOption.renderFinalNewline);
+
+        // Assert
+        AssertNotNull(options);
+        AssertEquals(option1, 5000, "foldingMaximumRegions");
+        AssertEquals(option2, "selection", "renderWhitespace");
+        AssertEquals(option3, true, "renderFinalNewline");
+    }
+
+    private async Task GetOption()
+    {
+        // Arrange
+
+        // Act
+        var option1 = await _editor.GetOption<int>(EditorOption.foldingMaximumRegions);
+        var option2 = await _editor.GetOption<string>(EditorOption.renderWhitespace);
+        var option3 = await _editor.GetOption<bool>(EditorOption.renderFinalNewline);
+
+        // Assert
+        AssertEquals(option1, 5000, "foldingMaximumRegions");
+        AssertEquals(option2, "selection", "renderWhitespace");
+        AssertEquals(option3, true, "renderFinalNewline");
+    }
+
+    private async Task GetRawOptions()
+    {
+        // Arrange
+
+        // Act
+        var rawOptions = await _editor.GetRawOptions();
+
+        // Assert
+        AssertNotNull(rawOptions);
+        AssertEquals(rawOptions.ScrollBeyondLastLine ?? false, _defaultOptions.ScrollBeyondLastLine ?? false, "scrollBeyondLastLine");
+        AssertEquals(rawOptions.RenderFinalNewline ?? false, _defaultOptions.RenderFinalNewline ?? false, "renderFinalNewline");
+        AssertEquals(rawOptions.SelectOnLineNumbers ?? false, _defaultOptions.SelectOnLineNumbers ?? false, "selectOnLineNumbers");
     }
 
     private async Task GetValue()
@@ -424,11 +503,29 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat lor
         AssertEquals(actual.Height, 19);
     }
 
-    private void AssertEquals<T>(T actual, T expected, [CallerMemberName] string caller = "") where T : IComparable
+    private void AssertEquals<T>(T actual, T expected, string testName = "", [CallerMemberName] string caller = "") where T : IComparable
     {
-        if (!actual.Equals(expected))
-            logger.LogError($"{caller} test failed :\n    actual is {actual}\n    expected is {expected}");
+        if (string.IsNullOrWhiteSpace(testName))
+            testName = caller;
         else
-            logger.LogInformation($"{caller} test succeeded :\n    actual is {actual}\n    expected is {expected}");
+            testName = $"{caller}.{testName}";
+
+        if (!actual.Equals(expected))
+            logger.LogError($"{testName} failed :\n    actual is {actual}\n    expected is {expected}");
+        else
+            logger.LogInformation($"{testName} succeeded :\n    actual is {actual}\n    expected is {expected}");
+    }
+
+    private void AssertNotNull<T>(T value, string testName = "", [CallerMemberName] string caller = "")
+    {
+        if (string.IsNullOrWhiteSpace(testName))
+            testName = caller;
+        else
+            testName = $"{caller}.{testName}";
+
+        if (value is null)
+            logger.LogError($"{testName} failed :\n    value is {null}");
+        else
+            logger.LogInformation($"{testName} succeeded :\n    value is not null and it's {value}");
     }
 }

@@ -17,24 +17,23 @@ namespace BlazorMonaco.Editor
         [Parameter]
         public Func<StandaloneDiffEditor, StandaloneDiffEditorConstructionOptions> ConstructionOptions { get; set; }
 
-        protected readonly Dictionary<string, ActionDescriptor> _actions = new Dictionary<string, ActionDescriptor>();
-        protected readonly Dictionary<string, CommandHandler> _commands = new Dictionary<string, CommandHandler>();
+        protected readonly Dictionary<string, List<ActionDescriptor>> _actions = new Dictionary<string, List<ActionDescriptor>>();
+        protected readonly Dictionary<string, List<CommandHandler>> _commands = new Dictionary<string, List<CommandHandler>>();
 
         [JSInvokable]
         public void ActionCallback(string actionId)
         {
-            if (!_actions.TryGetValue(actionId, out var actionDescriptor))
+            if (!_actions.TryGetValue(actionId, out var actionDescriptors))
                 return;
-            actionDescriptor?.Run?.Invoke(ModifiedEditor);
-            // actions for a diff editor run for its modified editor only
+            actionDescriptors?.ForEach(descriptor => descriptor.Run.Invoke(ModifiedEditor)); // actions of a diff editor run only for its modified editor
         }
 
         [JSInvokable]
         public void CommandCallback(int keyCode)
         {
-            if (!_commands.TryGetValue(keyCode.ToString(), out var commandHandler))
+            if (!_commands.TryGetValue(keyCode.ToString(), out var commandHandlers))
                 return;
-            commandHandler?.Invoke(this, keyCode);
+            commandHandlers.ForEach(handler => handler.Invoke(this, keyCode));
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -75,9 +74,12 @@ namespace BlazorMonaco.Editor
         public Task<string> AddCommand(int keybinding, CommandHandler handler, string context = null)
         {
             if (_commands.ContainsKey(keybinding.ToString()))
+            {
+                _commands[keybinding.ToString()].Add(handler);
                 return Task.FromResult("");
+            }
 
-            _commands[keybinding.ToString()] = handler;
+            _commands[keybinding.ToString()] = new List<CommandHandler> { handler };
             return jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.addCommand", Id, keybinding, context);
         }
 
@@ -102,9 +104,12 @@ namespace BlazorMonaco.Editor
         public Task AddAction(ActionDescriptor actionDescriptor)
         {
             if (_actions.ContainsKey(actionDescriptor.Id))
+            {
+                _actions[actionDescriptor.Id].Add(actionDescriptor);
                 return Task.CompletedTask;
+            }
 
-            _actions[actionDescriptor.Id] = actionDescriptor;
+            _actions[actionDescriptor.Id] = new List<ActionDescriptor> { actionDescriptor };
             return jsRuntime.SafeInvokeAsync("blazorMonaco.editor.addAction", Id, actionDescriptor);
         }
 

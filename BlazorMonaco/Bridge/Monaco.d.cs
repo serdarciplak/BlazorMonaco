@@ -3518,10 +3518,14 @@ namespace BlazorMonaco.Editor {
      * An event describing that the configuration of the editor has changed.
      */
     public class ConfigurationChangedEvent {
-        public List<EditorOption> ChangedOptions { get; set; }  // TODO : this needs to be filled
+        private readonly List<bool> _options;
+        public ConfigurationChangedEvent(List<bool> options)
+        {
+            _options = options;
+        }
         public bool HasChanged(EditorOption id)
         {
-            return ChangedOptions.Any(o => o == id);
+            return _options[(int)id];
         }
     }
 
@@ -3529,9 +3533,14 @@ namespace BlazorMonaco.Editor {
      * All computed editor options.
      */
     public class ComputedEditorOptions {
+        private readonly List<string> _options;
+        public ComputedEditorOptions(List<string> options)
+        {
+            _options = options;
+        }
         public T Get<T>(EditorOption id)
         {
-            return default; // TODO
+            return JsonSerializer.Deserialize<T>(_options[(int)id]);
         }
     }
 
