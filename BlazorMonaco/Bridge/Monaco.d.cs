@@ -6,6 +6,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 /*---------------------------------------------------------------------------------------------
@@ -873,7 +874,11 @@ namespace BlazorMonaco.Editor {
             // Convert the options object into a JsonElement to get rid of the properties with null values
             var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
             {
+#if !NET6_0_OR_GREATER
                 IgnoreNullValues = true,
+#else
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+#endif
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
@@ -918,7 +923,11 @@ namespace BlazorMonaco.Editor {
             // Convert the options object into a JsonElement to get rid of the properties with null values
             var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
             {
+                #if !NET6_0_OR_GREATER
                 IgnoreNullValues = true,
+                #else
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                #endif
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
