@@ -55,14 +55,46 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat lor
     {
         _tests = new()
             {
-                // public void ActionCallback(string actionId)
-                // public void CommandCallback(int keyCode)
+                // ------------------------
+                // ---- Editor Methods ----
+                // ------------------------
+
+                // public Task DisposeEditor()
+                // public Task<string> GetEditorType()
+                // public Task Layout(Dimension dimension = null)
+                // public Task Focus()
+                // public Task<bool> HasTextFocus()
+                // public Task<int> GetVisibleColumnFromPosition(Position position)
+                // public Task<Position> GetPosition()
+                // public Task SetPosition(Position position, string source)
+                // public Task RevealLine(int lineNumber, ScrollType? scrollType = null)
+                // public Task RevealLineInCenter(int lineNumber, ScrollType? scrollType = null)
+                // public Task RevealLineInCenterIfOutsideViewport(int lineNumber, ScrollType? scrollType = null)
+                // public Task RevealPosition(Position position, ScrollType? scrollType = null)
+                // public Task RevealPositionInCenter(Position position, ScrollType? scrollType = null)
+                // public Task RevealPositionInCenterIfOutsideViewport(Position position, ScrollType? scrollType = null)
+                // public Task<Selection> GetSelection()
+                // public Task<List<Selection>> GetSelections()
+                // public Task SetSelection(Range selection, string source)
+                // public Task SetSelection(Selection selection, string source)
+                // public Task SetSelections(List<Selection> selections, string source)
+                // public Task RevealLines(int startLineNumber, int endLineNumber, ScrollType? scrollType = null)
+                // public Task RevealLinesInCenter(int lineNumber, int endLineNumber, ScrollType? scrollType = null)
+                // public Task RevealLinesInCenterIfOutsideViewport(int lineNumber, int endLineNumber, ScrollType? scrollType = null)
+                // public Task RevealRange(Range range, ScrollType? scrollType = null)
+                // public Task RevealRangeInCenter(Range range, ScrollType? scrollType = null)
+                // public Task RevealRangeAtTop(Range range, ScrollType? scrollType = null)
+                // public Task RevealRangeInCenterIfOutsideViewport(Range range, ScrollType? scrollType = null)
+                // public Task Trigger(string source, string handlerId, object payload = null)
+
+                // --------------------------------------
+                // ---- StandaloneCodeEditor Methods ----
+                // --------------------------------------
+
                 // public Task UpdateOptions(EditorUpdateOptions newOptions)
-                // public Task<string> AddCommand(int keybinding, CommandHandler handler, string context = null)
-                // public Task AddAction(ActionDescriptor actionDescriptor)
+                ["AddCommand"] = AddCommand,
+                ["AddAction"] = AddAction,
                 // public Task ResetDeltaDecorations()
-                // public override async Task EventCallback(string eventName, string eventJson)
-                // public List<Selection> ExecuteEditsCallback(List<ValidEditOperation> inverseEditOperations)
 
                 // [Parameter] public EventCallback<ModelContentChangedEvent> OnDidChangeModelContent { get; set; }
                 // [Parameter] public EventCallback<ModelLanguageChangedEvent> OnDidChangeModelLanguage { get; set; }
@@ -91,7 +123,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat lor
                 // [Parameter] public EventCallback<ContentSizeChangedEvent> OnDidContentSizeChange { get; set; }
                 // [Parameter] public EventCallback<ScrollEvent> OnDidScrollChange { get; set; }
 
-                // public Task<bool> HasWidgetFocus()
+                ["HasWidgetFocus"] = HasWidgetFocus,
                 // public Task<TextModel> GetModel()
                 // public Task SetModel(TextModel model)
                 // public Task<ComputedEditorOptions> GetOptions()
@@ -146,6 +178,62 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat lor
                     await test_method();
             }
         }
+    }
+
+    private async Task AddCommand()
+    {
+        // Arrange
+        var runIsCalled = false;
+
+        // Act
+        await _editor.AddCommand((int)KeyMod.CtrlCmd | (int)KeyCode.Enter, (args) =>
+        {
+            runIsCalled = true;
+        });
+
+        // Assert
+        await _editor.Focus();
+        await jsRuntime.InvokeVoidAsync("dispatchKeydown", (int)'\r', true, false, false, false);
+        AssertEquals(runIsCalled, true);
+    }
+
+    private async Task AddAction()
+    {
+        // Arrange
+        var runIsCalled = false;
+        var actionDescriptor = new ActionDescriptor
+            {
+                Id = "testActionId",
+                Label = "testActionLabel",
+                Keybindings = new int[] { (int)KeyMod.CtrlCmd | (int)KeyCode.KeyE },
+                Run = (editor) =>
+                {
+                    runIsCalled = true;
+                }
+            };
+
+        // Act
+        await _editor.AddAction(actionDescriptor);
+
+        // Assert
+        await _editor.Focus();
+        await jsRuntime.InvokeVoidAsync("dispatchKeydown", (int)'E', true, false, false, false);
+        AssertEquals(runIsCalled, true);
+    }
+
+    private async Task HasWidgetFocus()
+    {
+        // Arrange
+        await jsRuntime.InvokeVoidAsync("focusElement", "h3");
+
+        // Act
+        var isBlurred = await _editor.HasWidgetFocus();
+        await _editor.Focus();
+        var isFocused = await _editor.HasWidgetFocus();
+
+        // Assert
+        AssertEquals(isBlurred, false);
+        AssertEquals(isFocused, true);
     }
 
     private async Task GetValue()

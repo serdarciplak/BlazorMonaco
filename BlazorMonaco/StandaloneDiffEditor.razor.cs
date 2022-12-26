@@ -17,15 +17,15 @@ namespace BlazorMonaco.Editor
         [Parameter]
         public Func<StandaloneDiffEditor, StandaloneDiffEditorConstructionOptions> ConstructionOptions { get; set; }
 
-        protected readonly Dictionary<string, ActionDescriptor> _actions = new Dictionary<string, ActionDescriptor>(); // TODO check what's sent from js as parameters
-        protected readonly Dictionary<string, CommandHandler> _commands = new Dictionary<string, CommandHandler>(); // TODO check what's sent from js as parameters
+        protected readonly Dictionary<string, ActionDescriptor> _actions = new Dictionary<string, ActionDescriptor>();
+        protected readonly Dictionary<string, CommandHandler> _commands = new Dictionary<string, CommandHandler>();
 
         [JSInvokable]
         public void ActionCallback(string actionId)
         {
             if (!_actions.TryGetValue(actionId, out var actionDescriptor))
                 return;
-            actionDescriptor?.Run?.Invoke(GetModifiedEditor());
+            actionDescriptor?.Run?.Invoke(ModifiedEditor);
             // actions for a diff editor run for its modified editor only
         }
 
@@ -52,8 +52,12 @@ namespace BlazorMonaco.Editor
                     options.LineNumbersLambda = null;
                 }
 
+                // Create the bridges for the inner editors
+                _originalEditor = StandaloneCodeEditor.CreateVirtualEditor(Id + "_original");
+                _modifiedEditor = StandaloneCodeEditor.CreateVirtualEditor(Id + "_modified");
+
                 // Create the editor
-                await Globals.CreateDiffEditor(Id, options, _dotnetObjectRef);
+                await BlazorMonacoGlobals.CreateDiffEditor(Id, options, null, _dotnetObjectRef, OriginalEditor._dotnetObjectRef, ModifiedEditor._dotnetObjectRef);
             }
             await base.OnAfterRenderAsync(firstRender);
         }
@@ -70,6 +74,9 @@ namespace BlazorMonaco.Editor
         }
         public Task<string> AddCommand(int keybinding, CommandHandler handler, string context = null)
         {
+            if (_commands.ContainsKey(keybinding.ToString()))
+                return Task.FromResult("");
+
             _commands[keybinding.ToString()] = handler;
             return jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.addCommand", Id, keybinding, context);
         }
@@ -94,12 +101,15 @@ namespace BlazorMonaco.Editor
         }
         public Task AddAction(ActionDescriptor actionDescriptor)
         {
+            if (_actions.ContainsKey(actionDescriptor.Id))
+                return Task.CompletedTask;
+
             _actions[actionDescriptor.Id] = actionDescriptor;
             return jsRuntime.SafeInvokeAsync("blazorMonaco.editor.addAction", Id, actionDescriptor);
         }
 
-        public new StandaloneCodeEditor GetOriginalEditor() => OriginalEditor;
-        public new StandaloneCodeEditor GetModifiedEditor() => ModifiedEditor;
+        public new StandaloneCodeEditor OriginalEditor => _originalEditor as StandaloneCodeEditor;
+        public new StandaloneCodeEditor ModifiedEditor => _modifiedEditor as StandaloneCodeEditor;
     }
 
     /**
@@ -109,8 +119,8 @@ namespace BlazorMonaco.Editor
     {
         #region Blazor
 
-        public StandaloneCodeEditor OriginalEditor { get; private set; }
-        public StandaloneCodeEditor ModifiedEditor { get; private set; }
+        protected CodeEditor _originalEditor;
+        protected CodeEditor _modifiedEditor;
 
         #region Events for the original editor (left)
         [Parameter] public EventCallback OnDidDisposeOriginal { get; set; }
@@ -191,12 +201,11 @@ namespace BlazorMonaco.Editor
         {
             if (firstRender)
             {
-                // Create the bridges for the inner editors
 #pragma warning disable BL0005
 
-                #region Init Original Editor Placeholder
+                #region Initialize the original editor
 
-                OriginalEditor = StandaloneCodeEditor.CreateVirtualEditor(Id + "_original");
+                _originalEditor = _originalEditor ?? new CodeEditor();
                 OriginalEditor.OnDidDispose = OnDidDisposeOriginal;
                 OriginalEditor.OnDidInit = OnDidInitOriginal;
                 OriginalEditor.OnDidChangeModelContent = OnDidChangeModelContentOriginal;
@@ -232,9 +241,9 @@ namespace BlazorMonaco.Editor
 
                 #endregion
 
-                #region Init Modified Editor Placeholder
+                #region Initialize the modified editor
 
-                ModifiedEditor = StandaloneCodeEditor.CreateVirtualEditor(Id + "_modified");
+                _modifiedEditor = _modifiedEditor ?? new CodeEditor();
                 ModifiedEditor.OnDidCompositionEnd = OnDidCompositionEndModified;
                 ModifiedEditor.OnDidDispose = OnDidDisposeModified;
                 ModifiedEditor.OnDidInit = OnDidInitModified;
@@ -332,11 +341,11 @@ namespace BlazorMonaco.Editor
         /**
          * Get the `original` editor.
          */
-        public StandaloneCodeEditor GetOriginalEditor() => OriginalEditor;
+        public CodeEditor OriginalEditor => _originalEditor;
         /**
          * Get the `modified` editor.
          */
-        public StandaloneCodeEditor GetModifiedEditor() => ModifiedEditor;
+        public CodeEditor ModifiedEditor => _modifiedEditor;
         /**
          * Get the computed diff information.
          */

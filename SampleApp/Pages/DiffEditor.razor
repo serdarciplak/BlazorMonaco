@@ -44,7 +44,7 @@
     private async Task EditorOnDidInit()
     {
         // Get or create the original model
-        TextModel original_model = await Globals.GetModel("sample-diff-editor-originalModel");
+        TextModel original_model = await BlazorMonacoGlobals.GetModel("sample-diff-editor-originalModel");
         if (original_model == null)
         {
             var original_value = "\"use strict\";\n" +
@@ -56,11 +56,11 @@
                             "Person.prototype.getAge = function () {\n" +
                             "	return this.age;\n" +
                             "};\n";
-            original_model = await Globals.CreateModel(original_value, "javascript", "sample-diff-editor-originalModel");
+            original_model = await BlazorMonacoGlobals.CreateModel(original_value, "javascript", "sample-diff-editor-originalModel");
         }
 
         // Get or create the modified model
-        TextModel modified_model = await Globals.GetModel("sample-diff-editor-modifiedModel");
+        TextModel modified_model = await BlazorMonacoGlobals.GetModel("sample-diff-editor-modifiedModel");
         if (modified_model == null)
         {
             var modified_value = "\"don't use strict\";\n" +
@@ -73,7 +73,7 @@
                             "	return this.age_is_just_a_number;\n" +
                             "};\n" +
                             "//Really, it is just a number people!";
-            modified_model = await Globals.CreateModel(modified_value, "javascript", "sample-diff-editor-modifiedModel");
+            modified_model = await BlazorMonacoGlobals.CreateModel(modified_value, "javascript", "sample-diff-editor-modifiedModel");
         }
 
         // Set the editor model
@@ -120,9 +120,9 @@
 
     private async Task AddCommand()
     {
-        await _diffEditor.ModifiedEditor.AddCommand((int)KeyMod.CtrlCmd | (int)KeyCode.Enter, (args) =>
+        await _diffEditor.AddCommand((int)KeyMod.CtrlCmd | (int)KeyCode.Enter, (args) =>
         {
-            Console.WriteLine($"Ctrl+Enter : Original Editor command is triggered. ({_diffEditor.Id})");
+            Console.WriteLine($"Ctrl+Enter : Diff Editor command is triggered. ({_diffEditor.Id})");
         });
     }
 
@@ -137,9 +137,9 @@
             ContextMenuOrder = 1.5f,
             Run = (editor) =>
             {
-                Console.WriteLine($"Ctrl+B : Modified Editor action is triggered. ({editor.Id})");
+                Console.WriteLine($"Ctrl+B : Diff Editor action is triggered. ({editor.Id})");
             }
         };
-        await _diffEditor.ModifiedEditor.AddAction(actionDescriptor);
+        await _diffEditor.AddAction(actionDescriptor);
     }
 }

@@ -495,7 +495,6 @@ namespace BlazorMonaco
     {
         public int Left { get; set; }
         public int Top { get; set; }
-        public int Width { get; set; }
         public int Height { get; set; }
     }
 
@@ -855,20 +854,16 @@ namespace BlazorMonaco.Editor {
         dispose(): void;
     }*/
 
-    public partial class Globals
+    public partial class BlazorMonacoGlobals
     {
         /**
          * Create a new editor under `domElement`.
          * `domElement` should be empty (not contain other dom nodes).
          * The editor will read the size of `domElement`.
          */
-        // TODO export function create(domElement: HTMLElement, options?: IStandaloneEditorConstructionOptions, override?: IEditorOverrideServices): IStandaloneCodeEditor;
-        internal static Task Create(string domElementId, StandaloneEditorConstructionOptions options, DotNetObjectReference<Editor> jsObjectRef)
+        internal static async Task<StandaloneCodeEditor> Create(string domElementId, StandaloneEditorConstructionOptions options, EditorOverrideServices overrideServices, DotNetObjectReference<Editor> dotnetObjectRef)
         {
-            options = options ?? new StandaloneEditorConstructionOptions
-            {
-                Language = "javascript"
-            };
+            options = options ?? new StandaloneEditorConstructionOptions();
 
             // Convert the options object into a JsonElement to get rid of the properties with null values
             var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
@@ -879,7 +874,8 @@ namespace BlazorMonaco.Editor {
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
 
             // Create the editor
-            return JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.create", domElementId, optionsDict, jsObjectRef);
+            await JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.create", domElementId, optionsDict, overrideServices, dotnetObjectRef);
+            return dotnetObjectRef.Value as StandaloneCodeEditor;
         }
 
         /**
@@ -894,8 +890,7 @@ namespace BlazorMonaco.Editor {
          * `domElement` should be empty (not contain other dom nodes).
          * The editor will read the size of `domElement`.
          */
-        // TODO export function createDiffEditor(domElement: HTMLElement, options?: IStandaloneDiffEditorConstructionOptions, override?: IEditorOverrideServices): IStandaloneDiffEditor;
-        internal static Task CreateDiffEditor(string domElementId, StandaloneDiffEditorConstructionOptions options, DotNetObjectReference<Editor> jsObjectRef)
+        internal static async Task<StandaloneDiffEditor> CreateDiffEditor(string domElementId, StandaloneDiffEditorConstructionOptions options, EditorOverrideServices overrideServices, DotNetObjectReference<Editor> dotnetObjectRef, DotNetObjectReference<Editor> dotnetObjectRefOriginal, DotNetObjectReference<Editor> dotnetObjectRefModified)
         {
             options = options ?? new StandaloneDiffEditorConstructionOptions();
 
@@ -908,7 +903,8 @@ namespace BlazorMonaco.Editor {
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
 
             // Create the editor
-            return JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.createDiffEditor", domElementId, optionsDict, jsObjectRef);
+            await JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.createDiffEditor", domElementId, optionsDict, overrideServices, dotnetObjectRef, dotnetObjectRefOriginal, dotnetObjectRefModified);
+            return dotnetObjectRef.Value as StandaloneDiffEditor;
         }
 
     }
@@ -918,7 +914,7 @@ namespace BlazorMonaco.Editor {
         public bool? AlwaysRevealFirst { get; set; }
     }
 
-    public partial class Globals
+    public partial class BlazorMonacoGlobals
     {
 
         //export function createDiffNavigator(diffEditor: IStandaloneDiffEditor, opts?: IDiffNavigatorOptions): IDiffNavigator;
@@ -1000,14 +996,12 @@ namespace BlazorMonaco.Editor {
         /**
          * Colorize the contents of `domNode` using attribute `data-lang`.
          */
-        // TODO export function colorizeElement(domNode: HTMLElement, options: IColorizerElementOptions): Promise<void>;
-        public static Task ColorizeElement(string elementId, ColorizerElementOptions options)
-            => JsRuntimeExt.Shared.SafeInvokeAsync<string>("blazorMonaco.editor.colorizeElement", elementId, options);
+        public static Task ColorizeElement(string domNodeId, ColorizerElementOptions options)
+            => JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.colorizeElement", domNodeId, options);
 
         /**
          * Colorize `text` using language `languageId`.
          */
-        // TODO export function colorize(text: string, languageId: string, options: IColorizerOptions): Promise<string>;
         public static Task<string> Colorize(string text, string languageId, ColorizerOptions options)
             => JsRuntimeExt.Shared.SafeInvokeAsync<string>("blazorMonaco.editor.colorize", text, languageId, options);
 
@@ -1348,9 +1342,8 @@ namespace BlazorMonaco.Editor {
         get(): T | undefined;
     }*/
 
-    /*export interface IEditorOverrideServices {
-        [index: string]: any;
-    }*/
+    public class EditorOverrideServices : Dictionary<string, object>
+    { }
 
     /*export interface IMarker {
         owner: string;
@@ -2304,12 +2297,10 @@ namespace BlazorMonaco.Editor {
          * The `uri` of the previous model or null.
          */
         public string OldModelUri { get; set; }
-        // TODO readonly oldModelUrl: Uri | null;
         /**
          * The `uri` of the new model or null.
          */
         public string NewModelUri { get; set; }
-        // TODO readonly newModelUrl: Uri | null;
     }
 
     public class ContentSizeChangedEvent

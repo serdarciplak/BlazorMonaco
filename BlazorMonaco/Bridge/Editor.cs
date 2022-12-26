@@ -33,7 +33,7 @@ namespace BlazorMonaco.Editor
         [Inject]
         protected IJSRuntime jsRuntime { get; set; }
 
-        protected DotNetObjectReference<Editor> _dotnetObjectRef;
+        internal DotNetObjectReference<Editor> _dotnetObjectRef;
         
         protected override void OnInitialized()
         {
@@ -82,6 +82,7 @@ namespace BlazorMonaco.Editor
         }
 
         protected Func<int, string> LineNumbersLambda { get; set; }
+        
         [JSInvokable]
         public string LineNumbersCallback(int lineNumber)
         {

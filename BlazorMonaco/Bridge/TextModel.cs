@@ -372,10 +372,7 @@ namespace BlazorMonaco.Editor
          * @param operations The edit operations.
          * @return If desired, the inverse edit operations, that, when applied, will bring the model back to the previous state.
          */
-        public Task ApplyEdits(List<IdentifiedSingleEditOperation> operations)
-            => JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.model.applyEdits", Uri, operations);
-        // TODO applyEdits(operations: IIdentifiedSingleEditOperation[], computeUndoEdits: false): void;
-        public Task<List<ValidEditOperation>> ApplyEdits(List<IdentifiedSingleEditOperation> operations, bool computeUndoEdits)
+        public Task<List<ValidEditOperation>> ApplyEdits(List<IdentifiedSingleEditOperation> operations, bool computeUndoEdits = false)
             => JsRuntimeExt.Shared.SafeInvokeAsync<List<ValidEditOperation>>("blazorMonaco.editor.model.applyEdits", Uri, operations, computeUndoEdits);
         /**
          * Change the end of line sequence without recording in the undo stack.

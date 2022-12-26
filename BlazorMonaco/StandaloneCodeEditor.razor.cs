@@ -64,7 +64,7 @@ namespace BlazorMonaco.Editor
                 }
 
                 // Create the editor
-                await Globals.Create(Id, options, _dotnetObjectRef);
+                await BlazorMonacoGlobals.Create(Id, options, null, _dotnetObjectRef);
             }
             await base.OnAfterRenderAsync(firstRender);
         }
@@ -93,6 +93,9 @@ namespace BlazorMonaco.Editor
         }
         public Task<string> AddCommand(int keybinding, CommandHandler handler, string context = null)
         {
+            if (_commands.ContainsKey(keybinding.ToString()))
+                return Task.FromResult("");
+
             _commands[keybinding.ToString()] = handler;
             return jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.addCommand", Id, keybinding, context);
         }
@@ -117,6 +120,9 @@ namespace BlazorMonaco.Editor
         }
         public Task AddAction(ActionDescriptor actionDescriptor)
         {
+            if (_actions.ContainsKey(actionDescriptor.Id))
+                return Task.CompletedTask;
+
             _actions[actionDescriptor.Id] = actionDescriptor;
             return jsRuntime.SafeInvokeAsync("blazorMonaco.editor.addAction", Id, actionDescriptor);
         }
@@ -645,13 +651,8 @@ namespace BlazorMonaco.Editor
          * Explanation 2: the results of this method will not change if the container of the editor gets repositioned.
          * Warning: the results of this method are inaccurate for positions that are outside the current editor viewport.
          */
-        /* TODO getScrolledVisiblePosition(position: IPosition): {
-            top: number;
-            left: number;
-            height: number;
-        } | null;*/
-        public Task<Position> GetScrolledVisiblePosition(Position position)
-            => jsRuntime.SafeInvokeAsync<Position>("blazorMonaco.editor.getScrolledVisiblePosition", Id, position);
+        public Task<ScrolledVisiblePosition> GetScrolledVisiblePosition(Position position)
+            => jsRuntime.SafeInvokeAsync<ScrolledVisiblePosition>("blazorMonaco.editor.getScrolledVisiblePosition", Id, position);
         /**
          * Apply the same font settings as the editor to `target`.
          */

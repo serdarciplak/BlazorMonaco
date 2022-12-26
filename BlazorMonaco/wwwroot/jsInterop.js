@@ -5,12 +5,14 @@ window.blazorMonaco.editor = {
 
     //#region Static methods
 
-    colorize: function (text, languageId, options) {
-        return monaco.editor.colorize(text, languageId, options);
+    colorize: async function (text, languageId, options) {
+        let promise = monaco.editor.colorize(text, languageId, options);
+        return await promise;
     },
 
-    colorizeElement: function (elementId, options) {
-        return monaco.editor.colorizeElement(document.getElementById(elementId), options);
+    colorizeElement: async function (elementId, options) {
+        let promise = monaco.editor.colorizeElement(document.getElementById(elementId), options);
+        await promise;
     },
 
     colorizeModelLine: function (uriStr, lineNumber, tabSize) {
@@ -20,7 +22,7 @@ window.blazorMonaco.editor = {
         return monaco.editor.colorizeModelLine(model, lineNumber, tabSize);
     },
 
-    create: function (id, options, dotnetRef) {
+    create: function (id, options, override, dotnetRef) {
         if (options == null)
             options = {};
 
@@ -40,11 +42,11 @@ window.blazorMonaco.editor = {
             }
         }
 
-        var editor = monaco.editor.create(document.getElementById(id), options);
+        var editor = monaco.editor.create(document.getElementById(id), options, override);
         window.blazorMonaco.editors.push({ id: id, editor: editor, dotnetRef: dotnetRef });
     },
 
-    createDiffEditor: function (id, options, dotnetRef) {
+    createDiffEditor: function (id, options, override, dotnetRef, dotnetRefOriginal, dotnetRefModified) {
         if (options == null)
             options = {};
 
@@ -68,10 +70,10 @@ window.blazorMonaco.editor = {
             }
         }
 
-        var editor = monaco.editor.createDiffEditor(document.getElementById(id), options);
+        var editor = monaco.editor.createDiffEditor(document.getElementById(id), options, override);
         window.blazorMonaco.editors.push({ id: id, editor: editor, dotnetRef: dotnetRef });
-        window.blazorMonaco.editors.push({ id: id + "_original", editor: editor.getOriginalEditor() });
-        window.blazorMonaco.editors.push({ id: id + "_modified", editor: editor.getModifiedEditor() });
+        window.blazorMonaco.editors.push({ id: id + "_original", editor: editor.getOriginalEditor(), dotnetRef: dotnetRefOriginal });
+        window.blazorMonaco.editors.push({ id: id + "_modified", editor: editor.getModifiedEditor(), dotnetRef: dotnetRefModified });
 
         if (oldModel !== null)
             editor.setModel(oldModel);
@@ -172,7 +174,7 @@ window.blazorMonaco.editor = {
             keybindingContext: actionDescriptor.keybindingContext,
             contextMenuGroupId: actionDescriptor.contextMenuGroupId,
             contextMenuOrder: actionDescriptor.contextMenuOrder,
-            run: function () {
+            run: function (editor, args) {
                 editorHolder.dotnetRef.invokeMethodAsync("ActionCallback", actionDescriptor.id);
             }
         });
@@ -180,7 +182,7 @@ window.blazorMonaco.editor = {
 
     addCommand: function (id, keybinding, context) {
         let editorHolder = this.getEditorHolder(id);
-        editorHolder.editor.addCommand(keybinding, function () {
+        editorHolder.editor.addCommand(keybinding, function (args) {
             editorHolder.dotnetRef.invokeMethodAsync("CommandCallback", keybinding);
         }, context);
     },
@@ -310,17 +312,17 @@ window.blazorMonaco.editor = {
 
     getScrollLeft: function (id) {
         let editor = this.getEditor(id);
-        return editor.getScrollHeight();
+        return editor.getScrollLeft();
     },
 
     getScrollTop: function (id) {
         let editor = this.getEditor(id);
-        return editor.getScrollHeight();
+        return editor.getScrollTop();
     },
 
     getScrollWidth: function (id) {
         let editor = this.getEditor(id);
-        return editor.getScrollHeight();
+        return editor.getScrollWidth();
     },
 
     getScrolledVisiblePosition: function (id, position) {
@@ -476,14 +478,14 @@ window.blazorMonaco.editor = {
         let dotnetRef = editorHolder.dotnetRef;
 
         let listener = function (e) {
-            var params = JSON.stringify(e);
+            var eventJson = JSON.stringify(e);
             if (eventName == "OnDidChangeModel") {
-                params = JSON.stringify({
+                eventJson = JSON.stringify({
                     oldModelUri: e.oldModelUrl == null ? null : e.oldModelUrl.toString(),
                     newModelUri: e.newModelUrl == null ? null : e.newModelUrl.toString(),
                 });
             }
-            dotnetRef.invokeMethodAsync("EventCallback", eventName, params);
+            dotnetRef.invokeMethodAsync("EventCallback", eventName, eventJson);
         };
 
         switch (eventName) {
@@ -549,12 +551,9 @@ window.blazorMonaco.editor = {
         editor.setScrollLeft(newScrollLeft, scrollType);
     },
 
-    setScrollPosition: function (id, newScrollLeft, newScrollTop, scrollType) {
+    setScrollPosition: function (id, newPosition, scrollType) {
         let editor = this.getEditor(id);
-        editor.setScrollPosition({
-            scrollLeft: newScrollLeft,
-            scrollTop: newScrollTop
-        }, scrollType);
+        editor.setScrollPosition(newPosition, scrollType);
     },
 
     setScrollTop: function (id, newScrollTop, scrollType) {
@@ -839,11 +838,6 @@ window.blazorMonaco.editor = {
         pushEOL: function (uriStr, eol) {
             let model = this.getModel(uriStr);
             return model.pushEOL(eol);
-        },
-
-        applyEdits: function (uriStr, operations) {
-            let model = this.getModel(uriStr);
-            return model.applyEdits(operations);
         },
 
         applyEdits: function (uriStr, operations, computeUndoEdits) {
