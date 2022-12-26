@@ -41,6 +41,7 @@ namespace BlazorMonaco.Editor
         /**
          * Replace the entire text buffer value contained in this model.
          */
+        // TODO setValue(newValue: string | ITextSnapshot) : void;
         public Task SetValue(string newValue)
             => JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.model.setValue", Uri, newValue);
         /**
@@ -51,6 +52,12 @@ namespace BlazorMonaco.Editor
          */
         public Task<string> GetValue(EndOfLinePreference? eol, bool? preserveBOM)
             => JsRuntimeExt.Shared.SafeInvokeAsync<string>("blazorMonaco.editor.model.getValue", Uri, eol, preserveBOM);
+        /**
+         * Get the text stored in this model.
+         * @param preserverBOM Preserve a BOM character if it was detected when the model was constructed.
+         * @return The text snapshot (it is safe to consume it asynchronously).
+         */
+        //createSnapshot(preserveBOM?: boolean) : ITextSnapshot;
         /**
          * Get the length of the text stored in this model.
          */

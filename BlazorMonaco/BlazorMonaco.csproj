@@ -35,7 +35,6 @@ https://github.com/serdarciplak/BlazorMonaco/blob/master/CHANGELOG.md</PackageRe
 
   <ItemGroup>
     <Folder Include="wwwroot\lib\monaco-editor\min-maps\vs\base\" />
-    <Folder Include="wwwroot\lib\monaco-editor\min\vs\base\browser\ui\codicons\" />
     <Folder Include="wwwroot\lib\monaco-editor\min\vs\basic-languages\" />
     <Folder Include="wwwroot\lib\monaco-editor\min\vs\language\" />
   </ItemGroup>
