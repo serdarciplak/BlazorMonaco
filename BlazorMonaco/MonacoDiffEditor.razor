@@ -5,7 +5,7 @@
 <div id="@Id" class="monaco-editor-container @CssClass"></div>
 
 @code {
-    [Parameter] public Func<MonacoDiffEditor, DiffEditorConstructionOptions> ConstructionOptions { get; set; }
+    [Parameter] public Func<MonacoDiffEditor, StandaloneDiffEditorConstructionOptions> ConstructionOptions { get; set; }
     [Parameter] public EventCallback<MonacoDiffEditor> OnDidUpdateDiff { get; set; }
 
     // Events for the original editor (left)
