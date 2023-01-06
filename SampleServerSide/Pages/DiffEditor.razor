@@ -1,0 +1,136 @@
+﻿@page "/diff-editor"
+
+<h3>Diff Editor</h3>
+
+<div>
+    <div style="margin:10px 0;">
+        New Value: <input type="text" @bind="ValueToSetOriginal" style="width: 400px;" /> <button @onclick="SetValueOriginal">Set Value Original</button>
+    </div>
+    <div style="margin:10px 0;">
+        New Value: <input type="text" @bind="ValueToSetModified" style="width: 400px;" /> <button @onclick="SetValueModified">Set Value Modified</button>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="GetValueOriginal">Get Value Original</button>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="GetValueModified">Get Value Modified</button>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="AddCommand">Add Command Original (Ctrl+Enter)</button>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="AddAction">Add Action Modified (Ctrl+D)</button>
+    </div>
+    <div style="margin:10px 0;">
+        See the console for results.
+    </div>
+</div>
+
+<MonacoDiffEditor @ref="_diffEditor" Id="sample-diff-editor-123" ConstructionOptions="DiffEditorConstructionOptions" OnDidInit="EditorOnDidInit" OnKeyUpOriginal="EditorOnKeyUpOriginal" OnKeyUpModified="EditorOnKeyUpModified" />
+
+@code {
+    private MonacoDiffEditor _diffEditor { get; set; }
+    private string ValueToSetOriginal { get; set; }
+    private string ValueToSetModified { get; set; }
+
+    private DiffEditorConstructionOptions DiffEditorConstructionOptions(MonacoDiffEditor editor)
+    {
+        return new DiffEditorConstructionOptions
+        {
+            OriginalEditable = true
+        };
+    }
+
+    private async Task EditorOnDidInit(MonacoEditorBase editor)
+    {
+        // Get or create the original model
+        TextModel original_model = await MonacoEditorBase.GetModel("sample-diff-editor-originalModel");
+        if (original_model == null)
+        {
+            var original_value = "\"use strict\";\n" +
+                            "function Person(age) {\n" +
+                            "	if (age) {\n" +
+                            "		this.age = age;\n" +
+                            "	}\n" +
+                            "}\n" +
+                            "Person.prototype.getAge = function () {\n" +
+                            "	return this.age;\n" +
+                            "};\n";
+            original_model = await MonacoEditorBase.CreateModel(original_value, "javascript", "sample-diff-editor-originalModel");
+        }
+
+        // Get or create the modified model
+        TextModel modified_model = await MonacoEditorBase.GetModel("sample-diff-editor-modifiedModel");
+        if (modified_model == null)
+        {
+            var modified_value = "\"don't use strict\";\n" +
+                            "furction Person(age_is_just_a_number) {\n" +
+                            "	if (age_is_just_a_number) {\n" +
+                            "		this.age_is_just_a_number = age_is_just_a_number;\n" +
+                            "	}\n" +
+                            "}\n" +
+                            "Person.prototype.getAge = function () {\n" +
+                            "	return this.age_is_just_a_number;\n" +
+                            "};\n" +
+                            "//Really, it is just a number people!";
+            modified_model = await MonacoEditorBase.CreateModel(modified_value, "javascript", "sample-diff-editor-modifiedModel");
+        }
+
+        // Set the editor model
+        await _diffEditor.SetModel(new DiffEditorModel
+        {
+            Original = original_model,
+            Modified = modified_model
+        });
+    }
+
+    private void EditorOnKeyUpOriginal(KeyboardEvent keyboardEvent)
+    {
+        Console.WriteLine("OnKeyUpOriginal : " + keyboardEvent.Code);
+    }
+
+    private void EditorOnKeyUpModified(KeyboardEvent keyboardEvent)
+    {
+        Console.WriteLine("OnKeyUpModified : " + keyboardEvent.Code);
+    }
+
+    private async Task SetValueOriginal()
+    {
+        Console.WriteLine($"setting original value to: {ValueToSetOriginal}");
+        await _diffEditor.OriginalEditor.SetValue(ValueToSetOriginal);
+    }
+
+    private async Task SetValueModified()
+    {
+        Console.WriteLine($"setting modified value to: {ValueToSetModified}");
+        await _diffEditor.ModifiedEditor.SetValue(ValueToSetModified);
+    }
+
+    private async Task GetValueOriginal()
+    {
+        var val = await _diffEditor.OriginalEditor.GetValue();
+        Console.WriteLine($"original value is: {val}");
+    }
+
+    private async Task GetValueModified()
+    {
+        var val = await _diffEditor.ModifiedEditor.GetValue();
+        Console.WriteLine($"modified value is: {val}");
+    }
+
+    private async Task AddCommand()
+    {
+        await _diffEditor.ModifiedEditor.AddCommand((int)KeyMode.CtrlCmd | (int)KeyCode.Enter, (editor, keyCode) =>
+        {
+            Console.WriteLine($"Ctrl+Enter : Original Editor command is triggered. ({editor.Id})");
+        });
+    }
+
+    private async Task AddAction()
+    {
+        await _diffEditor.ModifiedEditor.AddAction("testAction", "Test Action", new int[] { (int)KeyMode.CtrlCmd | (int)KeyCode.KEY_D, (int)KeyMode.CtrlCmd | (int)KeyCode.KEY_B }, null, null, "navigation", 1.5, (editor, keyCodes) =>
+        {
+            Console.WriteLine($"Ctrl+D : Modified Editor action is triggered. ({editor.Id})");
+        });
+    }
+}
