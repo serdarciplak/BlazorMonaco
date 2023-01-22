@@ -57,7 +57,7 @@ namespace BlazorMonaco.Editor
                 _modifiedEditor = StandaloneCodeEditor.CreateVirtualEditor(Id + "_modified");
 
                 // Create the editor
-                await BlazorMonacoGlobals.CreateDiffEditor(Id, options, null, _dotnetObjectRef, OriginalEditor._dotnetObjectRef, ModifiedEditor._dotnetObjectRef);
+                await Global.CreateDiffEditor(Id, options, null, _dotnetObjectRef, OriginalEditor._dotnetObjectRef, ModifiedEditor._dotnetObjectRef);
             }
             await base.OnAfterRenderAsync(firstRender);
         }

@@ -87,7 +87,7 @@
     private async Task ChangeTheme(ChangeEventArgs e)
     {
         Console.WriteLine($"setting theme to: {e.Value?.ToString()}");
-        await BlazorMonacoGlobals.SetTheme(e.Value?.ToString());
+        await Global.SetTheme(e.Value?.ToString());
     }
 
     private async Task SetValue()

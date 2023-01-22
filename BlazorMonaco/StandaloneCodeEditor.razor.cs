@@ -65,7 +65,7 @@ namespace BlazorMonaco.Editor
                 }
 
                 // Create the editor
-                await BlazorMonacoGlobals.Create(Id, options, null, _dotnetObjectRef);
+                await Global.Create(Id, options, null, _dotnetObjectRef);
             }
             await base.OnAfterRenderAsync(firstRender);
         }

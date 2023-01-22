@@ -1,5 +1,14 @@
 # Change Log
 
+## 3.0.0
+* Updated to Monaco Editor v0.34.1
+* Added support for net6.0 and net7.0
+* Aligned with Monaco Editor's original namespace and class names.
+* Cleaner integration.
+* Improvements and several bug fixes.
+* Breaking Changes:
+  * Please follow the migration guide [here](./MIGRATE.md).
+
 ## 2.1.0
 * Added ExecuteEdits method.
 * Added missing properties to DiffEditorConstructionOptions.

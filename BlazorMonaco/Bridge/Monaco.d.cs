@@ -860,7 +860,7 @@ namespace BlazorMonaco.Editor {
         dispose(): void;
     }*/
 
-    public partial class BlazorMonacoGlobals
+    public partial class Global
     {
         /**
          * Create a new editor under `domElement`.
@@ -936,15 +936,15 @@ namespace BlazorMonaco.Editor {
             await JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.createDiffEditor", domElementId, optionsDict, overrideServices, dotnetObjectRef, dotnetObjectRefOriginal, dotnetObjectRefModified);
             return dotnetObjectRef.Value as StandaloneDiffEditor;
         }
-
     }
+
     public class DiffNavigatorOptions {
         public bool? FollowsCaret { get; set; }
         public bool? IgnoreCharChanges { get; set; }
         public bool? AlwaysRevealFirst { get; set; }
     }
 
-    public partial class BlazorMonacoGlobals
+    public partial class Global
     {
 
         //export function createDiffNavigator(diffEditor: IStandaloneDiffEditor, opts?: IDiffNavigatorOptions): IDiffNavigator;
