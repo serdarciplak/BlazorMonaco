@@ -5,7 +5,7 @@
     flex-direction: column;
 }
 
-.main[b-s33837jit4] {
+main[b-s33837jit4] {
     flex: 1;
 }
 
@@ -22,15 +22,20 @@
     align-items: center;
 }
 
-    .top-row[b-s33837jit4]  a, .top-row .btn-link[b-s33837jit4] {
+    .top-row[b-s33837jit4]  a, .top-row[b-s33837jit4]  .btn-link {
         white-space: nowrap;
         margin-left: 1.5rem;
+        text-decoration: none;
     }
 
-    .top-row a:first-child[b-s33837jit4] {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+        .top-row[b-s33837jit4]  a:hover, .top-row[b-s33837jit4]  .btn-link:hover {
+            text-decoration: underline;
+        }
+
+        .top-row[b-s33837jit4]  a:first-child {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
 @media (max-width: 640.98px) {
     .top-row:not(.auth)[b-s33837jit4] {
@@ -41,7 +46,7 @@
         justify-content: space-between;
     }
 
-    .top-row a[b-s33837jit4], .top-row .btn-link[b-s33837jit4] {
+    .top-row[b-s33837jit4]  a, .top-row[b-s33837jit4]  .btn-link {
         margin-left: 0;
     }
 }
@@ -64,7 +69,13 @@
         z-index: 1;
     }
 
-    .main > div[b-s33837jit4] {
+        .top-row.auth[b-s33837jit4]  a:first-child {
+            flex: 1;
+            text-align: right;
+            width: 0;
+        }
+
+    .top-row[b-s33837jit4], article[b-s33837jit4] {
         padding-left: 2rem !important;
         padding-right: 1.5rem !important;
     }
@@ -112,15 +123,15 @@
         line-height: 3rem;
     }
 
-.nav-item[b-3eivwsh8em]  a.active {
-    background-color: rgba(255,255,255,0.25);
-    color: white;
-}
+        .nav-item[b-3eivwsh8em]  a.active {
+            background-color: rgba(255,255,255,0.25);
+            color: white;
+        }
 
-.nav-item[b-3eivwsh8em]  a:hover {
-    background-color: rgba(255,255,255,0.1);
-    color: white;
-}
+        .nav-item[b-3eivwsh8em]  a:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
 
 @media (min-width: 641px) {
     .navbar-toggler[b-3eivwsh8em] {
