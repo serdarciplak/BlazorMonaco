@@ -45,7 +45,7 @@ namespace BlazorMonaco.Editor
                 var options = ConstructionOptions?.Invoke(this);
 
                 // Prepare the line numbers callback
-                LineNumbersLambda = options.LineNumbersLambda;
+                LineNumbersLambda = options?.LineNumbersLambda;
                 if (LineNumbersLambda != null)
                 {
                     options.LineNumbers = "function";
