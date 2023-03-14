@@ -1,4 +1,5 @@
-﻿using Microsoft.JSInterop;
+﻿using BlazorMonaco.Services;
+using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -8,20 +9,6 @@ namespace BlazorMonaco.Helpers
 {
     internal static class JsRuntimeExt
     {
-        public static IJSRuntime Shared { get; set; }
-
-        public static async Task SafeInvokeAsync(this IJSRuntime jsRuntime, string identifier, params object[] args)
-        {
-            if (jsRuntime == null)
-                return;
-            await jsRuntime.InvokeVoidAsync(identifier, args);
-        }
-
-        public static async Task<T> SafeInvokeAsync<T>(this IJSRuntime jsRuntime, string identifier, params object[] args)
-        {
-            if (jsRuntime == null)
-                return default;
-            return await jsRuntime.InvokeAsync<T>(identifier, args);
-        }
+        public static BlazorMonacoJsRuntime Shared { get; set; }
     }
 }

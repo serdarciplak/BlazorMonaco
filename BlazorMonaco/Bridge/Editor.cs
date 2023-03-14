@@ -1,5 +1,6 @@
 ﻿using BlazorMonaco.Editor;
 using BlazorMonaco.Helpers;
+using BlazorMonaco.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System;
@@ -31,7 +32,7 @@ namespace BlazorMonaco.Editor
         public EventCallback OnDidInit { get; set; }
 
         [Inject]
-        protected IJSRuntime jsRuntime { get; set; }
+        protected BlazorMonacoJsRuntime jsRuntime { get; set; }
 
         internal DotNetObjectReference<Editor> _dotnetObjectRef;
         
