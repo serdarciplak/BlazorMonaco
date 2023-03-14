@@ -47,7 +47,7 @@ export const createDiffEditor = (id, options, override, dotnetRef, dotnetRefOrig
 
     const oldEditor = getEditor(id, true);
     let oldModel = null;
-    if (oldEditor !== null) {
+    if (!!oldEditor) {
         oldModel = oldEditor.getModel();
 
         editors.splice(editors.findIndex(item => item.id === id + "_original"), 1);
@@ -140,7 +140,7 @@ export const getEditorHolder = (id, unobstrusive = false) => {
 
 export const getEditor = (id, unobstrusive = false) => {
     const editorHolder = getEditorHolder(id, unobstrusive);
-    return editorHolder == null ? null : editorHolder.editor;
+    return editorHolder?.editor;
 };
 
 //#endregion
@@ -151,15 +151,6 @@ export const addAction = (id, actionDescriptor) => {
     const editorHolder = getEditorHolder(id);
     editorHolder.editor.addAction({
         ...actionDescriptor,
-        /*
-        id: actionDescriptor.id,
-        label: actionDescriptor.label,
-        keybindings: actionDescriptor.keybindings,
-        precondition: actionDescriptor.precondition,
-        keybindingContext: actionDescriptor.keybindingContext,
-        contextMenuGroupId: actionDescriptor.contextMenuGroupId,
-        contextMenuOrder: actionDescriptor.contextMenuOrder,
-        */
         run: (editor, args) => editorHolder.dotnetRef.invokeMethodAsync("ActionCallback", actionDescriptor.id)
     });
 };
@@ -209,7 +200,7 @@ export const getContainerDomNodeId = (id) => {
     if (!editor)
         return null;
     const containerNode = editor.getContainerDomNode();
-    if (containerNode == null)
+    if (!containerNode)
         return null;
     return containerNode.id;
 };
@@ -233,7 +224,7 @@ export const getDomNodeId = (id) => {
     if (!editor)
         return null;
     const domeNode = editor.getDomNode();
-    if (domeNode == null)
+    if (!domeNode)
         return null;
     return domeNode.id;
 };
@@ -561,13 +552,13 @@ export const setEventListener = (id, eventName) => {
 
     const listener = (e) => {
         let eventJson = JSON.stringify(e);
-        if (eventName == "OnDidChangeModel") {
+        if (eventName === "OnDidChangeModel") {
             eventJson = JSON.stringify({
-                oldModelUri: e.oldModelUrl == null ? null : e.oldModelUrl.toString(),
-                newModelUri: e.newModelUrl == null ? null : e.newModelUrl.toString(),
+                oldModelUri: e.oldModelUrl?.toString(),
+                newModelUri: e.newModelUrl?.toString(),
             });
         }
-        else if (eventName == "OnDidChangeConfiguration") {
+        else if (eventName === "OnDidChangeConfiguration") {
             eventJson = JSON.stringify(e._values);
         }
         dotnetRef.invokeMethodAsync("EventCallback", eventName, eventJson);
@@ -692,7 +683,7 @@ export const updateOptions = (id, options) => {
 };
 
 export const uuidv4 = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    let r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    let r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
 });
 
