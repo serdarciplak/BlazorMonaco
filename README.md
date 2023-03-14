@@ -29,6 +29,9 @@ Install-Package BlazorMonaco
 
 * Add the below script tags to your `index.html` file. Please note that these script tags must be placed before the script tag for the `blazor.webassembly.js` file.
 ```html
+<script>
+	var require = { paths: { vs: '_content/BlazorMonaco/lib/monaco-editor/min/vs' } };
+</script>
 <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
 <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
 ```
