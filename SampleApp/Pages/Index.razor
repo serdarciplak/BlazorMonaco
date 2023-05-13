@@ -18,6 +18,9 @@
         <button @onclick="GetValue">Get Value</button>
     </div>
     <div style="margin:10px 0;">
+        <button @onclick="GetDecoration">Get Decoration</button>
+    </div>
+    <div style="margin:10px 0;">
         <button @onclick="AddCommand">Add Command (Ctrl+Enter)</button>
     </div>
     <div style="margin:10px 0;">
@@ -100,6 +103,16 @@
     {
         var val = await _editor.GetValue();
         Console.WriteLine($"value is: {val}");
+    }
+
+    private async Task GetDecoration()
+    {
+        var model = await _editor.GetModel();
+        var decorations = await model.GetAllDecorations(0, false);
+        foreach(var decoration in decorations)
+        {
+            Console.WriteLine($"Id: {decoration.Id}, OnwerId: {decoration.OwnerId}, Range: {decoration.Range.StartLineNumber}, {decoration.Range.StartColumn}, {decoration.Range.EndLineNumber}, {decoration.Range.EndColumn}");
+        }
     }
 
     private async Task AddCommand()

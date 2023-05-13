@@ -786,22 +786,26 @@ window.blazorMonaco.editor = {
 
         getLineDecorations: function (uriStr, lineNumber, ownerId, filterOutValidation) {
             let model = this.getModel(uriStr);
-            return model.getLineDecorations(lineNumber, ownerId, filterOutValidation);
+            let decorations = model.getLineDecorations(lineNumber, ownerId, filterOutValidation);
+            return this.compactDecorations(decorations);
         },
 
         getLinesDecorations: function (uriStr, startLineNumber, endLineNumber, ownerId, filterOutValidation) {
             let model = this.getModel(uriStr);
-            return model.getLinesDecorations(startLineNumber, endLineNumber, ownerId, filterOutValidation);
+            let decorations = model.getLinesDecorations(startLineNumber, endLineNumber, ownerId, filterOutValidation);
+            return this.compactDecorations(decorations);
         },
 
         getDecorationsInRange: function (uriStr, range, ownerId, filterOutValidation) {
             let model = this.getModel(uriStr);
-            return model.getDecorationsInRange(range, ownerId, filterOutValidation);
+            let decorations = model.getDecorationsInRange(range, ownerId, filterOutValidation);
+            return this.compactDecorations(decorations);
         },
 
         getAllDecorations: function (uriStr, ownerId, filterOutValidation) {
             let model = this.getModel(uriStr);
-            return model.getAllDecorations(ownerId, filterOutValidation);
+            let decorations = model.getAllDecorations(ownerId, filterOutValidation);
+            return this.compactDecorations(decorations);
         },
 
         getInjectedTextDecorations: function (uriStr, ownerId) {
@@ -811,7 +815,8 @@ window.blazorMonaco.editor = {
 
         getOverviewRulerDecorations: function (uriStr, ownerId, filterOutValidation) {
             let model = this.getModel(uriStr);
-            return model.getOverviewRulerDecorations(ownerId, filterOutValidation);
+            let decorations = model.getOverviewRulerDecorations(ownerId, filterOutValidation);
+            return this.compactDecorations(decorations);
         },
 
         normalizeIndentation: function (uriStr, str) {
@@ -852,6 +857,15 @@ window.blazorMonaco.editor = {
         setEOL: function (uriStr, eol) {
             let model = this.getModel(uriStr);
             return model.setEOL(eol);
+        },
+
+        compactDecorations: function (srcDecorations) {
+            let destDecorations = [];
+            for (let i = 0; i < srcDecorations.length; ++i) {
+                let srcDecoration = srcDecorations[i];
+                destDecorations.push({ id: srcDecoration.id, ownerId: srcDecoration.ownerId, range: srcDecoration.range, options: srcDecoration.options });
+            }
+            return destDecorations;
         },
 
         dispose: function (uriStr) {
