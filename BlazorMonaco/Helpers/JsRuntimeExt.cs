@@ -8,7 +8,11 @@ namespace BlazorMonaco.Helpers
 {
     internal static class JsRuntimeExt
     {
-        public static IJSRuntime Shared { get; set; }
+        public static IJSRuntime Shared;
+        public static void SetJSRuntime(IJSRuntime _jsRuntime)
+        {
+            Shared = _jsRuntime;
+        }
 
         public static async Task SafeInvokeAsync(this IJSRuntime jsRuntime, string identifier, params object[] args)
         {

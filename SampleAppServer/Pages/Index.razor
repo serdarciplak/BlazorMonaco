@@ -1,0 +1,45 @@
+﻿@page "/"
+
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Index</PageTitle>
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+<StandaloneCodeEditor Id="my-editor-instance-id" ConstructionOptions="EditorConstructionOptions" @ref="_standaloneCodeEditor" />
+
+<label>@selected </label>
+
+<button @onclick="GetSelectedText">Get Selected</button>
+
+
+@code {
+	private StandaloneCodeEditor? _standaloneCodeEditor;
+
+	public string selected = "";
+
+	private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
+	{
+		return new StandaloneEditorConstructionOptions
+			{
+				AutomaticLayout = true,
+				Language = "javascript",
+				Value = "function xyz() {\n" +
+							"   console.log(\"Hello world!\");\n" +
+							"}"
+			};
+	}
+
+	public async Task GetSelectedText()
+	{
+		var model = await _standaloneCodeEditor!.GetModel(JSRuntime);
+		BlazorMonaco.Range range = await _standaloneCodeEditor.GetSelection();
+		selected = await model.GetValueInRange(range, EndOfLinePreference.TextDefined);
+
+
+
+	}
+}
+ 
