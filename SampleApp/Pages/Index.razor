@@ -1,5 +1,7 @@
 ﻿@page "/"
 
+@inject IJSRuntime JSRuntime
+
 <h3>Code Editor</h3>
 
 <div>
@@ -31,8 +33,15 @@
 <StandaloneCodeEditor @ref="_editor" Id="sample-code-editor-123" ConstructionOptions="EditorConstructionOptions" OnDidInit="EditorOnDidInit" OnContextMenu="OnContextMenu" />
 
 @code {
+
+
     private StandaloneCodeEditor _editor = null!;
     private string _valueToSet = "";
+
+    private async void GetModel()
+    {
+        var model = await _editor!.GetModel(JSRuntime);
+    }
 
     private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
     {

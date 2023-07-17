@@ -416,8 +416,14 @@ namespace BlazorMonaco.Editor
         /**
          * Type the getModel() of IEditor.
          */
-        public Task<TextModel> GetModel()
-            => jsRuntime.SafeInvokeAsync<TextModel>("blazorMonaco.editor.getInstanceModel", Id);
+        public Task<TextModel> GetModel(IJSRuntime _jsRuntime)
+        {
+            JsRuntimeExt.SetJSRuntime(_jsRuntime);
+            return jsRuntime.SafeInvokeAsync<TextModel>("blazorMonaco.editor.getInstanceModel", Id);
+
+        }
+            
+
         /**
          * Sets the current model attached to this editor.
          * If the previous model was created by the editor via the value key in the options
