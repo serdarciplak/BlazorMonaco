@@ -6,11 +6,11 @@ window.blazorMonaco.editor = {
 
     //#region Utilities
 
-    removeCircular: function (orig) {
+    removeCircularReferences: function (orig) {
         if (Array.isArray(orig))
-            return orig.map(this.removeCircular);
+            return orig.map(this.removeCircularReferences);
 
-        const getCircularReplacer = () => {
+        const circularReferenceReplacer = () => {
             const seen = new WeakSet();
             return (key, value) => {
                 if (typeof value === "object" && value !== null) {
@@ -23,7 +23,7 @@ window.blazorMonaco.editor = {
             };
         };
 
-        let json_str = JSON.stringify(orig, getCircularReplacer());
+        let json_str = JSON.stringify(orig, circularReferenceReplacer());
         let cloned = JSON.parse(json_str);
         return cloned;
     },
@@ -813,37 +813,37 @@ window.blazorMonaco.editor = {
         getLineDecorations: function (uriStr, lineNumber, ownerId, filterOutValidation) {
             let model = this.getModel(uriStr);
             let result = model.getLineDecorations(lineNumber, ownerId, filterOutValidation);
-            return blazorMonaco.editor.removeCircular(result);
+            return blazorMonaco.editor.removeCircularReferences(result);
         },
 
         getLinesDecorations: function (uriStr, startLineNumber, endLineNumber, ownerId, filterOutValidation) {
             let model = this.getModel(uriStr);
             let result = model.getLinesDecorations(startLineNumber, endLineNumber, ownerId, filterOutValidation);
-            return blazorMonaco.editor.removeCircular(result);
+            return blazorMonaco.editor.removeCircularReferences(result);
         },
 
         getDecorationsInRange: function (uriStr, range, ownerId, filterOutValidation) {
             let model = this.getModel(uriStr);
             let result = model.getDecorationsInRange(range, ownerId, filterOutValidation);
-            return blazorMonaco.editor.removeCircular(result);
+            return blazorMonaco.editor.removeCircularReferences(result);
         },
 
         getAllDecorations: function (uriStr, ownerId, filterOutValidation) {
             let model = this.getModel(uriStr);
             let result = model.getAllDecorations(ownerId, filterOutValidation);
-            return blazorMonaco.editor.removeCircular(result);
+            return blazorMonaco.editor.removeCircularReferences(result);
         },
 
         getOverviewRulerDecorations: function (uriStr, ownerId, filterOutValidation) {
             let model = this.getModel(uriStr);
             let result = model.getOverviewRulerDecorations(ownerId, filterOutValidation);
-            return blazorMonaco.editor.removeCircular(result);
+            return blazorMonaco.editor.removeCircularReferences(result);
         },
 
         getInjectedTextDecorations: function (uriStr, ownerId) {
             let model = this.getModel(uriStr);
             let result = model.getInjectedTextDecorations(ownerId);
-            return blazorMonaco.editor.removeCircular(result);
+            return blazorMonaco.editor.removeCircularReferences(result);
         },
 
         normalizeIndentation: function (uriStr, str) {
