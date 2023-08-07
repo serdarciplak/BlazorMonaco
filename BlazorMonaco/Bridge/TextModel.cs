@@ -1,7 +1,4 @@
-﻿using BlazorMonaco.Editor;
-using BlazorMonaco.Helpers;
-using Microsoft.JSInterop;
-using System;
+﻿using BlazorMonaco.Helpers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

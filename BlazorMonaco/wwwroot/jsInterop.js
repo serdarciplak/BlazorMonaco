@@ -163,18 +163,20 @@ window.blazorMonaco.editor = {
         return true;
     },
 
-    getEditorHolder: function (id, unobstrusive = false) {
+    getEditorHolder: function (id, silent = false) {
         let editorHolder = window.blazorMonaco.editors.find(e => e.id === id);
         if (!editorHolder) {
-            if (unobstrusive) {
-                console.log("WARNING : Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length);
+            if (silent != false) {
+                if (silent != true) // If silent is null, log a warning
+                    console.log("WARNING : Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length);
                 return null;
             }
             throw "Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length;
         }
         else if (!editorHolder.editor) {
-            if (unobstrusive) {
-                console.log("WARNING : editor is null for editorHolder: " + editorHolder);
+            if (silent != false) {
+                if (silent != true) // If silent is null, log a warning
+                    console.log("WARNING : editor is null for editorHolder: " + editorHolder);
                 return null;
             }
             throw "editor is null for editorHolder: " + editorHolder;
@@ -182,8 +184,8 @@ window.blazorMonaco.editor = {
         return editorHolder;
     },
 
-    getEditor: function (id, unobstrusive = false) {
-        let editorHolder = this.getEditorHolder(id, unobstrusive);
+    getEditor: function (id, silent = false) {
+        let editorHolder = this.getEditorHolder(id, silent);
         return editorHolder == null ? null : editorHolder.editor;
     },
 

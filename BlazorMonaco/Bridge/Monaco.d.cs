@@ -2,9 +2,6 @@
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -851,7 +848,8 @@ namespace BlazorMonaco
     }
 }
 
-namespace BlazorMonaco.Editor {
+namespace BlazorMonaco.Editor
+{
 
     /*export interface IDiffNavigator {
         canNavigate(): boolean;
@@ -7605,7 +7603,8 @@ namespace BlazorMonaco.Languages
 
 }
 
-namespace BlazorMonaco.Worker {
+namespace BlazorMonaco.Worker
+{
 
 
     /*export interface IMirrorTextModel {
@@ -7631,7 +7630,8 @@ namespace BlazorMonaco.Worker {
 
 }
 
-namespace BlazorMonaco.Languages.Css {
+namespace BlazorMonaco.Languages.Css
+{
     /*export interface CSSFormatConfiguration {
         /** separate selectors with newline (e.g. "a,\nbr" or "a, br"): Default: true * /
         newlineBetweenSelectors?: boolean;
@@ -7822,7 +7822,8 @@ namespace BlazorMonaco.Languages.Css {
     //export type MarkupKind = 'plaintext' | 'markdown';
 }
 
-namespace BlazorMonaco.Languages.Html {
+namespace BlazorMonaco.Languages.Html
+{
     /*export interface HTMLFormatConfiguration {
         readonly tabSize: number;
         readonly insertSpaces: boolean;
@@ -7984,7 +7985,8 @@ namespace BlazorMonaco.Languages.Html {
     //export type MarkupKind = 'plaintext' | 'markdown';
 }
 
-namespace BlazorMonaco.Languages.Json {
+namespace BlazorMonaco.Languages.Json
+{
     /*export interface DiagnosticsOptions {
         /**
          * If set, the validator will be enabled and perform syntax and schema based validation,
@@ -8091,7 +8093,8 @@ namespace BlazorMonaco.Languages.Json {
     //export const jsonDefaults: LanguageServiceDefaults;
 }
 
-namespace BlazorMonaco.Languages.Typescript {
+namespace BlazorMonaco.Languages.Typescript
+{
     public enum ModuleKind {
         None = 0,
         CommonJS = 1,
