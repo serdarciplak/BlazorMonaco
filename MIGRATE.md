@@ -22,7 +22,7 @@
 
 - Class, property and object names are now better aligned with the original Monaco Editor JavaScript library. So, you need to update your usages with the new names. You'll notice right away that `MonacoEditor` is renamed to `StandaloneCodeEditor`, and `MonacoDiffEditor` is renamed to `StandaloneDiffEditor`. Based on what you use, you'll notice more changes. Just check the namespace and class definitions. If Microsoft didnot remove that thing in the new Monaco Editor version, it'll be there with a new name similar to the old one.
 
-- Static methods in the `MonacoEditor` and `MonacoEditorBase` classes (e.g. `SetTheme`, `Colorize`, etc) are removed from the editor class and grouped together under a new class named `BlazorMonacoGlobals`.
+- Static methods in the `MonacoEditor` and `MonacoEditorBase` classes (e.g. `SetTheme`, `Colorize`, etc) are removed from the editor class and grouped together under a new class named `BlazorMonaco.Editor.Global`.
 
 - Event callback methods used to have a parameter for the source editor instance that raised the event. It's removed for following the original Monaco Editor implementation.
 

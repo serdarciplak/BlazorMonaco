@@ -154,7 +154,7 @@ private void OnKeyUpModified(KeyboardEvent keyboardEvent)
 * You can define custom themes using the `DefineTheme` method. Just make sure that you don't call `DefineTheme` before any editor instance is initialized. BlazorMonaco needs an `IJSRuntime` instance to call JavaScript methods and it gets one when the first instance is initialized.
 
 ```csharp
-await BlazorMonacoGlobals.DefineTheme("my-custom-theme", new StandaloneThemeData
+await BlazorMonaco.Editor.Global.DefineTheme("my-custom-theme", new StandaloneThemeData
 {
 	Base = "vs-dark",
 	Inherit = true,
@@ -179,7 +179,7 @@ await BlazorMonacoGlobals.DefineTheme("my-custom-theme", new StandaloneThemeData
 * After defining your custom theme, you can call the `SetTheme` method at any time with your custom theme name to set it active.
 
 ```csharp
-await BlazorMonacoGlobals.SetTheme("my-custom-theme");
+await BlazorMonaco.Editor.Global.SetTheme("my-custom-theme");
 ```
 
 ### DeltaDecorations
