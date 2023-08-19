@@ -865,10 +865,15 @@ namespace BlazorMonaco.Editor
          * `domElement` should be empty (not contain other dom nodes).
          * The editor will read the size of `domElement`.
          */
-        internal static async Task<StandaloneCodeEditor> Create(string domElementId, StandaloneEditorConstructionOptions options, EditorOverrideServices overrideServices, DotNetObjectReference<Editor> dotnetObjectRef)
+        internal static async Task<StandaloneCodeEditor> Create(
+            IJSRuntime jsRuntime,
+            string domElementId,
+            StandaloneEditorConstructionOptions options,
+            EditorOverrideServices overrideServices,
+            DotNetObjectReference<Editor> dotnetObjectRef)
         {
             options = options ?? new StandaloneEditorConstructionOptions();
-
+            
             // Convert the options object into a JsonElement to get rid of the properties with null values
             var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
             {
@@ -882,7 +887,7 @@ namespace BlazorMonaco.Editor
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
 
             // Create the editor
-            await JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.create", domElementId, optionsDict, overrideServices, dotnetObjectRef);
+            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.create", domElementId, optionsDict, overrideServices, dotnetObjectRef);
             return dotnetObjectRef.Value as StandaloneCodeEditor;
         }
 
@@ -914,24 +919,31 @@ namespace BlazorMonaco.Editor
          * `domElement` should be empty (not contain other dom nodes).
          * The editor will read the size of `domElement`.
          */
-        internal static async Task<StandaloneDiffEditor> CreateDiffEditor(string domElementId, StandaloneDiffEditorConstructionOptions options, EditorOverrideServices overrideServices, DotNetObjectReference<Editor> dotnetObjectRef, DotNetObjectReference<Editor> dotnetObjectRefOriginal, DotNetObjectReference<Editor> dotnetObjectRefModified)
+        internal static async Task<StandaloneDiffEditor> CreateDiffEditor(
+            IJSRuntime jsRuntime,
+            string domElementId,
+            StandaloneDiffEditorConstructionOptions options,
+            EditorOverrideServices overrideServices,
+            DotNetObjectReference<Editor> dotnetObjectRef,
+            DotNetObjectReference<Editor> dotnetObjectRefOriginal,
+            DotNetObjectReference<Editor> dotnetObjectRefModified)
         {
             options = options ?? new StandaloneDiffEditorConstructionOptions();
-
+            
             // Convert the options object into a JsonElement to get rid of the properties with null values
             var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
             {
-                #if !NET6_0_OR_GREATER
+#if !NET6_0_OR_GREATER
                 IgnoreNullValues = true,
-                #else
+#else
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                #endif
+#endif
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
 
             // Create the editor
-            await JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.createDiffEditor", domElementId, optionsDict, overrideServices, dotnetObjectRef, dotnetObjectRefOriginal, dotnetObjectRefModified);
+            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.createDiffEditor", domElementId, optionsDict, overrideServices, dotnetObjectRef, dotnetObjectRefOriginal, dotnetObjectRefModified);
             return dotnetObjectRef.Value as StandaloneDiffEditor;
         }
     }
@@ -997,14 +1009,25 @@ namespace BlazorMonaco.Editor
          * Create a new editor model.
          * You can specify the language that should be set for this model or let the language be inferred from the `uri`.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<TextModel> CreateModel(string value, string language = null, string uri = null)
-            => JsRuntimeExt.Shared.SafeInvokeAsync<TextModel>("blazorMonaco.editor.createModel", value, language, uri);
+            => CreateModel(null, value, language, uri);
+        public static async Task<TextModel> CreateModel(IJSRuntime jsRuntime, string value, string language = null, string uri = null)
+        {
+            var textModel = await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<TextModel>("blazorMonaco.editor.createModel", value, language, uri);
+            if (textModel != null)
+                textModel.JsRuntime = JsRuntimeExt.UpdateRuntime(jsRuntime);
+            return textModel;
+        }
 
         /**
          * Change the language for a model.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task SetModelLanguage(TextModel model, string languageId)
-            => JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.setModelLanguage", model.Uri, languageId);
+            => SetModelLanguage(null, model, languageId);
+        public static Task SetModelLanguage(IJSRuntime jsRuntime, TextModel model, string languageId)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setModelLanguage", model.Uri, languageId);
 
         /**
          * Set the markers for a model.
@@ -1036,14 +1059,32 @@ namespace BlazorMonaco.Editor
         /**
          * Get the model that has `uri` if it exists.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<TextModel> GetModel(string uri)
-            => JsRuntimeExt.Shared.SafeInvokeAsync<TextModel>("blazorMonaco.editor.getModel", uri);
+            => GetModel(null, uri);
+        public static async Task<TextModel> GetModel(IJSRuntime jsRuntime, string uri)
+        {
+            var textModel = await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<TextModel>("blazorMonaco.editor.getModel", uri);
+            if (textModel != null)
+                textModel.JsRuntime = JsRuntimeExt.UpdateRuntime(jsRuntime);
+            return textModel;
+        }
 
         /**
          * Get all the created models.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<List<TextModel>> GetModels()
-            => JsRuntimeExt.Shared.SafeInvokeAsync<List<TextModel>>("blazorMonaco.editor.getModels");
+            => GetModels(null);
+        public static async Task<List<TextModel>> GetModels(IJSRuntime jsRuntime)
+        {
+            var result = await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<List<TextModel>>("blazorMonaco.editor.getModels");
+            result.ForEach(t => {
+                if (t != null)
+                    t.JsRuntime = JsRuntimeExt.UpdateRuntime(jsRuntime);
+            });
+            return result;
+        }
 
         /**
          * Emitted when a model is created.
@@ -1075,20 +1116,29 @@ namespace BlazorMonaco.Editor
         /**
          * Colorize the contents of `domNode` using attribute `data-lang`.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task ColorizeElement(string domNodeId, ColorizerElementOptions options)
-            => JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.colorizeElement", domNodeId, options);
+            => ColorizeElement(null, domNodeId, options);
+        public static Task ColorizeElement(IJSRuntime jsRuntime, string domNodeId, ColorizerElementOptions options)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.colorizeElement", domNodeId, options);
 
         /**
          * Colorize `text` using language `languageId`.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<string> Colorize(string text, string languageId, ColorizerOptions options)
-            => JsRuntimeExt.Shared.SafeInvokeAsync<string>("blazorMonaco.editor.colorize", text, languageId, options);
+            => Colorize(null, text, languageId, options);
+        public static Task<string> Colorize(IJSRuntime jsRuntime, string text, string languageId, ColorizerOptions options)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<string>("blazorMonaco.editor.colorize", text, languageId, options);
 
         /**
          * Colorize a line in a model.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<string> ColorizeModelLine(TextModel model, int lineNumber, int? tabSize = null)
-            => JsRuntimeExt.Shared.SafeInvokeAsync<string>("blazorMonaco.editor.colorizeModelLine", model.Uri, lineNumber, tabSize);
+            => ColorizeModelLine(null, model, lineNumber, tabSize);
+        public static Task<string> ColorizeModelLine(IJSRuntime jsRuntime, TextModel model, int lineNumber, int? tabSize = null)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<string>("blazorMonaco.editor.colorizeModelLine", model.Uri, lineNumber, tabSize);
 
         /**
          * Tokenize `text` using language `languageId`
@@ -1098,20 +1148,29 @@ namespace BlazorMonaco.Editor
         /**
          * Define a new theme or update an existing theme.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task DefineTheme(string themeName, StandaloneThemeData themeData)
-            => JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.defineTheme", themeName, themeData);
+            => DefineTheme(null, themeName, themeData);
+        public static Task DefineTheme(IJSRuntime jsRuntime, string themeName, StandaloneThemeData themeData)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.defineTheme", themeName, themeData);
 
         /**
          * Switches to a theme.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task SetTheme(string themeName)
-            => JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.setTheme", themeName);
+            => SetTheme(null, themeName);
+        public static Task SetTheme(IJSRuntime jsRuntime, string themeName)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setTheme", themeName);
 
         /**
          * Clears all cached font measurements and triggers re-measurement.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task RemeasureFonts()
-            => JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.remeasureFonts");
+            => RemeasureFonts(null);
+        public static Task RemeasureFonts(IJSRuntime jsRuntime)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.remeasureFonts");
 
         /**
          * Register a command.

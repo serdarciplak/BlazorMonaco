@@ -51,11 +51,11 @@ namespace BlazorMonaco.Editor
                 }
 
                 // Create the bridges for the inner editors
-                _originalEditor = StandaloneCodeEditor.CreateVirtualEditor(Id + "_original");
-                _modifiedEditor = StandaloneCodeEditor.CreateVirtualEditor(Id + "_modified");
+                _originalEditor = StandaloneCodeEditor.CreateVirtualEditor(JsRuntime, Id + "_original");
+                _modifiedEditor = StandaloneCodeEditor.CreateVirtualEditor(JsRuntime, Id + "_modified");
 
                 // Create the editor
-                await Global.CreateDiffEditor(Id, options, null, _dotnetObjectRef, OriginalEditor._dotnetObjectRef, ModifiedEditor._dotnetObjectRef);
+                await Global.CreateDiffEditor(JsRuntime, Id, options, null, _dotnetObjectRef, OriginalEditor._dotnetObjectRef, ModifiedEditor._dotnetObjectRef);
             }
             await base.OnAfterRenderAsync(firstRender);
         }
@@ -79,7 +79,7 @@ namespace BlazorMonaco.Editor
             }
 
             _commands[keybinding.ToString()] = new List<CommandHandler> { handler };
-            return jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.addCommand", Id, keybinding, context);
+            return JsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.addCommand", Id, keybinding, context);
         }
 
         //createContextKey<T extends ContextKeyValue = ContextKeyValue>(key: string, defaultValue: T): IContextKey<T>;
@@ -109,7 +109,7 @@ namespace BlazorMonaco.Editor
             }
 
             _actions[actionDescriptor.Id] = new List<ActionDescriptor> { actionDescriptor };
-            return jsRuntime.SafeInvokeAsync("blazorMonaco.editor.addAction", Id, actionDescriptor);
+            return JsRuntime.SafeInvokeAsync("blazorMonaco.editor.addAction", Id, actionDescriptor);
         }
 
         public new StandaloneCodeEditor OriginalEditor => _originalEditor as StandaloneCodeEditor;
@@ -312,7 +312,7 @@ namespace BlazorMonaco.Editor
          * @see {@link ICodeEditor.getContainerDomNode}
          */
         public Task<string> GetContainerDomNodeId()
-            => jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getContainerDomNodeId", Id);
+            => JsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getContainerDomNodeId", Id);
         /**
          * An event emitted when the diff information computed by this diff editor has been updated.
          * @event
@@ -331,7 +331,7 @@ namespace BlazorMonaco.Editor
          * Type the getModel() of IEditor.
          */
         public Task<DiffEditorModel> GetModel()
-            => jsRuntime.SafeInvokeAsync<DiffEditorModel>("blazorMonaco.editor.getInstanceDiffModel", Id);
+            => JsRuntime.SafeInvokeAsync<DiffEditorModel>("blazorMonaco.editor.getInstanceDiffModel", Id);
         /**
          * Sets the current model attached to this editor.
          * If the previous model was created by the editor via the value key in the options
@@ -341,7 +341,7 @@ namespace BlazorMonaco.Editor
          * It is safe to call setModel(null) to simply detach the current model from the editor.
          */
         public Task SetModel(DiffEditorModel model)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.setInstanceDiffModel", Id, model);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.setInstanceDiffModel", Id, model);
         /**
          * Get the `original` editor.
          */
@@ -380,7 +380,7 @@ namespace BlazorMonaco.Editor
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
-            return jsRuntime.SafeInvokeAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
+            return JsRuntime.SafeInvokeAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
         }
     }
 }
