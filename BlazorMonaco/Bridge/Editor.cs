@@ -28,14 +28,14 @@ namespace BlazorMonaco.Editor
         public EventCallback OnDidInit { get; set; }
 
         [Inject]
-        protected IJSRuntime jsRuntime { get; set; }
+        protected IJSRuntime JsRuntime { get; set; }
 
         internal DotNetObjectReference<Editor> _dotnetObjectRef;
         
         protected override void OnInitialized()
         {
             base.OnInitialized();
-            JsRuntimeExt.Shared = jsRuntime;
+            JsRuntimeExt.UpdateRuntime(JsRuntime); // Update the static IJSRuntime instance for WASM apps
             _dotnetObjectRef = DotNetObjectReference.Create(this);
         }
 
@@ -48,7 +48,7 @@ namespace BlazorMonaco.Editor
         {
             base.OnParametersSet();
             if (string.IsNullOrWhiteSpace(Id))
-                Id = "blazor-monaco-" + Guid.NewGuid().ToString();
+                Id = $"blazor-monaco-{Guid.NewGuid()}";
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -68,7 +68,7 @@ namespace BlazorMonaco.Editor
         }
 
         internal Task SetEventListener(string eventName)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.setEventListener", Id, eventName);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.setEventListener", Id, eventName);
 
         public virtual async Task EventCallback(string eventName, string eventJson)
         {
@@ -97,7 +97,7 @@ namespace BlazorMonaco.Editor
          * Dispose the editor.
          */
         public Task DisposeEditor()
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.dispose", Id);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.dispose", Id);
         /**
          * Get a unique id for this editor instance.
          */
@@ -107,7 +107,7 @@ namespace BlazorMonaco.Editor
          * This is to avoid an instanceof check
          */
         public Task<string> GetEditorType()
-            => jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getEditorType", Id);
+            => JsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getEditorType", Id);
         /**
          * Update the editor's options after the editor has been created.
          */
@@ -121,17 +121,17 @@ namespace BlazorMonaco.Editor
          * If a dimension is passed in, the passed in value will be used.
          */
         public Task Layout(Dimension dimension = null)
-            => jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.layout", Id, dimension);
+            => JsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.layout", Id, dimension);
         /**
          * Brings browser focus to the editor text
          */
         public Task Focus()
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.focus", Id);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.focus", Id);
         /**
          * Returns true if the text inside this editor is focused (i.e. cursor is blinking).
          */
         public Task<bool> HasTextFocus()
-            => jsRuntime.SafeInvokeAsync<bool>("blazorMonaco.editor.hasTextFocus", Id);
+            => JsRuntime.SafeInvokeAsync<bool>("blazorMonaco.editor.hasTextFocus", Id);
         /**
          * Returns all actions associated with this editor.
          */
@@ -148,34 +148,34 @@ namespace BlazorMonaco.Editor
          * Given a position, returns a column number that takes tab-widths into account.
          */
         public Task<int> GetVisibleColumnFromPosition(Position position)
-            => jsRuntime.SafeInvokeAsync<int>("blazorMonaco.editor.getVisibleColumnFromPosition", Id, position);
+            => JsRuntime.SafeInvokeAsync<int>("blazorMonaco.editor.getVisibleColumnFromPosition", Id, position);
         /**
          * Returns the primary position of the cursor.
          */
         public Task<Position> GetPosition()
-            => jsRuntime.SafeInvokeAsync<Position>("blazorMonaco.editor.getPosition", Id);
+            => JsRuntime.SafeInvokeAsync<Position>("blazorMonaco.editor.getPosition", Id);
         /**
          * Set the primary position of the cursor. This will remove any secondary cursors.
          * @param position New primary cursor's position
          * @param source Source of the call that caused the position
          */
         public Task SetPosition(Position position, string source)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.setPosition", Id, position, source);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.setPosition", Id, position, source);
         /**
          * Scroll vertically as necessary and reveal a line.
          */
         public Task RevealLine(int lineNumber, ScrollType? scrollType = null)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealLine", Id, lineNumber, scrollType);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealLine", Id, lineNumber, scrollType);
         /**
          * Scroll vertically as necessary and reveal a line centered vertically.
          */
         public Task RevealLineInCenter(int lineNumber, ScrollType? scrollType = null)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealLineInCenter", Id, lineNumber, scrollType);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealLineInCenter", Id, lineNumber, scrollType);
         /**
          * Scroll vertically as necessary and reveal a line centered vertically only if it lies outside the viewport.
          */
         public Task RevealLineInCenterIfOutsideViewport(int lineNumber, ScrollType? scrollType = null)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealLineInCenterIfOutsideViewport", Id, lineNumber, scrollType);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealLineInCenterIfOutsideViewport", Id, lineNumber, scrollType);
         /**
          * Scroll vertically as necessary and reveal a line close to the top of the viewport,
          * optimized for viewing a code definition.
@@ -185,17 +185,17 @@ namespace BlazorMonaco.Editor
          * Scroll vertically or horizontally as necessary and reveal a position.
          */
         public Task RevealPosition(Position position, ScrollType? scrollType = null)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealPosition", Id, position, scrollType);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealPosition", Id, position, scrollType);
         /**
          * Scroll vertically or horizontally as necessary and reveal a position centered vertically.
          */
         public Task RevealPositionInCenter(Position position, ScrollType? scrollType = null)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealPositionInCenter", Id, position, scrollType);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealPositionInCenter", Id, position, scrollType);
         /**
          * Scroll vertically or horizontally as necessary and reveal a position centered vertically only if it lies outside the viewport.
          */
         public Task RevealPositionInCenterIfOutsideViewport(Position position, ScrollType? scrollType = null)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealPositionInCenterIfOutsideViewport", Id, position, scrollType);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealPositionInCenterIfOutsideViewport", Id, position, scrollType);
         /**
          * Scroll vertically or horizontally as necessary and reveal a position close to the top of the viewport,
          * optimized for viewing a code definition.
@@ -205,12 +205,12 @@ namespace BlazorMonaco.Editor
          * Returns the primary selection of the editor.
          */
         public Task<Selection> GetSelection()
-            => jsRuntime.SafeInvokeAsync<Selection>("blazorMonaco.editor.getSelection", Id);
+            => JsRuntime.SafeInvokeAsync<Selection>("blazorMonaco.editor.getSelection", Id);
         /**
          * Returns all the selections of the editor.
          */
         public Task<List<Selection>> GetSelections()
-            => jsRuntime.SafeInvokeAsync<List<Selection>>("blazorMonaco.editor.getSelections", Id);
+            => JsRuntime.SafeInvokeAsync<List<Selection>>("blazorMonaco.editor.getSelections", Id);
         /**
          * Set the primary selection of the editor. This will remove any secondary cursors.
          * @param selection The new selection
@@ -223,7 +223,7 @@ namespace BlazorMonaco.Editor
          * @param source Source of the call that caused the selection
          */
         public Task SetSelection(Range selection, string source)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.setSelection", Id, selection, source);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.setSelection", Id, selection, source);
         /**
          * Set the primary selection of the editor. This will remove any secondary cursors.
          * @param selection The new selection
@@ -236,7 +236,7 @@ namespace BlazorMonaco.Editor
          * @param source Source of the call that caused the selection
          */
         public Task SetSelection(Selection selection, string source)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.setSelection", Id, selection, source);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.setSelection", Id, selection, source);
         /**
          * Set the selections for all the cursors of the editor.
          * Cursors will be removed or added, as necessary.
@@ -244,22 +244,22 @@ namespace BlazorMonaco.Editor
          * @param source Source of the call that caused the selection
          */
         public Task SetSelections(List<Selection> selections, string source)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.setSelections", Id, selections, source);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.setSelections", Id, selections, source);
         /**
          * Scroll vertically as necessary and reveal lines.
          */
         public Task RevealLines(int startLineNumber, int endLineNumber, ScrollType? scrollType = null)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealLines", Id, startLineNumber, endLineNumber, scrollType);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealLines", Id, startLineNumber, endLineNumber, scrollType);
         /**
          * Scroll vertically as necessary and reveal lines centered vertically.
          */
         public Task RevealLinesInCenter(int lineNumber, int endLineNumber, ScrollType? scrollType = null)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealLinesInCenter", Id, lineNumber, endLineNumber, scrollType);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealLinesInCenter", Id, lineNumber, endLineNumber, scrollType);
         /**
          * Scroll vertically as necessary and reveal lines centered vertically only if it lies outside the viewport.
          */
         public Task RevealLinesInCenterIfOutsideViewport(int lineNumber, int endLineNumber, ScrollType? scrollType = null)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealLinesInCenterIfOutsideViewport", Id, lineNumber, endLineNumber, scrollType);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealLinesInCenterIfOutsideViewport", Id, lineNumber, endLineNumber, scrollType);
         /**
          * Scroll vertically as necessary and reveal lines close to the top of the viewport,
          * optimized for viewing a code definition.
@@ -269,22 +269,22 @@ namespace BlazorMonaco.Editor
          * Scroll vertically or horizontally as necessary and reveal a range.
          */
         public Task RevealRange(Range range, ScrollType? scrollType = null)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealRange", Id, range, scrollType);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealRange", Id, range, scrollType);
         /**
          * Scroll vertically or horizontally as necessary and reveal a range centered vertically.
          */
         public Task RevealRangeInCenter(Range range, ScrollType? scrollType = null)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealRangeInCenter", Id, range, scrollType);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealRangeInCenter", Id, range, scrollType);
         /**
          * Scroll vertically or horizontally as necessary and reveal a range at the top of the viewport.
          */
         public Task RevealRangeAtTop(Range range, ScrollType? scrollType = null)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealRangeAtTop", Id, range, scrollType);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealRangeAtTop", Id, range, scrollType);
         /**
          * Scroll vertically or horizontally as necessary and reveal a range centered vertically only if it lies outside the viewport.
          */
         public Task RevealRangeInCenterIfOutsideViewport(Range range, ScrollType? scrollType = null)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealRangeInCenterIfOutsideViewport", Id, range, scrollType);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.revealRangeInCenterIfOutsideViewport", Id, range, scrollType);
         /**
          * Scroll vertically or horizontally as necessary and reveal a range close to the top of the viewport,
          * optimized for viewing a code definition.
@@ -304,7 +304,7 @@ namespace BlazorMonaco.Editor
         public Task Trigger(string source, string handlerId, object payload = null)
         {
             var payloadJsonElement = JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(payload));
-            return jsRuntime.SafeInvokeAsync("blazorMonaco.editor.trigger", Id, source, handlerId, payloadJsonElement);
+            return JsRuntime.SafeInvokeAsync("blazorMonaco.editor.trigger", Id, source, handlerId, payloadJsonElement);
         }
         /**
          * Gets the current model attached to this editor.

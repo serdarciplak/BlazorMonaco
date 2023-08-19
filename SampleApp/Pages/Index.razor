@@ -1,4 +1,5 @@
 ﻿@page "/"
+@inject IJSRuntime jsRuntime
 
 <h3>Code Editor</h3>
 
@@ -87,7 +88,7 @@
     private async Task ChangeTheme(ChangeEventArgs e)
     {
         Console.WriteLine($"setting theme to: {e.Value?.ToString()}");
-        await Global.SetTheme(e.Value?.ToString());
+        await Global.SetTheme(jsRuntime, e.Value?.ToString());
     }
 
     private async Task SetValue()
