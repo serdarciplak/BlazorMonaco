@@ -19,19 +19,19 @@
         <button @onclick="GetValue">Get Value</button>
     </div>
     <div style="margin:10px 0;">
-        <button @onclick="AddCommand">Add Command (Ctrl+Enter)</button>
+        <button @onclick="AddCommand">Add Command</button> <span style="font-size:10px">Ctrl+Enter to trigger the command.</span>
     </div>
     <div style="margin:10px 0;">
-        <button @onclick="AddAction">Add Action (Ctrl+B)</button>
+        <button @onclick="AddAction">Add Action</button> <span style="font-size:10px">Ctrl+B to trigger the action.</span>
     </div>
     <div style="margin:10px 0;">
-        <button @onclick="RegisterCodeActionProvider">RegisterCodeActionProvider</button>
+        <button @onclick="RegisterCodeActionProvider">RegisterCodeActionProvider</button> <span style="font-size:10px">Hover over the "this" on line:4</span>
     </div>
     <div style="margin:10px 0;">
-        <button @onclick="RegisterCompletionItemProvider">RegisterCompletionItemProvider</button>
+        <button @onclick="RegisterCompletionItemProvider">RegisterCompletionItemProvider</button> <span style="font-size:10px">Ctrl+Space on the "this" on line:4</span>
     </div>
     <div style="margin:10px 0;">
-        See the console for results.
+        See the console for the button results.
     </div>
 </div>
 
@@ -145,9 +145,9 @@
                 CodeAsObject = new MarkerCode
                 {
                     TargetUri = "https://www.google.com",
-                    Value = "vlue"
+                    Value = "my-value"
                 },
-                Message = "Marker sample",
+                Message = "Marker example",
                 Severity = MarkerSeverity.Warning,
                 StartLineNumber = 4,
                 StartColumn = 3,
@@ -168,7 +168,7 @@
             {
                 new CodeAction
                 {
-                    Title = "Fix sample",
+                    Title = "Fix example",
                     Kind = "quickfix",
                     Diagnostics = markers,
                     Edit = new WorkspaceEdit
@@ -206,7 +206,7 @@
                     {
                         LabelAsString = "Replace by THIS",
                         Kind = CompletionItemKind.Variable,
-                        Detail = "PRESS ENTER",
+                        Detail = "this -> THIS",
                         InsertText = "THIS",
                         Preselect = true,
                         RangeAsObject = new BlazorMonaco.Range
