@@ -182,7 +182,7 @@ app {
 }
 
 .monaco-editor-container {
-    height: 200px;
+    height: 500px;
     border: 1px solid gray;
 }
 

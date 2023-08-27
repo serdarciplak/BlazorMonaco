@@ -1,6 +1,9 @@
 # Change Log
 
 ## 3.1.0
+* Added support for model markers.
+* Added support for RegisterCodeActionProviders.
+* Added support for RegisterCompletionItemProviders.
 * Added support for server-side Blazor apps.
 * Bug fixes.
 
