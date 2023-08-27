@@ -4,6 +4,48 @@ window.blazorMonaco.editors = [];
 
 window.blazorMonaco.editor = {
 
+    //#region Utilities
+
+    convertUriToString: function (obj) {
+        if (obj == null)
+            return obj;
+        if (Array.isArray(obj))
+            return obj.map(this.convertUriToString);
+
+        Object.keys(obj).forEach(k => {
+            if (monaco.Uri.isUri(obj[k]))
+                obj[k] = obj[k].toString();
+            else if (typeof obj[k] === 'object')
+                blazorMonaco.editor.convertUriToString(obj[k]);
+        });
+
+        return obj;
+    },
+
+    removeCircularReferences: function (orig) {
+        if (Array.isArray(orig))
+            return orig.map(this.removeCircularReferences);
+
+        const circularReferenceReplacer = () => {
+            const seen = new WeakSet();
+            return (key, value) => {
+                if (typeof value === "object" && value !== null) {
+                    if (seen.has(value)) {
+                        return;
+                    }
+                    seen.add(value);
+                }
+                return value;
+            };
+        };
+
+        let json_str = JSON.stringify(orig, circularReferenceReplacer());
+        let cloned = JSON.parse(json_str);
+        return cloned;
+    },
+
+    //#endregion
+
     //#region Static methods
 
     colorize: async function (text, languageId, options) {
@@ -128,27 +170,44 @@ window.blazorMonaco.editor = {
     setModelLanguage: function (uriStr, languageId) {
         var model = this.model.getModel(uriStr);
         if (model == null)
-            return null;
-        return monaco.editor.setModelLanguage(model, languageId);
+            return;
+        monaco.editor.setModelLanguage(model, languageId);
+    },
+
+    setModelMarkers: function (uriStr, owner, markers) {
+        var model = this.model.getModel(uriStr);
+        if (model == null)
+            return;
+        monaco.editor.setModelMarkers(model, owner, markers);
+    },
+
+    removeAllMarkers: function (owner) {
+        monaco.editor.removeAllMarkers(owner);
+    },
+
+    getModelMarkers: function (filter) {
+        var markers = monaco.editor.getModelMarkers(filter);
+        return blazorMonaco.editor.convertUriToString(markers);
     },
 
     setTheme: function (theme) {
         monaco.editor.setTheme(theme);
-        return true;
     },
 
-    getEditorHolder: function (id, unobstrusive = false) {
+    getEditorHolder: function (id, silent = false) {
         let editorHolder = window.blazorMonaco.editors.find(e => e.id === id);
         if (!editorHolder) {
-            if (unobstrusive) {
-                console.log("WARNING : Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length);
+            if (silent != false) {
+                if (silent != true) // If silent is null, log a warning
+                    console.log("WARNING : Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length);
                 return null;
             }
             throw "Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length;
         }
         else if (!editorHolder.editor) {
-            if (unobstrusive) {
-                console.log("WARNING : editor is null for editorHolder: " + editorHolder);
+            if (silent != false) {
+                if (silent != true) // If silent is null, log a warning
+                    console.log("WARNING : editor is null for editorHolder: " + editorHolder);
                 return null;
             }
             throw "editor is null for editorHolder: " + editorHolder;
@@ -156,8 +215,8 @@ window.blazorMonaco.editor = {
         return editorHolder;
     },
 
-    getEditor: function (id, unobstrusive = false) {
-        let editorHolder = this.getEditorHolder(id, unobstrusive);
+    getEditor: function (id, silent = false) {
+        let editorHolder = this.getEditorHolder(id, silent);
         return editorHolder == null ? null : editorHolder.editor;
     },
 
@@ -481,10 +540,7 @@ window.blazorMonaco.editor = {
         let listener = function (e) {
             var eventJson = JSON.stringify(e);
             if (eventName == "OnDidChangeModel") {
-                eventJson = JSON.stringify({
-                    oldModelUri: e.oldModelUrl == null ? null : e.oldModelUrl.toString(),
-                    newModelUri: e.newModelUrl == null ? null : e.newModelUrl.toString(),
-                });
+                eventJson = JSON.stringify(blazorMonaco.editor.convertUriToString(e));
             }
             else if (eventName == "OnDidChangeConfiguration") {
                 eventJson = JSON.stringify(e._values);
@@ -786,32 +842,38 @@ window.blazorMonaco.editor = {
 
         getLineDecorations: function (uriStr, lineNumber, ownerId, filterOutValidation) {
             let model = this.getModel(uriStr);
-            return model.getLineDecorations(lineNumber, ownerId, filterOutValidation);
+            let result = model.getLineDecorations(lineNumber, ownerId, filterOutValidation);
+            return blazorMonaco.editor.removeCircularReferences(result);
         },
 
         getLinesDecorations: function (uriStr, startLineNumber, endLineNumber, ownerId, filterOutValidation) {
             let model = this.getModel(uriStr);
-            return model.getLinesDecorations(startLineNumber, endLineNumber, ownerId, filterOutValidation);
+            let result = model.getLinesDecorations(startLineNumber, endLineNumber, ownerId, filterOutValidation);
+            return blazorMonaco.editor.removeCircularReferences(result);
         },
 
         getDecorationsInRange: function (uriStr, range, ownerId, filterOutValidation) {
             let model = this.getModel(uriStr);
-            return model.getDecorationsInRange(range, ownerId, filterOutValidation);
+            let result = model.getDecorationsInRange(range, ownerId, filterOutValidation);
+            return blazorMonaco.editor.removeCircularReferences(result);
         },
 
         getAllDecorations: function (uriStr, ownerId, filterOutValidation) {
             let model = this.getModel(uriStr);
-            return model.getAllDecorations(ownerId, filterOutValidation);
-        },
-
-        getInjectedTextDecorations: function (uriStr, ownerId) {
-            let model = this.getModel(uriStr);
-            return model.getInjectedTextDecorations(ownerId);
+            let result = model.getAllDecorations(ownerId, filterOutValidation);
+            return blazorMonaco.editor.removeCircularReferences(result);
         },
 
         getOverviewRulerDecorations: function (uriStr, ownerId, filterOutValidation) {
             let model = this.getModel(uriStr);
-            return model.getOverviewRulerDecorations(ownerId, filterOutValidation);
+            let result = model.getOverviewRulerDecorations(ownerId, filterOutValidation);
+            return blazorMonaco.editor.removeCircularReferences(result);
+        },
+
+        getInjectedTextDecorations: function (uriStr, ownerId) {
+            let model = this.getModel(uriStr);
+            let result = model.getInjectedTextDecorations(ownerId);
+            return blazorMonaco.editor.removeCircularReferences(result);
         },
 
         normalizeIndentation: function (uriStr, str) {
@@ -858,6 +920,50 @@ window.blazorMonaco.editor = {
             let model = this.getModel(uriStr);
             return model.dispose();
         }
+    }
+
+    //#endregion
+}
+
+window.blazorMonaco.languages = {
+    //#region Static methods
+
+    registerCodeActionProvider: async function (language, codeActionProviderRef, metadata) {
+        monaco.languages.registerCodeActionProvider(language, {
+            provideCodeActions: (model, range, context, cancellationToken) => {
+                return codeActionProviderRef.invokeMethodAsync("ProvideCodeActions", decodeURI(model.uri.toString()), range, context)
+                    .then(result =>
+                    {
+                        (result.actions || []).forEach(action => {
+                            (action.edit.edits || []).forEach(edit => {
+                                if (edit.resource != null)
+                                    edit.resource = monaco.Uri.parse(edit.resource)
+                                if (edit.oldResource != null)
+                                    edit.oldResource = monaco.Uri.parse(edit.oldResource)
+                                if (edit.newResource != null)
+                                    edit.newResource = monaco.Uri.parse(edit.newResource)
+                            });
+                        });
+                        result.dispose = () => { };
+                        return result;
+                    });
+            },
+            resolveCodeAction: (codeAction, cancellationToken) => {
+                return codeActionProviderRef.invokeMethodAsync("ResolveCodeAction", codeAction);
+            }
+        }, metadata);
+    },
+
+    registerCompletionItemProvider: async function (language, triggerCharacters, completionItemProviderRef) {
+        monaco.languages.registerCompletionItemProvider(language, {
+            triggerCharacters: triggerCharacters,
+            provideCompletionItems: (model, position, context, cancellationToken) => {
+                return completionItemProviderRef.invokeMethodAsync("ProvideCompletionItems", decodeURI(model.uri.toString()), position, context);
+            },
+            resolveCompletionItem: (completionItem, cancellationToken) => {
+                return completionItemProviderRef.invokeMethodAsync("ResolveCompletionItem", completionItem);
+            }
+        });
     }
 
     //#endregion

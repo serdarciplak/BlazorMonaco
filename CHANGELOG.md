@@ -1,5 +1,12 @@
 # Change Log
 
+## 3.1.0
+* Added support for model markers.
+* Added support for RegisterCodeActionProviders.
+* Added support for RegisterCompletionItemProviders.
+* Added support for server-side Blazor apps.
+* Bug fixes.
+
 ## 3.0.0
 * Updated to Monaco Editor v0.34.1
 * Added support for net6.0 and net7.0

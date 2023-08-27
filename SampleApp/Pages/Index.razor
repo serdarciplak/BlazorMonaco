@@ -1,4 +1,5 @@
 ﻿@page "/"
+@inject IJSRuntime jsRuntime
 
 <h3>Code Editor</h3>
 
@@ -18,13 +19,19 @@
         <button @onclick="GetValue">Get Value</button>
     </div>
     <div style="margin:10px 0;">
-        <button @onclick="AddCommand">Add Command (Ctrl+Enter)</button>
+        <button @onclick="AddCommand">Add Command</button> <span style="font-size:10px">Ctrl+Enter to trigger the command.</span>
     </div>
     <div style="margin:10px 0;">
-        <button @onclick="AddAction">Add Action (Ctrl+B)</button>
+        <button @onclick="AddAction">Add Action</button> <span style="font-size:10px">Ctrl+B to trigger the action.</span>
     </div>
     <div style="margin:10px 0;">
-        See the console for results.
+        <button @onclick="RegisterCodeActionProvider">RegisterCodeActionProvider</button> <span style="font-size:10px">Hover over the "this" on line:4</span>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="RegisterCompletionItemProvider">RegisterCompletionItemProvider</button> <span style="font-size:10px">Ctrl+Space on the "this" on line:4</span>
+    </div>
+    <div style="margin:10px 0;">
+        See the console for the button results.
     </div>
 </div>
 
@@ -87,7 +94,7 @@
     private async Task ChangeTheme(ChangeEventArgs e)
     {
         Console.WriteLine($"setting theme to: {e.Value?.ToString()}");
-        await Global.SetTheme(e.Value?.ToString());
+        await BlazorMonaco.Editor.Global.SetTheme(jsRuntime, e.Value?.ToString());
     }
 
     private async Task SetValue()
@@ -125,5 +132,94 @@
             }
         };
         await _editor.AddAction(actionDescriptor);
+    }
+
+    private async Task RegisterCodeActionProvider()
+    {
+        // Set sample marker
+        var model = await _editor.GetModel();
+        var markers = new List<MarkerData>
+        {
+            new MarkerData
+            {
+                CodeAsObject = new MarkerCode
+                {
+                    TargetUri = "https://www.google.com",
+                    Value = "my-value"
+                },
+                Message = "Marker example",
+                Severity = MarkerSeverity.Warning,
+                StartLineNumber = 4,
+                StartColumn = 3,
+                EndLineNumber = 4,
+                EndColumn = 7
+            }
+        };
+        await BlazorMonaco.Editor.Global.SetModelMarkers(jsRuntime, model, "default", markers);
+
+        // Register quick fix for marker
+        await BlazorMonaco.Languages.Global.RegisterCodeActionProvider(jsRuntime, "javascript", (modelUri, range, context) =>
+        {
+            var codeActionList = new CodeActionList();
+            if (context.Markers.Count == 0)
+                return codeActionList;
+
+            codeActionList.Actions = new List<CodeAction>
+            {
+                new CodeAction
+                {
+                    Title = "Fix example",
+                    Kind = "quickfix",
+                    Diagnostics = markers,
+                    Edit = new WorkspaceEdit
+                    {
+                        Edits = new List<IWorkspaceEdit>
+                        {
+                            new WorkspaceTextEdit
+                            {
+                                ResourceUri = modelUri,
+                                TextEdit = new TextEditWithInsertAsSnippet
+                                {
+                                    Range = range,
+                                    Text = "THIS"
+                                }
+                            }
+                        }
+                    },
+                    IsPreferred = true
+                }
+            };
+            return codeActionList;
+        });
+    }
+
+    private async Task RegisterCompletionItemProvider()
+    {
+        // Register completion item to replace warning item
+        await BlazorMonaco.Languages.Global.RegisterCompletionItemProvider(jsRuntime, "javascript", (modelUri, position, context) =>
+        {
+            var completionList = new CompletionList()
+            {
+                Suggestions = new List<CompletionItem>
+                {
+                    new CompletionItem
+                    {
+                        LabelAsString = "Replace by THIS",
+                        Kind = CompletionItemKind.Variable,
+                        Detail = "this -> THIS",
+                        InsertText = "THIS",
+                        Preselect = true,
+                        RangeAsObject = new BlazorMonaco.Range
+                        {
+                            StartLineNumber = 4,
+                            StartColumn = 3,
+                            EndLineNumber = 4,
+                            EndColumn = 7
+                        }
+                    }
+                }
+            };
+            return completionList;
+        });
     }
 }

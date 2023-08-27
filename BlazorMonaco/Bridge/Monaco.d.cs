@@ -1,10 +1,9 @@
-﻿using BlazorMonaco.Helpers;
+﻿using BlazorMonaco.Editor;
+using BlazorMonaco.Helpers;
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -23,7 +22,8 @@ namespace BlazorMonaco
 {
     //export type Thenable<T> = PromiseLike<T>;
 
-    public class Environment {
+    public class Environment
+    {
         public bool? GlobalAPI { get; set; }
         public string BaseUrl { get; set; }
         //getWorker?(workerId: string, label: string): Worker;
@@ -54,7 +54,8 @@ namespace BlazorMonaco
         Deprecated = 2
     }
 
-    public enum MarkerSeverity {
+    public enum MarkerSeverity
+    {
         Hint = 1,
         Info = 2,
         Warning = 4,
@@ -444,9 +445,7 @@ namespace BlazorMonaco
         public bool? SupportThemeIcons { get; set; }
         public bool? SupportHtml { get; set; }
         public UriComponents BaseUri { get; set; }
-        /*uris?: {
-            [href: string]: UriComponents;
-        };*/
+        public Dictionary<string, UriComponents> Uris { get; set; }
     }
 
     public class KeyboardEvent
@@ -841,7 +840,8 @@ namespace BlazorMonaco
         RTL = 1
     }
 
-    public class Token {
+    public class Token
+    {
         //_tokenBrand: void;
         public int Offset { get; set; }
         public string Type { get; set; }
@@ -851,7 +851,8 @@ namespace BlazorMonaco
     }
 }
 
-namespace BlazorMonaco.Editor {
+namespace BlazorMonaco.Editor
+{
 
     /*export interface IDiffNavigator {
         canNavigate(): boolean;
@@ -867,24 +868,21 @@ namespace BlazorMonaco.Editor {
          * `domElement` should be empty (not contain other dom nodes).
          * The editor will read the size of `domElement`.
          */
-        internal static async Task<StandaloneCodeEditor> Create(string domElementId, StandaloneEditorConstructionOptions options, EditorOverrideServices overrideServices, DotNetObjectReference<Editor> dotnetObjectRef)
+        internal static async Task<StandaloneCodeEditor> Create(
+            IJSRuntime jsRuntime,
+            string domElementId,
+            StandaloneEditorConstructionOptions options,
+            EditorOverrideServices overrideServices,
+            DotNetObjectReference<Editor> dotnetObjectRef)
         {
             options = options ?? new StandaloneEditorConstructionOptions();
-
+            
             // Convert the options object into a JsonElement to get rid of the properties with null values
-            var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
-            {
-#if !NET6_0_OR_GREATER
-                IgnoreNullValues = true,
-#else
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-#endif
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+            var optionsJson = JsonSerializer.Serialize(options, JsonSerializerExt.DefaultOptions);
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
 
             // Create the editor
-            await JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.create", domElementId, optionsDict, overrideServices, dotnetObjectRef);
+            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.create", domElementId, optionsDict, overrideServices, dotnetObjectRef);
             return dotnetObjectRef.Value as StandaloneCodeEditor;
         }
 
@@ -916,29 +914,29 @@ namespace BlazorMonaco.Editor {
          * `domElement` should be empty (not contain other dom nodes).
          * The editor will read the size of `domElement`.
          */
-        internal static async Task<StandaloneDiffEditor> CreateDiffEditor(string domElementId, StandaloneDiffEditorConstructionOptions options, EditorOverrideServices overrideServices, DotNetObjectReference<Editor> dotnetObjectRef, DotNetObjectReference<Editor> dotnetObjectRefOriginal, DotNetObjectReference<Editor> dotnetObjectRefModified)
+        internal static async Task<StandaloneDiffEditor> CreateDiffEditor(
+            IJSRuntime jsRuntime,
+            string domElementId,
+            StandaloneDiffEditorConstructionOptions options,
+            EditorOverrideServices overrideServices,
+            DotNetObjectReference<Editor> dotnetObjectRef,
+            DotNetObjectReference<Editor> dotnetObjectRefOriginal,
+            DotNetObjectReference<Editor> dotnetObjectRefModified)
         {
             options = options ?? new StandaloneDiffEditorConstructionOptions();
-
+            
             // Convert the options object into a JsonElement to get rid of the properties with null values
-            var optionsJson = JsonSerializer.Serialize(options, new JsonSerializerOptions
-            {
-                #if !NET6_0_OR_GREATER
-                IgnoreNullValues = true,
-                #else
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                #endif
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+            var optionsJson = JsonSerializer.Serialize(options, JsonSerializerExt.DefaultOptions);
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
 
             // Create the editor
-            await JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.createDiffEditor", domElementId, optionsDict, overrideServices, dotnetObjectRef, dotnetObjectRefOriginal, dotnetObjectRefModified);
+            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.createDiffEditor", domElementId, optionsDict, overrideServices, dotnetObjectRef, dotnetObjectRefOriginal, dotnetObjectRefModified);
             return dotnetObjectRef.Value as StandaloneDiffEditor;
         }
     }
 
-    public class DiffNavigatorOptions {
+    public class DiffNavigatorOptions
+    {
         public bool? FollowsCaret { get; set; }
         public bool? IgnoreCharChanges { get; set; }
         public bool? AlwaysRevealFirst { get; set; }
@@ -999,35 +997,52 @@ namespace BlazorMonaco.Editor {
          * Create a new editor model.
          * You can specify the language that should be set for this model or let the language be inferred from the `uri`.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<TextModel> CreateModel(string value, string language = null, string uri = null)
-            => JsRuntimeExt.Shared.SafeInvokeAsync<TextModel>("blazorMonaco.editor.createModel", value, language, uri);
+            => CreateModel(null, value, language, uri);
+        public static async Task<TextModel> CreateModel(IJSRuntime jsRuntime, string value, string language = null, string uri = null)
+        {
+            var textModel = await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<TextModel>("blazorMonaco.editor.createModel", value, language, uri);
+            if (textModel != null)
+                textModel.JsRuntime = JsRuntimeExt.UpdateRuntime(jsRuntime);
+            return textModel;
+        }
 
         /**
          * Change the language for a model.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task SetModelLanguage(TextModel model, string languageId)
-            => JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.setModelLanguage", model.Uri, languageId);
+            => SetModelLanguage(null, model, languageId);
+        public static Task SetModelLanguage(IJSRuntime jsRuntime, TextModel model, string languageId)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setModelLanguage", model.Uri, languageId);
 
         /**
          * Set the markers for a model.
          */
-        //export function setModelMarkers(model: ITextModel, owner: string, markers: IMarkerData[]): void;
+        public static Task SetModelMarkers(IJSRuntime jsRuntime, TextModel model, string owner, List<MarkerData> markers)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setModelMarkers", model.Uri, owner, markers);
 
         /**
          * Remove all markers of an owner.
          */
-        //export function removeAllMarkers(owner: string) : void;
+        public static Task RemoveAllMarkers(IJSRuntime jsRuntime, string owner)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.removeAllMarkers", owner);
 
         /**
          * Get markers for owner and/or resource
          *
          * @returns list of markers
          */
-        /*export function getModelMarkers(filter: {
-            owner?: string;
-            resource?: Uri;
-            take?: number;
-        }): IMarker[];*/
+        public static Task<List<Marker>> GetModelMarkers(IJSRuntime jsRuntime, GetModelMarkersFilter filter)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<List<Marker>>("blazorMonaco.editor.getModelMarkers", filter);
+
+        public class GetModelMarkersFilter
+        {
+            public string Owner { get; set; }
+            public string Resource { get; set; }
+            public int? Take { get; set; }
+        }
 
         /**
          * Emitted when markers change for a model.
@@ -1038,14 +1053,32 @@ namespace BlazorMonaco.Editor {
         /**
          * Get the model that has `uri` if it exists.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<TextModel> GetModel(string uri)
-            => JsRuntimeExt.Shared.SafeInvokeAsync<TextModel>("blazorMonaco.editor.getModel", uri);
+            => GetModel(null, uri);
+        public static async Task<TextModel> GetModel(IJSRuntime jsRuntime, string uri)
+        {
+            var textModel = await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<TextModel>("blazorMonaco.editor.getModel", uri);
+            if (textModel != null)
+                textModel.JsRuntime = JsRuntimeExt.UpdateRuntime(jsRuntime);
+            return textModel;
+        }
 
         /**
          * Get all the created models.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<List<TextModel>> GetModels()
-            => JsRuntimeExt.Shared.SafeInvokeAsync<List<TextModel>>("blazorMonaco.editor.getModels");
+            => GetModels(null);
+        public static async Task<List<TextModel>> GetModels(IJSRuntime jsRuntime)
+        {
+            var result = await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<List<TextModel>>("blazorMonaco.editor.getModels");
+            result.ForEach(t => {
+                if (t != null)
+                    t.JsRuntime = JsRuntimeExt.UpdateRuntime(jsRuntime);
+            });
+            return result;
+        }
 
         /**
          * Emitted when a model is created.
@@ -1077,20 +1110,29 @@ namespace BlazorMonaco.Editor {
         /**
          * Colorize the contents of `domNode` using attribute `data-lang`.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task ColorizeElement(string domNodeId, ColorizerElementOptions options)
-            => JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.colorizeElement", domNodeId, options);
+            => ColorizeElement(null, domNodeId, options);
+        public static Task ColorizeElement(IJSRuntime jsRuntime, string domNodeId, ColorizerElementOptions options)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.colorizeElement", domNodeId, options);
 
         /**
          * Colorize `text` using language `languageId`.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<string> Colorize(string text, string languageId, ColorizerOptions options)
-            => JsRuntimeExt.Shared.SafeInvokeAsync<string>("blazorMonaco.editor.colorize", text, languageId, options);
+            => Colorize(null, text, languageId, options);
+        public static Task<string> Colorize(IJSRuntime jsRuntime, string text, string languageId, ColorizerOptions options)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<string>("blazorMonaco.editor.colorize", text, languageId, options);
 
         /**
          * Colorize a line in a model.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<string> ColorizeModelLine(TextModel model, int lineNumber, int? tabSize = null)
-            => JsRuntimeExt.Shared.SafeInvokeAsync<string>("blazorMonaco.editor.colorizeModelLine", model.Uri, lineNumber, tabSize);
+            => ColorizeModelLine(null, model, lineNumber, tabSize);
+        public static Task<string> ColorizeModelLine(IJSRuntime jsRuntime, TextModel model, int lineNumber, int? tabSize = null)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<string>("blazorMonaco.editor.colorizeModelLine", model.Uri, lineNumber, tabSize);
 
         /**
          * Tokenize `text` using language `languageId`
@@ -1100,27 +1142,37 @@ namespace BlazorMonaco.Editor {
         /**
          * Define a new theme or update an existing theme.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task DefineTheme(string themeName, StandaloneThemeData themeData)
-            => JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.defineTheme", themeName, themeData);
+            => DefineTheme(null, themeName, themeData);
+        public static Task DefineTheme(IJSRuntime jsRuntime, string themeName, StandaloneThemeData themeData)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.defineTheme", themeName, themeData);
 
         /**
          * Switches to a theme.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task SetTheme(string themeName)
-            => JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.setTheme", themeName);
+            => SetTheme(null, themeName);
+        public static Task SetTheme(IJSRuntime jsRuntime, string themeName)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setTheme", themeName);
 
         /**
          * Clears all cached font measurements and triggers re-measurement.
          */
+        [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task RemeasureFonts()
-            => JsRuntimeExt.Shared.SafeInvokeAsync("blazorMonaco.editor.remeasureFonts");
+            => RemeasureFonts(null);
+        public static Task RemeasureFonts(IJSRuntime jsRuntime)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.remeasureFonts");
 
         /**
          * Register a command.
          */
         //export function registerCommand(id: string, handler: (accessor: any, ...args: any[]) => void): IDisposable;
     }
-    public class BuiltinTheme {
+    public class BuiltinTheme
+    {
         const string Vs = "vs";
         const string VsDark = "vs-dark";
         const string HcBlack = "hc-black";
@@ -1163,7 +1215,8 @@ namespace BlazorMonaco.Editor {
         withSyncedResources(resources: Uri[]): Promise<T>;
     }*/
 
-    public class WebWorkerOptions {
+    public class WebWorkerOptions
+    {
         /**
          * The AMD moduleId to load.
          * It should export a function `create` that should return the exported proxy.
@@ -1191,7 +1244,8 @@ namespace BlazorMonaco.Editor {
     /**
      * Description of an action contribution
      */
-    public class ActionDescriptor {
+    public class ActionDescriptor
+    {
         /**
          * An unique identifier of the contributed action.
          */
@@ -1230,14 +1284,15 @@ namespace BlazorMonaco.Editor {
          * Method that will be executed when the action is triggered.
          * @param editor The editor instance is passed in as a convenience
          */
-        [System.Text.Json.Serialization.JsonIgnore]
+        [JsonIgnore]
         public Action<CodeEditor> Run { get; set; }
     }
 
     /**
      * Options which apply for all editors.
      */
-    public interface IGlobalEditorOptions {
+    public interface IGlobalEditorOptions
+    {
         /**
          * The number of spaces a tab is equal to.
          * This setting is overridden based on the file contents when `detectIndentation` is on.
@@ -1326,7 +1381,8 @@ namespace BlazorMonaco.Editor {
     /**
      * The options to create an editor.
      */
-    public class StandaloneEditorConstructionOptions : EditorConstructionOptions, IGlobalEditorOptions {
+    public class StandaloneEditorConstructionOptions : EditorConstructionOptions, IGlobalEditorOptions
+    {
         /**
          * The initial model associated with this code editor.
          */
@@ -1383,7 +1439,8 @@ namespace BlazorMonaco.Editor {
     /**
      * The options to create a diff editor.
      */
-    public class StandaloneDiffEditorConstructionOptions : DiffEditorConstructionOptions {
+    public class StandaloneDiffEditorConstructionOptions : DiffEditorConstructionOptions
+    {
         /**
          * Initial theme to be used for rendering.
          * The current out-of-the-box available themes are: 'vs' (default), 'vs-dark', 'hc-black', 'hc-light'.
@@ -1429,54 +1486,84 @@ namespace BlazorMonaco.Editor {
     public class EditorOverrideServices : Dictionary<string, object>
     { }
 
-    /*export interface IMarker {
-        owner: string;
-        resource: Uri;
-        severity: MarkerSeverity;
-        code?: string | {
-            value: string;
-            target: Uri;
-        };
-        message: string;
-        source?: string;
-        startLineNumber: number;
-        startColumn: number;
-        endLineNumber: number;
-        endColumn: number;
-        relatedInformation?: IRelatedInformation[];
-        tags?: MarkerTag[];
-    }*/
+    public class Marker
+    {
+        public string Owner { get; set; }
+        [JsonPropertyName("resource")]
+        public string ResourceUri { get; set; }
+        public MarkerSeverity Severity { get; set; }
+        public JsonElement? Code { get; set; }
+        [JsonIgnore]
+        public string CodeAsString
+        {
+            get => Code?.AsString();
+            set => Code = JsonElementExt.FromObject(value);
+        }
+        [JsonIgnore]
+        public MarkerCode CodeAsObject
+        {
+            get => Code?.AsObject<MarkerCode>();
+            set => Code = JsonElementExt.FromObject(value);
+        }
+        public string Message { get; set; }
+        public string Source { get; set; }
+        public int StartLineNumber { get; set; }
+        public int StartColumn { get; set; }
+        public int EndLineNumber { get; set; }
+        public int EndColumn { get; set; }
+        public List<RelatedInformation> RelatedInformation { get; set; }
+        public List<MarkerTag> Tags { get; set; }
+    }
+
+    public class MarkerCode
+    {
+        public string Value { get; set; }
+        [JsonPropertyName("target")]
+        public string TargetUri { get; set; }
+    }
 
     /**
      * A structure defining a problem/warning/etc.
      */
-    /*export interface IMarkerData {
-        code?: string | {
-            value: string;
-            target: Uri;
-        };
-        severity: MarkerSeverity;
-        message: string;
-        source?: string;
-        startLineNumber: number;
-        startColumn: number;
-        endLineNumber: number;
-        endColumn: number;
-        relatedInformation?: IRelatedInformation[];
-        tags?: MarkerTag[];
-    }*/
+    public class MarkerData
+    {
+        public JsonElement? Code { get; set; }
+        [JsonIgnore]
+        public string CodeAsString
+        {
+            get => Code?.AsString();
+            set => Code = JsonElementExt.FromObject(value);
+        }
+        [JsonIgnore]
+        public MarkerCode CodeAsObject
+        {
+            get => Code?.AsObject<MarkerCode>();
+            set => Code = JsonElementExt.FromObject(value);
+        }
+        public MarkerSeverity Severity { get; set; }
+        public string Message { get; set; }
+        public string Source { get; set; }
+        public int StartLineNumber { get; set; }
+        public int StartColumn { get; set; }
+        public int EndLineNumber { get; set; }
+        public int EndColumn { get; set; }
+        public List<RelatedInformation> RelatedInformation { get; set; }
+        public List<MarkerTag> Tags { get; set; }
+    }
 
     /**
      *
      */
-    /*export interface IRelatedInformation {
-        resource: Uri;
-        message: string;
-        startLineNumber: number;
-        startColumn: number;
-        endLineNumber: number;
-        endColumn: number;
-    }*/
+    public class RelatedInformation
+    {
+        [JsonPropertyName("resource")]
+        public string ResourceUri { get; set; }
+        public string Message { get; set; }
+        public int StartLineNumber { get; set; }
+        public int StartColumn { get; set; }
+        public int EndLineNumber { get; set; }
+        public int EndColumn { get; set; }
+    }
 
     public class ColorizerOptions
     {
@@ -2410,11 +2497,11 @@ namespace BlazorMonaco.Editor {
         /**
          * The `uri` of the previous model or null.
          */
-        public string OldModelUri { get; set; }
+        public string OldModelUrl { get; set; }
         /**
          * The `uri` of the new model or null.
          */
-        public string NewModelUri { get; set; }
+        public string NewModelUrl { get; set; }
     }
 
     public class ContentSizeChangedEvent
@@ -2425,7 +2512,8 @@ namespace BlazorMonaco.Editor {
         public bool ContentHeightChanged { get; set; }
     }
 
-    public class NewScrollPosition {
+    public class NewScrollPosition
+    {
         public double ScrollLeft { get; set; }
         public double ScrollTop { get; set; }
     }
@@ -2988,7 +3076,8 @@ namespace BlazorMonaco.Editor {
     /**
      * Configuration options for the editor.
      */
-    public class EditorOptions {
+    public class EditorOptions
+    {
         /**
          * This editor is used inside a diff editor.
          */
@@ -3612,7 +3701,8 @@ namespace BlazorMonaco.Editor {
         public DropIntoEditorOptions DropIntoEditor { get; set; }
     }
 
-    public interface IDiffEditorBaseOptions {
+    public interface IDiffEditorBaseOptions
+    {
         /**
          * Allow the user to resize the diff editor split view.
          * Defaults to true.
@@ -3690,7 +3780,8 @@ namespace BlazorMonaco.Editor {
     /**
      * An event describing that the configuration of the editor has changed.
      */
-    public class ConfigurationChangedEvent {
+    public class ConfigurationChangedEvent
+    {
         private readonly List<bool> _options;
         public ConfigurationChangedEvent(List<bool> options)
         {
@@ -3705,7 +3796,8 @@ namespace BlazorMonaco.Editor {
     /**
      * All computed editor options.
      */
-    public class ComputedEditorOptions {
+    public class ComputedEditorOptions
+    {
         private readonly List<string> _options;
         public ComputedEditorOptions(List<string> options)
         {
@@ -3717,7 +3809,8 @@ namespace BlazorMonaco.Editor {
         }
     }
 
-    public class IEditorOption<V> {
+    public class IEditorOption<V>
+    {
         public EditorOption Id { get; set; }
         public string Name { get; set; }
         public V DefaultValue { get; set; }
@@ -3890,7 +3983,8 @@ namespace BlazorMonaco.Editor {
     /**
      * A description for the overview ruler position.
      */
-    public class OverviewRulerPosition {
+    public class OverviewRulerPosition
+    {
         /**
          * Width of the overview ruler
          */
@@ -3919,7 +4013,8 @@ namespace BlazorMonaco.Editor {
     /**
      * The internal layout details of the editor.
      */
-    public class EditorLayoutInfo {
+    public class EditorLayoutInfo
+    {
         /**
          * Full editor width.
          */
@@ -4016,7 +4111,8 @@ namespace BlazorMonaco.Editor {
         /**
          * Configuration options for editor sticky scroll
          */
-        public class StickyScrollOptions {
+        public class StickyScrollOptions
+        {
             /**
              * Enable the sticky scroll
              */
@@ -4156,7 +4252,8 @@ namespace BlazorMonaco.Editor {
 
     //export type LineNumbersType = 'on' | 'off' | 'relative' | 'interval' | ((lineNumber: number) => string);
 
-    public enum RenderLineNumbersType {
+    public enum RenderLineNumbersType
+    {
         Off = 0,
         On = 1,
         Relative = 2,
@@ -4274,7 +4371,8 @@ namespace BlazorMonaco.Editor {
     /**
      * Configuration options for unicode highlighting.
      */
-    public class UnicodeHighlightOptions {
+    public class UnicodeHighlightOptions
+    {
         /**
          * Controls whether all non-basic ASCII characters are highlighted. Only characters between U+0020 and U+007E, tab, line-feed and carriage-return are considered basic ASCII.
          */
@@ -4305,7 +4403,8 @@ namespace BlazorMonaco.Editor {
         //public bool? AllowedLocales?: Record<string | '_os' | '_vscode', true>;
     }
 
-    public class InlineSuggestOptions {
+    public class InlineSuggestOptions
+    {
         /**
          * Enable or disable the rendering of automatic inline completions.
         */
@@ -4320,7 +4419,8 @@ namespace BlazorMonaco.Editor {
         public string Mode { get; set; } // 'prefix' | 'subword' | 'subwordSmart';
     }
 
-    public class BracketPairColorizationOptions {
+    public class BracketPairColorizationOptions
+    {
         /**
          * Enable or disable bracket pair colorization.
         */
@@ -4527,7 +4627,8 @@ namespace BlazorMonaco.Editor {
     /**
      * Describes how to indent wrapped lines.
      */
-    public enum WrappingIndent {
+    public enum WrappingIndent
+    {
         /**
          * No indentation => wrapped lines begin at column 1.
          */
@@ -4565,7 +4666,8 @@ namespace BlazorMonaco.Editor {
         public bool? Enabled { get; set; }
     }
 
-    public enum EditorOption {
+    public enum EditorOption
+    {
         acceptSuggestionOnCommitCharacter = 0,
         acceptSuggestionOnEnter = 1,
         accessibilitySupport = 2,
@@ -4851,7 +4953,8 @@ namespace BlazorMonaco.Editor {
 
     //export type FindComputedEditorOptionValueById<T extends EditorOption> = ComputedEditorOptionValue<EditorOptionsType[FindEditorOptionsKeyById<T>]>;
 
-    public class EditorConstructionOptions : EditorOptions {
+    public class EditorConstructionOptions : EditorOptions
+    {
         /**
          * The initial editor dimension (to avoid measuring the container).
          */
@@ -4949,7 +5052,8 @@ namespace BlazorMonaco.Editor {
     /**
      * A positioning preference for rendering content widgets.
      */
-    public enum ContentWidgetPositionPreference {
+    public enum ContentWidgetPositionPreference
+    {
         /**
          * Place the content widget exactly at a position
          */
@@ -5032,7 +5136,8 @@ namespace BlazorMonaco.Editor {
     /**
      * A positioning preference for rendering overlay widgets.
      */
-    public enum OverlayWidgetPositionPreference {
+    public enum OverlayWidgetPositionPreference
+    {
         /**
          * Position the overlay widget in the top right corner
          */
@@ -5079,7 +5184,8 @@ namespace BlazorMonaco.Editor {
     /**
      * Type of hit element with the mouse in the editor.
      */
-    public enum MouseTargetType {
+    public enum MouseTargetType
+    {
         /**
          * Mouse is on top of an unknown element.
          */
@@ -5280,7 +5386,8 @@ namespace BlazorMonaco.Editor {
         public BaseMouseTarget Target { get; set; }
     }
 
-    public class PartialEditorMouseEvent {
+    public class PartialEditorMouseEvent
+    {
         public MouseEvent Event { get; set; }
         public BaseMouseTarget Target { get; set; }
     }
@@ -5294,7 +5401,8 @@ namespace BlazorMonaco.Editor {
         public string LanguageId { get; set; }
     }
 
-    public class DiffEditorConstructionOptions : DiffEditorOptions {
+    public class DiffEditorConstructionOptions : DiffEditorOptions
+    {
         /**
          * The initial editor dimension (to avoid measuring the container).
          */
@@ -5706,7 +5814,8 @@ namespace BlazorMonaco.Editor {
     /**
      * Information about a line in the diff editor
      */
-    public class DiffLineInformation {
+    public class DiffLineInformation
+    {
         public int EquivalentLineNumber { get; set; }
     }
 
@@ -5806,59 +5915,98 @@ namespace BlazorMonaco.Editor {
 namespace BlazorMonaco.Languages
 {
 
-    /*export interface IRelativePattern
+    public class RelativePattern
     {
         /**
          * A base file path to which this pattern will be matched against relatively.
-         * /
-        readonly base: string;
+         */
+        public string Base { get; set; }
         /**
          * A file glob pattern like `*.{ts,js}` that will be matched on file paths
          * relative to the base path.
          *
          * Example: Given a base of `/home/work/folder` and a file path of `/home/work/folder/index.js`,
          * the file glob pattern will match on `index.js`.
-         * /
-        readonly pattern: string;
-    }*/
+         */
+        public string Pattern { get; set; }
 
-    //export type LanguageSelector = string | LanguageFilter | ReadonlyArray<string | LanguageFilter>;
+        public RelativePattern()
+        { }
 
-    /*export interface LanguageFilter
+        public RelativePattern(string pattern)
+            => Pattern = pattern;
+
+        public static implicit operator RelativePattern(string pattern) => new RelativePattern(pattern);
+    }
+
+    public class LanguageSelector : List<LanguageFilter>
     {
-        readonly language?: string;
-        readonly scheme?: string;
-        readonly pattern?: string | IRelativePattern;
-        readonly notebookType?: string;
+        public LanguageSelector()
+        { }
+
+        public LanguageSelector(string language)
+            => Add(language);
+
+        public LanguageSelector(List<string> languages)
+            => AddRange(languages.Select(l => new LanguageFilter(l)));
+
+        public LanguageSelector(LanguageFilter languageFilter)
+            => Add(languageFilter);
+
+        public LanguageSelector(List<LanguageFilter> languageFilters)
+            => AddRange(languageFilters);
+
+        public static implicit operator LanguageSelector(string language) => new LanguageSelector(language);
+        public static implicit operator LanguageSelector(List<string> languages) => new LanguageSelector(languages);
+        public static implicit operator LanguageSelector(LanguageFilter language) => new LanguageSelector(language);
+    }
+
+    public class LanguageFilter
+    {
+        public string Language { get; set; }
+        public string Scheme { get; set; }
+        public RelativePattern Pattern { get; set; }
+        public string NotebookType { get; set; }
         /**
          * This provider is implemented in the UI thread.
-         * /
-        readonly hasAccessToAllModels?: boolean;
-        readonly exclusive?: boolean;
-    }*/
+         */
+        public bool? HasAccessToAllModels { get; set; }
+        public bool? Exclusive { get; set; }
 
-    /**
-     * Register information about a new language.
-     */
-    //export function register(language: ILanguageExtensionPoint): void;
+        public LanguageFilter()
+        { }
 
-    /**
-     * Get the information of all the registered languages.
-     */
-    //export function getLanguages(): ILanguageExtensionPoint[];
+        public LanguageFilter(string language)
+            => Language = language;
 
-    //export function getEncodedLanguageId(languageId: string): number;
+        public static implicit operator LanguageFilter(string language) => new LanguageFilter(language);
+    }
 
-    /**
-     * An event emitted when a language is needed for the first time (e.g. a model has it set).
-     * @event
-     */
-    //export function onLanguage(languageId: string, callback: () => void): IDisposable;
+    public partial class Global
+    {
+        /**
+         * Register information about a new language.
+         */
+        //export function register(language: ILanguageExtensionPoint): void;
 
-    /**
-     * Set the editing configuration for a language.
-     */
-    //export function setLanguageConfiguration(languageId: string, configuration: LanguageConfiguration): IDisposable;
+        /**
+         * Get the information of all the registered languages.
+         */
+        //export function getLanguages(): ILanguageExtensionPoint[];
+
+        //export function getEncodedLanguageId(languageId: string): number;
+
+        /**
+         * An event emitted when a language is needed for the first time (e.g. a model has it set).
+         * @event
+         */
+        //export function onLanguage(languageId: string, callback: () => void): IDisposable;
+
+        /**
+         * Set the editing configuration for a language.
+         */
+        //export function setLanguageConfiguration(languageId: string, configuration: LanguageConfiguration): IDisposable;
+    }
 
     /**
      * A token.
@@ -5954,207 +6102,230 @@ namespace BlazorMonaco.Languages
         tokenize?(line: string, state: IState): ILineTokens;
     }*/
 
-    /**
-     * Change the color map that is used for token colors.
-     * Supported formats (hex): #RRGGBB, $RRGGBBAA, #RGB, #RGBA
-     */
-    //export function setColorMap(colorMap: string[] | null): void;
+    public partial class Global
+    {
+        /**
+         * Change the color map that is used for token colors.
+         * Supported formats (hex): #RRGGBB, $RRGGBBAA, #RGB, #RGBA
+         */
+        //export function setColorMap(colorMap: string[] | null): void;
 
-    /**
-     * Register a tokens provider factory for a language. This tokenizer will be exclusive with a tokenizer
-     * set using `setTokensProvider` or one created using `setMonarchTokensProvider`, but will work together
-     * with a tokens provider set using `registerDocumentSemanticTokensProvider` or `registerDocumentRangeSemanticTokensProvider`.
-     */
-    //export function registerTokensProviderFactory(languageId: string, factory: TokensProviderFactory): IDisposable;
+        /**
+         * Register a tokens provider factory for a language. This tokenizer will be exclusive with a tokenizer
+         * set using `setTokensProvider` or one created using `setMonarchTokensProvider`, but will work together
+         * with a tokens provider set using `registerDocumentSemanticTokensProvider` or `registerDocumentRangeSemanticTokensProvider`.
+         */
+        //export function registerTokensProviderFactory(languageId: string, factory: TokensProviderFactory): IDisposable;
 
-    /**
-     * Set the tokens provider for a language (manual implementation). This tokenizer will be exclusive
-     * with a tokenizer created using `setMonarchTokensProvider`, or with `registerTokensProviderFactory`,
-     * but will work together with a tokens provider set using `registerDocumentSemanticTokensProvider`
-     * or `registerDocumentRangeSemanticTokensProvider`.
-     */
-    //export function setTokensProvider(languageId: string, provider: TokensProvider | EncodedTokensProvider | Thenable<TokensProvider | EncodedTokensProvider>): IDisposable;
+        /**
+         * Set the tokens provider for a language (manual implementation). This tokenizer will be exclusive
+         * with a tokenizer created using `setMonarchTokensProvider`, or with `registerTokensProviderFactory`,
+         * but will work together with a tokens provider set using `registerDocumentSemanticTokensProvider`
+         * or `registerDocumentRangeSemanticTokensProvider`.
+         */
+        //export function setTokensProvider(languageId: string, provider: TokensProvider | EncodedTokensProvider | Thenable<TokensProvider | EncodedTokensProvider>): IDisposable;
 
-    /**
-     * Set the tokens provider for a language (monarch implementation). This tokenizer will be exclusive
-     * with a tokenizer set using `setTokensProvider`, or with `registerTokensProviderFactory`, but will
-     * work together with a tokens provider set using `registerDocumentSemanticTokensProvider` or
-     * `registerDocumentRangeSemanticTokensProvider`.
-     */
-    //export function setMonarchTokensProvider(languageId: string, languageDef: IMonarchLanguage | Thenable<IMonarchLanguage>): IDisposable;
+        /**
+         * Set the tokens provider for a language (monarch implementation). This tokenizer will be exclusive
+         * with a tokenizer set using `setTokensProvider`, or with `registerTokensProviderFactory`, but will
+         * work together with a tokens provider set using `registerDocumentSemanticTokensProvider` or
+         * `registerDocumentRangeSemanticTokensProvider`.
+         */
+        //export function setMonarchTokensProvider(languageId: string, languageDef: IMonarchLanguage | Thenable<IMonarchLanguage>): IDisposable;
 
-    /**
-     * Register a reference provider (used by e.g. reference search).
-     */
-    //export function registerReferenceProvider(languageSelector: LanguageSelector, provider: ReferenceProvider) : IDisposable;
+        /**
+         * Register a reference provider (used by e.g. reference search).
+         */
+        //export function registerReferenceProvider(languageSelector: LanguageSelector, provider: ReferenceProvider) : IDisposable;
 
-    /**
-     * Register a rename provider (used by e.g. rename symbol).
-     */
-    //export function registerRenameProvider(languageSelector: LanguageSelector, provider: RenameProvider) : IDisposable;
+        /**
+         * Register a rename provider (used by e.g. rename symbol).
+         */
+        //export function registerRenameProvider(languageSelector: LanguageSelector, provider: RenameProvider) : IDisposable;
 
-    /**
-     * Register a signature help provider (used by e.g. parameter hints).
-     */
-    //export function registerSignatureHelpProvider(languageSelector: LanguageSelector, provider: SignatureHelpProvider) : IDisposable;
+        /**
+         * Register a signature help provider (used by e.g. parameter hints).
+         */
+        //export function registerSignatureHelpProvider(languageSelector: LanguageSelector, provider: SignatureHelpProvider) : IDisposable;
 
-    /**
-     * Register a hover provider (used by e.g. editor hover).
-     */
-    //export function registerHoverProvider(languageSelector: LanguageSelector, provider: HoverProvider) : IDisposable;
+        /**
+         * Register a hover provider (used by e.g. editor hover).
+         */
+        //export function registerHoverProvider(languageSelector: LanguageSelector, provider: HoverProvider) : IDisposable;
 
-    /**
-     * Register a document symbol provider (used by e.g. outline).
-     */
-    //export function registerDocumentSymbolProvider(languageSelector: LanguageSelector, provider: DocumentSymbolProvider) : IDisposable;
+        /**
+         * Register a document symbol provider (used by e.g. outline).
+         */
+        //export function registerDocumentSymbolProvider(languageSelector: LanguageSelector, provider: DocumentSymbolProvider) : IDisposable;
 
-    /**
-     * Register a document highlight provider (used by e.g. highlight occurrences).
-     */
-    //export function registerDocumentHighlightProvider(languageSelector: LanguageSelector, provider: DocumentHighlightProvider) : IDisposable;
+        /**
+         * Register a document highlight provider (used by e.g. highlight occurrences).
+         */
+        //export function registerDocumentHighlightProvider(languageSelector: LanguageSelector, provider: DocumentHighlightProvider) : IDisposable;
 
-    /**
-     * Register an linked editing range provider.
-     */
-    //export function registerLinkedEditingRangeProvider(languageSelector: LanguageSelector, provider: LinkedEditingRangeProvider) : IDisposable;
+        /**
+         * Register an linked editing range provider.
+         */
+        //export function registerLinkedEditingRangeProvider(languageSelector: LanguageSelector, provider: LinkedEditingRangeProvider) : IDisposable;
 
-    /**
-     * Register a definition provider (used by e.g. go to definition).
-     */
-    //export function registerDefinitionProvider(languageSelector: LanguageSelector, provider: DefinitionProvider) : IDisposable;
+        /**
+         * Register a definition provider (used by e.g. go to definition).
+         */
+        //export function registerDefinitionProvider(languageSelector: LanguageSelector, provider: DefinitionProvider) : IDisposable;
 
-    /**
-     * Register a implementation provider (used by e.g. go to implementation).
-     */
-    //export function registerImplementationProvider(languageSelector: LanguageSelector, provider: ImplementationProvider) : IDisposable;
+        /**
+         * Register a implementation provider (used by e.g. go to implementation).
+         */
+        //export function registerImplementationProvider(languageSelector: LanguageSelector, provider: ImplementationProvider) : IDisposable;
 
-    /**
-     * Register a type definition provider (used by e.g. go to type definition).
-     */
-    //export function registerTypeDefinitionProvider(languageSelector: LanguageSelector, provider: TypeDefinitionProvider) : IDisposable;
+        /**
+         * Register a type definition provider (used by e.g. go to type definition).
+         */
+        //export function registerTypeDefinitionProvider(languageSelector: LanguageSelector, provider: TypeDefinitionProvider) : IDisposable;
 
-    /**
-     * Register a code lens provider (used by e.g. inline code lenses).
-     */
-    //export function registerCodeLensProvider(languageSelector: LanguageSelector, provider: CodeLensProvider) : IDisposable;
+        /**
+         * Register a code lens provider (used by e.g. inline code lenses).
+         */
+        //export function registerCodeLensProvider(languageSelector: LanguageSelector, provider: CodeLensProvider) : IDisposable;
 
-    /**
-     * Register a code action provider (used by e.g. quick fix).
-     */
-    //export function registerCodeActionProvider(languageSelector: LanguageSelector, provider: CodeActionProvider, metadata?: CodeActionProviderMetadata) : IDisposable;
+        /**
+         * Register a code action provider (used by e.g. quick fix).
+         */
+        public static Task RegisterCodeActionProvider(IJSRuntime jsRuntime, LanguageSelector language, CodeActionProvider.ProvideCodeActionsDelegate provideCodeActions, CodeActionProvider.ResolveCodeActionDelegate resolveCodeAction = null, CodeActionProviderMetadata metadata = null)
+            => RegisterCodeActionProvider(jsRuntime, language, new CodeActionProvider(provideCodeActions, resolveCodeAction), metadata);
+        public static Task RegisterCodeActionProvider(IJSRuntime jsRuntime, LanguageSelector language, CodeActionProvider codeActionProvider, CodeActionProviderMetadata metadata = null)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.languages.registerCodeActionProvider", language, DotNetObjectReference.Create(codeActionProvider), metadata);
 
-    /**
-     * Register a formatter that can handle only entire models.
-     */
-    //export function registerDocumentFormattingEditProvider(languageSelector: LanguageSelector, provider: DocumentFormattingEditProvider) : IDisposable;
+        /**
+         * Register a formatter that can handle only entire models.
+         */
+        //export function registerDocumentFormattingEditProvider(languageSelector: LanguageSelector, provider: DocumentFormattingEditProvider) : IDisposable;
 
-    /**
-     * Register a formatter that can handle a range inside a model.
-     */
-    //export function registerDocumentRangeFormattingEditProvider(languageSelector: LanguageSelector, provider: DocumentRangeFormattingEditProvider) : IDisposable;
+        /**
+         * Register a formatter that can handle a range inside a model.
+         */
+        //export function registerDocumentRangeFormattingEditProvider(languageSelector: LanguageSelector, provider: DocumentRangeFormattingEditProvider) : IDisposable;
 
-    /**
-     * Register a formatter than can do formatting as the user types.
-     */
-    //export function registerOnTypeFormattingEditProvider(languageSelector: LanguageSelector, provider: OnTypeFormattingEditProvider) : IDisposable;
+        /**
+         * Register a formatter than can do formatting as the user types.
+         */
+        //export function registerOnTypeFormattingEditProvider(languageSelector: LanguageSelector, provider: OnTypeFormattingEditProvider) : IDisposable;
 
-    /**
-     * Register a link provider that can find links in text.
-     */
-    //export function registerLinkProvider(languageSelector: LanguageSelector, provider: LinkProvider) : IDisposable;
+        /**
+         * Register a link provider that can find links in text.
+         */
+        //export function registerLinkProvider(languageSelector: LanguageSelector, provider: LinkProvider) : IDisposable;
 
-    /**
-     * Register a completion item provider (use by e.g. suggestions).
-     */
-    //export function registerCompletionItemProvider(languageSelector: LanguageSelector, provider: CompletionItemProvider) : IDisposable;
+        /**
+         * Register a completion item provider (use by e.g. suggestions).
+         */
+        public static Task RegisterCompletionItemProvider(IJSRuntime jsRuntime, LanguageSelector language, CompletionItemProvider.ProvideCompletionItemsDelegate provideCompletionItems, CompletionItemProvider.ResolveCompletionItemDelegate resolveCompletionItem = null)
+            => RegisterCompletionItemProvider(jsRuntime, language, new CompletionItemProvider(provideCompletionItems, resolveCompletionItem));
+        public static Task RegisterCompletionItemProvider(IJSRuntime jsRuntime, LanguageSelector language, CompletionItemProvider completionItemProvider)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.languages.registerCompletionItemProvider", language, completionItemProvider.TriggerCharacters, DotNetObjectReference.Create(completionItemProvider));
 
-    /**
-     * Register a document color provider (used by Color Picker, Color Decorator).
-     */
-    //export function registerColorProvider(languageSelector: LanguageSelector, provider: DocumentColorProvider) : IDisposable;
+        /**
+         * Register a document color provider (used by Color Picker, Color Decorator).
+         */
+        //export function registerColorProvider(languageSelector: LanguageSelector, provider: DocumentColorProvider) : IDisposable;
 
-    /**
-     * Register a folding range provider
-     */
-    //export function registerFoldingRangeProvider(languageSelector: LanguageSelector, provider: FoldingRangeProvider) : IDisposable;
+        /**
+         * Register a folding range provider
+         */
+        //export function registerFoldingRangeProvider(languageSelector: LanguageSelector, provider: FoldingRangeProvider) : IDisposable;
 
-    /**
-     * Register a declaration provider
-     */
-    //export function registerDeclarationProvider(languageSelector: LanguageSelector, provider: DeclarationProvider) : IDisposable;
+        /**
+         * Register a declaration provider
+         */
+        //export function registerDeclarationProvider(languageSelector: LanguageSelector, provider: DeclarationProvider) : IDisposable;
 
-    /**
-     * Register a selection range provider
-     */
-    //export function registerSelectionRangeProvider(languageSelector: LanguageSelector, provider: SelectionRangeProvider) : IDisposable;
+        /**
+         * Register a selection range provider
+         */
+        //export function registerSelectionRangeProvider(languageSelector: LanguageSelector, provider: SelectionRangeProvider) : IDisposable;
 
-    /**
-     * Register a document semantic tokens provider. A semantic tokens provider will complement and enhance a
-     * simple top-down tokenizer. Simple top-down tokenizers can be set either via `setMonarchTokensProvider`
-     * or `setTokensProvider`.
-     *
-     * For the best user experience, register both a semantic tokens provider and a top-down tokenizer.
-     */
-    //export function registerDocumentSemanticTokensProvider(languageSelector: LanguageSelector, provider: DocumentSemanticTokensProvider) : IDisposable;
+        /**
+         * Register a document semantic tokens provider. A semantic tokens provider will complement and enhance a
+         * simple top-down tokenizer. Simple top-down tokenizers can be set either via `setMonarchTokensProvider`
+         * or `setTokensProvider`.
+         *
+         * For the best user experience, register both a semantic tokens provider and a top-down tokenizer.
+         */
+        //export function registerDocumentSemanticTokensProvider(languageSelector: LanguageSelector, provider: DocumentSemanticTokensProvider) : IDisposable;
 
-    /**
-     * Register a document range semantic tokens provider. A semantic tokens provider will complement and enhance a
-     * simple top-down tokenizer. Simple top-down tokenizers can be set either via `setMonarchTokensProvider`
-     * or `setTokensProvider`.
-     *
-     * For the best user experience, register both a semantic tokens provider and a top-down tokenizer.
-     */
-    //export function registerDocumentRangeSemanticTokensProvider(languageSelector: LanguageSelector, provider: DocumentRangeSemanticTokensProvider) : IDisposable;
+        /**
+         * Register a document range semantic tokens provider. A semantic tokens provider will complement and enhance a
+         * simple top-down tokenizer. Simple top-down tokenizers can be set either via `setMonarchTokensProvider`
+         * or `setTokensProvider`.
+         *
+         * For the best user experience, register both a semantic tokens provider and a top-down tokenizer.
+         */
+        //export function registerDocumentRangeSemanticTokensProvider(languageSelector: LanguageSelector, provider: DocumentRangeSemanticTokensProvider) : IDisposable;
 
-    /**
-     * Register an inline completions provider.
-     */
-    //export function registerInlineCompletionsProvider(languageSelector: LanguageSelector, provider: InlineCompletionsProvider) : IDisposable;
+        /**
+         * Register an inline completions provider.
+         */
+        //export function registerInlineCompletionsProvider(languageSelector: LanguageSelector, provider: InlineCompletionsProvider) : IDisposable;
 
-    /**
-     * Register an inlay hints provider.
-     */
-    //export function registerInlayHintsProvider(languageSelector: LanguageSelector, provider: InlayHintsProvider) : IDisposable;
+        /**
+         * Register an inlay hints provider.
+         */
+        //export function registerInlayHintsProvider(languageSelector: LanguageSelector, provider: InlayHintsProvider) : IDisposable;
+    }
 
     /**
      * Contains additional diagnostic information about the context in which
      * a [code action](#CodeActionProvider.provideCodeActions) is run.
      */
-    /*export interface CodeActionContext {
+    public class CodeActionContext {
         /**
          * An array of diagnostics.
-         * /
-        readonly markers: editor.IMarkerData[];
+         */
+        public List<MarkerData> Markers { get; set; }
         /**
          * Requested kind of actions to return.
-         * /
-        readonly only?: string;
+         */
+        public string Only { get; set; }
         /**
          * The reason why code actions were requested.
-         * /
-        readonly trigger: CodeActionTriggerType;
+         */
+        public CodeActionTriggerType Trigger { get; set; }
     }
-*/
 
     /**
      * The code action interface defines the contract between extensions and
      * the [light bulb](https://code.visualstudio.com/docs/editor/editingevolved#_code-action) feature.
      */
-    /*export interface CodeActionProvider {
+    public class CodeActionProvider {
+
         /**
          * Provide commands for the given document and range.
-         * /
-        provideCodeActions(model: editor.ITextModel, range: Range, context: CodeActionContext, token: CancellationToken): ProviderResult<CodeActionList>;
+         */
+        public delegate CodeActionList ProvideCodeActionsDelegate(string modelUri, Range range, CodeActionContext context);
+        public ProvideCodeActionsDelegate ProvideCodeActionsFunc { get; set; }
+        [JSInvokable]
+        public CodeActionList ProvideCodeActions(string modelUri, Range range, CodeActionContext context) => ProvideCodeActionsFunc.Invoke(modelUri, range, context);
+
         /**
          * Given a code action fill in the edit. Will only invoked when missing.
-         * /
-        resolveCodeAction?(codeAction: CodeAction, token: CancellationToken): ProviderResult<CodeAction>;
-    }*/
+         */
+        public delegate CodeAction ResolveCodeActionDelegate(CodeAction codeAction);
+        public ResolveCodeActionDelegate ResolveCodeActionFunc { get; set; }
+        [JSInvokable]
+        public CodeAction ResolveCodeAction(CodeAction codeAction) => ResolveCodeActionFunc?.Invoke(codeAction);
+
+        public CodeActionProvider(ProvideCodeActionsDelegate provideCodeActions, ResolveCodeActionDelegate resolveCodeAction = null)
+        {
+            ProvideCodeActionsFunc = provideCodeActions;
+            ResolveCodeActionFunc = resolveCodeAction;
+        }
+    }
 
     /**
      * Metadata about the type of code actions that a {@link CodeActionProvider} provides.
      */
-    /*export interface CodeActionProviderMetadata {
+    public class CodeActionProviderMetadata
+    {
         /**
          * List of code action kinds that a {@link CodeActionProvider} may return.
          *
@@ -6162,13 +6333,16 @@ namespace BlazorMonaco.Languages
          * To avoid unnecessary computation, every `CodeActionProvider` should list use `providedCodeActionKinds`. The
          * list of kinds may either be generic, such as `["quickfix", "refactor", "source"]`, or list out every kind provided,
          * such as `["quickfix.removeLine", "source.fixAll" ...]`.
-         * /
-        readonly providedCodeActionKinds?: readonly string[];
-        readonly documentation?: ReadonlyArray<{
-            readonly kind: string;
-            readonly command: Command;
-        }>;
-    }*/
+         */
+        public List<string> ProvidedCodeActionKinds { get; }
+        public List<CodeActionProviderMetadataDocumentation> Documentation { get; }
+    }
+
+    public class CodeActionProviderMetadataDocumentation
+    {
+        public string Kind { get; }
+        public Command Command { get; }
+    }
 
     /**
      * Describes how comments for a language work.
@@ -6354,7 +6528,8 @@ namespace BlazorMonaco.Languages
     /**
      * Describes what to do with the indentation when pressing Enter.
      */
-    public enum IndentAction {
+    public enum IndentAction
+    {
         /**
          * Insert new line and copy the previous line's indentation.
          */
@@ -6441,7 +6616,8 @@ namespace BlazorMonaco.Languages
         provideHover(model: editor.ITextModel, position: Position, token: CancellationToken): ProviderResult<Hover>;
     }*/
 
-    public enum CompletionItemKind {
+    public enum CompletionItemKind
+    {
         Method = 0,
         Function = 1,
         Constructor = 2,
@@ -6472,17 +6648,20 @@ namespace BlazorMonaco.Languages
         Snippet = 27
     }
 
-    /*export interface CompletionItemLabel {
-        label: string;
-        detail?: string;
-        description?: string;
-    }*/
+    public class CompletionItemLabel
+    {
+        public string Label { get; set; }
+        public string Detail { get; set; }
+        public string Description { get; set; }
+    }
 
-    public enum CompletionItemTag {
+    public enum CompletionItemTag
+    {
         Deprecated = 1
     }
 
-    public enum CompletionItemInsertTextRule {
+    public enum CompletionItemInsertTextRule
+    {
         /**
          * Adjust whitespace/indentation of multiline insert texts to
          * match the current line indentation.
@@ -6494,69 +6673,95 @@ namespace BlazorMonaco.Languages
         InsertAsSnippet = 4
     }
 
-    /*export interface CompletionItemRanges {
-        insert: IRange;
-        replace: IRange;
-    }*/
+    public class CompletionItemRanges
+    {
+        public Range Insert { get; set; }
+        public Range Replace { get; set; }
+    }
 
     /**
      * A completion item represents a text snippet that is
      * proposed to complete text that is being typed.
      */
-    /*export interface CompletionItem {
+    public class CompletionItem
+    {
         /**
          * The label of this completion item. By default
          * this is also the text that is inserted when selecting
          * this completion.
-         * /
-        label: string | CompletionItemLabel;
+         */
+        public JsonElement? Label { get; set; }
+        [JsonIgnore]
+        public string LabelAsString
+        {
+            get => Label?.AsString();
+            set => Label = JsonElementExt.FromObject(value);
+        }
+        [JsonIgnore]
+        public CompletionItemLabel LabelAsObject
+        {
+            get => Label?.AsObject<CompletionItemLabel>();
+            set => Label = JsonElementExt.FromObject(value);
+        }
         /**
          * The kind of this completion item. Based on the kind
          * an icon is chosen by the editor.
-         * /
-        kind: CompletionItemKind;
+         */
+        public CompletionItemKind Kind { get; set; }
         /**
          * A modifier to the `kind` which affect how the item
          * is rendered, e.g. Deprecated is rendered with a strikeout
-         * /
-        tags?: ReadonlyArray<CompletionItemTag>;
+         */
+        public List<CompletionItemTag> Tags { get; set; }
         /**
          * A human-readable string with additional information
          * about this item, like type or symbol information.
-         * /
-        detail?: string;
+         */
+        public string Detail { get; set; }
         /**
          * A human-readable string that represents a doc-comment.
-         * /
-        documentation?: string | IMarkdownString;
+         */
+        public JsonElement? Documentation { get; set; }
+        [JsonIgnore]
+        public string DocumentationAsString
+        {
+            get => Documentation?.AsString();
+            set => Documentation = JsonElementExt.FromObject(value);
+        }
+        [JsonIgnore]
+        public MarkdownString DocumentationAsObject
+        {
+            get => Documentation?.AsObject<MarkdownString>();
+            set => Documentation = JsonElementExt.FromObject(value);
+        }
         /**
          * A string that should be used when comparing this item
          * with other items. When `falsy` the {@link CompletionItem.label label}
          * is used.
-         * /
-        sortText?: string;
+         */
+        public string SortText { get; set; }
         /**
          * A string that should be used when filtering a set of
          * completion items. When `falsy` the {@link CompletionItem.label label}
          * is used.
-         * /
-        filterText?: string;
+         */
+        public string FilterText { get; set; }
         /**
          * Select this item when showing. *Note* that only one completion item can be selected and
          * that the editor decides which item that is. The rule is that the *first* item of those
          * that match best is selected.
-         * /
-        preselect?: boolean;
+         */
+        public bool? Preselect { get; set; }
         /**
          * A string or snippet that should be inserted in a document when selecting
          * this completion.
-         * /
-        insertText: string;
+         */
+        public string InsertText { get; set; }
         /**
          * Additional rules (as bitmask) that should be applied when inserting
          * this completion.
-         * /
-        insertTextRules?: CompletionItemInsertTextRule;
+         */
+        public CompletionItemInsertTextRule? InsertTextRules { get; set; }
         /**
          * A range of text that should be replaced by this completion item.
          *
@@ -6565,36 +6770,51 @@ namespace BlazorMonaco.Languages
          *
          * *Note:* The range must be a {@link Range.isSingleLine single line} and it must
          * {@link Range.contains contain} the position at which completion has been {@link CompletionItemProvider.provideCompletionItems requested}.
-         * /
-        range: IRange | CompletionItemRanges;
+         */
+        public JsonElement? Range { get; set; }
+        [JsonIgnore]
+        public Range RangeAsObject
+        {
+            get => Range?.AsObject<Range>();
+            set => Range = JsonElementExt.FromObject(value);
+        }
+        [JsonIgnore]
+        public CompletionItemRanges RangeAsList
+        {
+            get => Range?.AsObject<CompletionItemRanges>();
+            set => Range = JsonElementExt.FromObject(value);
+        }
         /**
          * An optional set of characters that when pressed while this completion is active will accept it first and
          * then type that character. *Note* that all commit characters should have `length=1` and that superfluous
          * characters will be ignored.
-         * /
-        commitCharacters?: string[];
+         */
+        public List<string> CommitCharacters { get; set; }
         /**
          * An optional array of additional text edits that are applied when
          * selecting this completion. Edits must not overlap with the main edit
          * nor with themselves.
-         * /
-        additionalTextEdits?: editor.ISingleEditOperation[];
+         */
+        public List<SingleEditOperation> AdditionalTextEdits { get; set; }
         /**
          * A command that should be run upon acceptance of this item.
-         * /
-        command?: Command;
-    }*/
+         */
+        public Command Command { get; set; }
+    }
 
-    /*export interface CompletionList {
-        suggestions: CompletionItem[];
-        incomplete?: boolean;
-        dispose?(): void;
-    }*/
+    public class CompletionList
+    {
+        public List<CompletionItem> Suggestions { get; set; }
+        public bool? Incomplete { get; set; }
+        // TODO
+        // dispose?(): void;
+    }
 
     /**
      * How a suggest provider was triggered.
      */
-    public enum CompletionTriggerKind {
+    public enum CompletionTriggerKind
+    {
         Invoke = 0,
         TriggerCharacter = 1,
         TriggerForIncompleteCompletions = 2
@@ -6604,18 +6824,18 @@ namespace BlazorMonaco.Languages
      * Contains additional information about the context in which
      * {@link CompletionItemProvider.provideCompletionItems completion provider} is triggered.
      */
-    /*export interface CompletionContext {
+    public class CompletionContext {
         /**
          * How the completion was triggered.
-         * /
-        triggerKind: CompletionTriggerKind;
+         */
+        public CompletionTriggerKind? TriggerKind { get; set; }
         /**
          * Character that triggered the completion item provider.
          *
          * `undefined` if provider was not triggered by a character.
-         * /
-        triggerCharacter?: string;
-    }*/
+         */
+        public string TriggerCharacter { get; set; }
+    }
 
     /**
      * The completion item provider interface defines the contract between extensions and
@@ -6628,25 +6848,40 @@ namespace BlazorMonaco.Languages
      * when a completion item is shown in the UI and gains focus this provider is asked to resolve
      * the item, like adding {@link CompletionItem.documentation doc-comment} or {@link CompletionItem.detail details}.
      */
-    /*export interface CompletionItemProvider {
-        triggerCharacters?: string[];
+    public class CompletionItemProvider {
+        public List<string> TriggerCharacters { get; set; }
+
         /**
          * Provide completion items for the given position and document.
-         * /
-        provideCompletionItems(model: editor.ITextModel, position: Position, context: CompletionContext, token: CancellationToken): ProviderResult<CompletionList>;
+         */
+        public delegate CompletionList ProvideCompletionItemsDelegate(string modelUri, Position position, CompletionContext context);
+        public ProvideCompletionItemsDelegate ProvideCompletionItemsFunc { get; set; }
+        [JSInvokable]
+        public CompletionList ProvideCompletionItems(string modelUri, Position position, CompletionContext context) => ProvideCompletionItemsFunc.Invoke(modelUri, position, context);
+
         /**
          * Given a completion item fill in more data, like {@link CompletionItem.documentation doc-comment}
          * or {@link CompletionItem.detail details}.
          *
          * The editor will only resolve a completion item once.
-         * /
-        resolveCompletionItem?(item: CompletionItem, token: CancellationToken): ProviderResult<CompletionItem>;
-    }*/
+         */
+        public delegate CompletionItem ResolveCompletionItemDelegate(CompletionItem completionItem);
+        public ResolveCompletionItemDelegate ResolveCompletionItemFunc { get; set; }
+        [JSInvokable]
+        public CompletionItem ResolveCompletionItem(CompletionItem completionItem) => ResolveCompletionItemFunc?.Invoke(completionItem);
+
+        public CompletionItemProvider(ProvideCompletionItemsDelegate provideCompletionItems, ResolveCompletionItemDelegate resolveCompletionItem = null)
+        {
+            ProvideCompletionItemsFunc = provideCompletionItems;
+            ResolveCompletionItemFunc = resolveCompletionItem;
+        }
+    }
 
     /**
      * How an {@link InlineCompletionsProvider inline completion provider} was triggered.
      */
-    public enum InlineCompletionTriggerKind {
+    public enum InlineCompletionTriggerKind
+    {
         /**
          * Completion was triggered automatically while editing.
          * It is sufficient to return a single completion item in this case.
@@ -6659,20 +6894,20 @@ namespace BlazorMonaco.Languages
         Explicit = 1
     }
 
-    /*export interface InlineCompletionContext {
+    public class InlineCompletionContext {
         /**
          * How the completion was triggered.
-         * /
-        readonly triggerKind: InlineCompletionTriggerKind;
-        readonly selectedSuggestionInfo: SelectedSuggestionInfo | undefined;
-    }*/
+         */
+        public InlineCompletionTriggerKind TriggerKind { get; }
+        public SelectedSuggestionInfo SelectedSuggestionInfo { get; }
+    }
 
-    /*export interface SelectedSuggestionInfo {
-        range: IRange;
-        text: string;
-        isSnippetText: boolean;
-        completionKind: CompletionItemKind;
-    }*/
+    public class SelectedSuggestionInfo {
+        public Range Range { get; set; }
+        public string Text { get; set; }
+        public bool IsSnippetText { get; set; }
+        public CompletionItemKind CompletionKind { get; set; }
+    }
 
     /*export interface InlineCompletion
     {
@@ -6732,15 +6967,16 @@ namespace BlazorMonaco.Languages
         freeInlineCompletions(completions: T): void;
     }*/
 
-    /*export interface CodeAction {
-        title: string;
-        command?: Command;
-        edit?: WorkspaceEdit;
-        diagnostics?: editor.IMarkerData[];
-        kind?: string;
-        isPreferred?: boolean;
-        disabled?: string;
-    }*/
+    public class CodeAction
+    {
+        public string Title { get; set; }
+        public Command Command { get; set; }
+        public WorkspaceEdit Edit { get; set; }
+        public List<MarkerData> Diagnostics { get; set; }
+        public string Kind { get; set; }
+        public bool? IsPreferred { get; set; }
+        public string Disabled { get; set; }
+    }
 
     public enum CodeActionTriggerType
     {
@@ -6748,9 +6984,9 @@ namespace BlazorMonaco.Languages
         Auto = 2
     }
 
-    /*export interface CodeActionList extends IDisposable {
-        readonly actions: ReadonlyArray<CodeAction>;
-    }*/
+    public class CodeActionList /* TODO : IDisposable*/ {
+        public List<CodeAction> Actions { get; set; }
+    }
 
     /**
      * Represents a parameter of a callable-signature. A parameter can
@@ -6821,7 +7057,8 @@ namespace BlazorMonaco.Languages
         value: SignatureHelp;
     }*/
 
-    public enum SignatureHelpTriggerKind {
+    public enum SignatureHelpTriggerKind
+    {
         Invoke = 1,
         TriggerCharacter = 2,
         ContentChange = 3
@@ -6850,7 +7087,8 @@ namespace BlazorMonaco.Languages
     /**
      * A document highlight kind.
      */
-    public enum DocumentHighlightKind {
+    public enum DocumentHighlightKind
+    {
         /**
          * A textual occurrence.
          */
@@ -7028,7 +7266,8 @@ namespace BlazorMonaco.Languages
     /**
      * A symbol kind.
      */
-    public enum SymbolKind {
+    public enum SymbolKind
+    {
         File = 0,
         Module = 1,
         Namespace = 2,
@@ -7057,7 +7296,8 @@ namespace BlazorMonaco.Languages
         TypeParameter = 25
     }
 
-    public enum SymbolTag {
+    public enum SymbolTag
+    {
         Deprecated = 1
     }
 
@@ -7084,11 +7324,12 @@ namespace BlazorMonaco.Languages
         provideDocumentSymbols(model: editor.ITextModel, token: CancellationToken): ProviderResult<DocumentSymbol[]>;
     }*/
 
-    /*export interface TextEdit {
-        range: IRange;
-        text: string;
-        eol?: editor.EndOfLineSequence;
-    }*/
+    public class TextEdit
+    {
+        public Range Range { get; set; }
+        public string Text { get; set; }
+        public EndOfLineSequence? Eol { get; set; }
+    }
 
     /**
      * Interface used to format a model
@@ -7311,45 +7552,59 @@ namespace BlazorMonaco.Languages
         constructor(value: string);
     }*/
 
-    /*export interface WorkspaceEditMetadata {
-        needsConfirmation: boolean;
-        label: string;
-        description?: string;
-    }*/
-
-    /*export interface WorkspaceFileEditOptions {
-        overwrite?: boolean;
-        ignoreIfNotExists?: boolean;
-        ignoreIfExists?: boolean;
-        recursive?: boolean;
-        copy?: boolean;
-        folder?: boolean;
-        skipTrashBin?: boolean;
-        maxSize?: number;
-    }*/
-
-    /*export interface IWorkspaceFileEdit
+    public class WorkspaceEditMetadata
     {
-        oldResource?: Uri;
-        newResource?: Uri;
-        options?: WorkspaceFileEditOptions;
-        metadata?: WorkspaceEditMetadata;
-    }*/
+        public bool? NeedsConfirmation { get; set; }
+        public string Label { get; set; }
+        public string Description { get; set; }
+    }
 
-    /*export interface IWorkspaceTextEdit
+    public class WorkspaceFileEditOptions
     {
-        resource: Uri;
-        textEdit: TextEdit & {
-            insertAsSnippet?: boolean;
-        };
-        versionId: number | undefined;
-        metadata?: WorkspaceEditMetadata;
-    }*/
+        public bool? Overwrite { get; set; }
+        public bool? IgnoreIfNotExists { get; set; }
+        public bool? IgnoreIfExists { get; set; }
+        public bool? Recursive { get; set; }
+        public bool? Copy { get; set; }
+        public bool? Folder { get; set; }
+        public bool? SkipTrashBin { get; set; }
+        public int? MaxSize { get; set; }
+    }
 
-    /*export interface WorkspaceEdit
+    public class WorkspaceFileEdit : IWorkspaceEdit
     {
-        edits: Array<IWorkspaceTextEdit | IWorkspaceFileEdit>;
-    }*/
+        [JsonPropertyName("oldResource")]
+        public string OldResourceUri { get; set; }
+        [JsonPropertyName("newResource")]
+        public string NewResourceUri { get; set; }
+        public WorkspaceFileEditOptions Options { get; set; }
+        public WorkspaceEditMetadata Metadata { get; set; }
+    }
+
+    public class WorkspaceTextEdit : IWorkspaceEdit
+    {
+        [JsonPropertyName("resource")]
+        public string ResourceUri { get; set; }
+        public TextEditWithInsertAsSnippet TextEdit { get; set; }
+        public int? VersionId { get; set; }
+        public WorkspaceEditMetadata Metadata { get; set; }
+    }
+
+    public class TextEditWithInsertAsSnippet : TextEdit
+    {
+        public bool? InsertAsSnippet { get; set; }
+    }
+
+    public interface IWorkspaceEdit
+    {
+        WorkspaceEditMetadata Metadata { get; set; }
+    }
+
+    public class WorkspaceEdit
+    {
+        [JsonConverter(typeof(ListJsonConverter<IWorkspaceEdit, WorkspaceEditJsonConverter>))]
+        public List<IWorkspaceEdit> Edits { get; set; }
+    }
 
     /*export interface Rejection {
         rejectReason?: string;
@@ -7365,12 +7620,13 @@ namespace BlazorMonaco.Languages
         resolveRenameLocation?(model: editor.ITextModel, position: Position, token: CancellationToken): ProviderResult<RenameLocation & Rejection>;
     }*/
 
-    /*export interface Command {
-        id: string;
-        title: string;
-        tooltip?: string;
-        arguments?: any[];
-    }*/
+    public class Command
+    {
+        public string Id { get; set; }
+        public string Title { get; set; }
+        public string Tooltip { get; set; }
+        public List<object> Arguments { get; set; }
+    }
 
     /*export interface CodeLens {
         range: IRange;
@@ -7389,7 +7645,8 @@ namespace BlazorMonaco.Languages
         resolveCodeLens?(model: editor.ITextModel, codeLens: CodeLens, token: CancellationToken): ProviderResult<CodeLens>;
     }*/
 
-    public enum InlayHintKind {
+    public enum InlayHintKind
+    {
         Type = 1,
         Parameter = 2
     }
@@ -7605,7 +7862,8 @@ namespace BlazorMonaco.Languages
 
 }
 
-namespace BlazorMonaco.Worker {
+namespace BlazorMonaco.Worker
+{
 
 
     /*export interface IMirrorTextModel {
@@ -7631,7 +7889,8 @@ namespace BlazorMonaco.Worker {
 
 }
 
-namespace BlazorMonaco.Languages.Css {
+namespace BlazorMonaco.Languages.Css
+{
     /*export interface CSSFormatConfiguration {
         /** separate selectors with newline (e.g. "a,\nbr" or "a, br"): Default: true * /
         newlineBetweenSelectors?: boolean;
@@ -7822,7 +8081,8 @@ namespace BlazorMonaco.Languages.Css {
     //export type MarkupKind = 'plaintext' | 'markdown';
 }
 
-namespace BlazorMonaco.Languages.Html {
+namespace BlazorMonaco.Languages.Html
+{
     /*export interface HTMLFormatConfiguration {
         readonly tabSize: number;
         readonly insertSpaces: boolean;
@@ -7984,7 +8244,8 @@ namespace BlazorMonaco.Languages.Html {
     //export type MarkupKind = 'plaintext' | 'markdown';
 }
 
-namespace BlazorMonaco.Languages.Json {
+namespace BlazorMonaco.Languages.Json
+{
     /*export interface DiagnosticsOptions {
         /**
          * If set, the validator will be enabled and perform syntax and schema based validation,
@@ -8091,8 +8352,10 @@ namespace BlazorMonaco.Languages.Json {
     //export const jsonDefaults: LanguageServiceDefaults;
 }
 
-namespace BlazorMonaco.Languages.Typescript {
-    public enum ModuleKind {
+namespace BlazorMonaco.Languages.Typescript
+{
+    public enum ModuleKind
+    {
         None = 0,
         CommonJS = 1,
         AMD = 2,
@@ -8101,7 +8364,9 @@ namespace BlazorMonaco.Languages.Typescript {
         ES2015 = 5,
         ESNext = 99
     }
-    public enum JsxEmit {
+
+    public enum JsxEmit
+    {
         None = 0,
         Preserve = 1,
         React = 2,
@@ -8109,11 +8374,15 @@ namespace BlazorMonaco.Languages.Typescript {
         ReactJSX = 4,
         ReactJSXDev = 5
     }
-    public enum NewLineKind {
+
+    public enum NewLineKind
+    {
         CarriageReturnLineFeed = 0,
         LineFeed = 1
     }
-    public enum ScriptTarget {
+
+    public enum ScriptTarget
+    {
         ES3 = 0,
         ES5 = 1,
         ES2015 = 2,
@@ -8126,10 +8395,13 @@ namespace BlazorMonaco.Languages.Typescript {
         JSON = 100,
         Latest = 99
     }
-    public enum ModuleResolutionKind {
+
+    public enum ModuleResolutionKind
+    {
         Classic = 1,
         NodeJs = 2
     }
+
     /*interface MapLike<T> {
         [index: string]: T;
     }*/

@@ -1,14 +1,25 @@
 ﻿using Microsoft.JSInterop;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace BlazorMonaco.Helpers
 {
     internal static class JsRuntimeExt
     {
-        public static IJSRuntime Shared { get; set; }
+        private static IJSRuntime Shared { get; set; }
+
+        public static IJSRuntime UpdateRuntime(IJSRuntime jsRuntime)
+        {
+            if (Shared is IJSInProcessRuntime || jsRuntime is IJSInProcessRuntime)
+            {
+                // Allow jsRuntime to be null in WASM apps. If it's null, use the static instance instead.
+                return Shared = jsRuntime ?? Shared;
+            }
+            else
+            {
+                // The static instance in not used in server-side apps. jsRuntime has to be non-null there.
+                return jsRuntime;
+            }
+        }
 
         public static async Task SafeInvokeAsync(this IJSRuntime jsRuntime, string identifier, params object[] args)
         {

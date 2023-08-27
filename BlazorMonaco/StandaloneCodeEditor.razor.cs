@@ -4,7 +4,6 @@ using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -37,13 +36,13 @@ namespace BlazorMonaco.Editor
             commandHandlers.ForEach(handler => handler.Invoke(this, keyCode));
         }
 
-        internal static StandaloneCodeEditor CreateVirtualEditor(string id, string cssClass = null)
+        internal static StandaloneCodeEditor CreateVirtualEditor(IJSRuntime jsRuntime, string id, string cssClass = null)
         {
             var virtual_editor = new StandaloneCodeEditor
             {
                 Id = id,
                 CssClass = cssClass,
-                jsRuntime = JsRuntimeExt.Shared
+                JsRuntime = jsRuntime
             };
             virtual_editor._dotnetObjectRef = DotNetObjectReference.Create<Editor>(virtual_editor);
             return virtual_editor;
@@ -65,7 +64,7 @@ namespace BlazorMonaco.Editor
                 }
 
                 // Create the editor
-                await Global.Create(Id, options, null, _dotnetObjectRef);
+                await Global.Create(JsRuntime, Id, options, null, _dotnetObjectRef);
             }
             await base.OnAfterRenderAsync(firstRender);
         }
@@ -75,17 +74,9 @@ namespace BlazorMonaco.Editor
         public Task UpdateOptions(EditorUpdateOptions newOptions)
         {
             // Convert the options object into a JsonElement to get rid of the properties with null values
-            var optionsJson = JsonSerializer.Serialize(newOptions, new JsonSerializerOptions
-            {
-#if !NET6_0_OR_GREATER
-                IgnoreNullValues = true,
-#else
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-#endif
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+            var optionsJson = JsonSerializer.Serialize(newOptions, JsonSerializerExt.DefaultOptions);
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
-            return jsRuntime.SafeInvokeAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
+            return JsRuntime.SafeInvokeAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
         }
         
         [Obsolete("This method is deprecated. Use AddCommand(int keybinding, CommandHandler handler, string context = null) instead.")]
@@ -105,7 +96,7 @@ namespace BlazorMonaco.Editor
             }
 
             _commands[keybinding.ToString()] = new List<CommandHandler> { handler };
-            return jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.addCommand", Id, keybinding, context);
+            return JsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.addCommand", Id, keybinding, context);
         }
 
         //createContextKey<T extends ContextKeyValue = ContextKeyValue>(key: string, defaultValue: T): IContextKey<T>;
@@ -135,7 +126,7 @@ namespace BlazorMonaco.Editor
             }
 
             _actions[actionDescriptor.Id] = new List<ActionDescriptor> { actionDescriptor };
-            return jsRuntime.SafeInvokeAsync("blazorMonaco.editor.addAction", Id, actionDescriptor);
+            return JsRuntime.SafeInvokeAsync("blazorMonaco.editor.addAction", Id, actionDescriptor);
         }
     }
 
@@ -406,7 +397,7 @@ namespace BlazorMonaco.Editor
          * Returns true if the text inside this editor or an editor widget has focus.
          */
         public Task<bool> HasWidgetFocus()
-            => jsRuntime.SafeInvokeAsync<bool>("blazorMonaco.editor.hasWidgetFocus", Id);
+            => JsRuntime.SafeInvokeAsync<bool>("blazorMonaco.editor.hasWidgetFocus", Id);
         /**
          * Get a contribution of this editor.
          * @id Unique identifier of the contribution.
@@ -416,8 +407,14 @@ namespace BlazorMonaco.Editor
         /**
          * Type the getModel() of IEditor.
          */
-        public Task<TextModel> GetModel()
-            => jsRuntime.SafeInvokeAsync<TextModel>("blazorMonaco.editor.getInstanceModel", Id);
+        public async Task<TextModel> GetModel()
+        {
+            var textModel = await JsRuntime.SafeInvokeAsync<TextModel>("blazorMonaco.editor.getInstanceModel", Id);
+            if (textModel != null)
+                textModel.JsRuntime = JsRuntime;
+            return textModel;
+        }
+
         /**
          * Sets the current model attached to this editor.
          * If the previous model was created by the editor via the value key in the options
@@ -427,13 +424,13 @@ namespace BlazorMonaco.Editor
          * It is safe to call setModel(null) to simply detach the current model from the editor.
          */
         public Task SetModel(TextModel model)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.setInstanceModel", Id, model.Uri);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.setInstanceModel", Id, model.Uri);
         /**
          * Gets all the editor computed options.
          */
         public async Task<ComputedEditorOptions> GetOptions()
         {
-            var strList = await jsRuntime.SafeInvokeAsync<List<string>>("blazorMonaco.editor.getOptions", Id);
+            var strList = await JsRuntime.SafeInvokeAsync<List<string>>("blazorMonaco.editor.getOptions", Id);
             return new ComputedEditorOptions(strList);
         }
         /**
@@ -441,73 +438,73 @@ namespace BlazorMonaco.Editor
          */
         public async Task<T> GetOption<T>(EditorOption option)
         {
-            var strValue = await jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getOption", Id, (int)option);
+            var strValue = await JsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getOption", Id, (int)option);
             return JsonSerializer.Deserialize<T>(strValue);
         }
         /**
          * Returns the editor's configuration (without any validation or defaults).
          */
         public Task<EditorOptions> GetRawOptions()
-            => jsRuntime.SafeInvokeAsync<EditorOptions>("blazorMonaco.editor.getRawOptions", Id);
+            => JsRuntime.SafeInvokeAsync<EditorOptions>("blazorMonaco.editor.getRawOptions", Id);
         /**
          * Get value of the current model attached to this editor.
          * @see {@link ITextModel.getValue}
          */
         public Task<string> GetValue(bool? preserveBOM = null, string lineEnding = null)
-            => jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getValue", Id, preserveBOM, lineEnding);
+            => JsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getValue", Id, preserveBOM, lineEnding);
         /**
          * Set the value of the current model attached to this editor.
          * @see {@link ITextModel.setValue}
          */
         public Task SetValue(string newValue)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.setValue", Id, newValue);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.setValue", Id, newValue);
         /**
          * Get the width of the editor's content.
          * This is information that is "erased" when computing `scrollWidth = Math.max(contentWidth, width)`
          */
         public Task<double> GetContentWidth()
-            => jsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getContentWidth", Id);
+            => JsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getContentWidth", Id);
         /**
          * Get the scrollWidth of the editor's viewport.
          */
         public Task<double> GetScrollWidth()
-            => jsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getScrollWidth", Id);
+            => JsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getScrollWidth", Id);
         /**
          * Get the scrollLeft of the editor's viewport.
          */
         public Task<double> GetScrollLeft()
-            => jsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getScrollLeft", Id);
+            => JsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getScrollLeft", Id);
         /**
          * Get the height of the editor's content.
          * This is information that is "erased" when computing `scrollHeight = Math.max(contentHeight, height)`
          */
         public Task<double> GetContentHeight()
-            => jsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getContentHeight", Id);
+            => JsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getContentHeight", Id);
         /**
          * Get the scrollHeight of the editor's viewport.
          */
         public Task<double> GetScrollHeight()
-            => jsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getScrollHeight", Id);
+            => JsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getScrollHeight", Id);
         /**
          * Get the scrollTop of the editor's viewport.
          */
         public Task<double> GetScrollTop()
-            => jsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getScrollTop", Id);
+            => JsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getScrollTop", Id);
         /**
          * Change the scrollLeft of the editor's viewport.
          */
         public Task SetScrollLeft(int newScrollLeft, ScrollType? scrollType = null)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.setScrollLeft", Id, newScrollLeft, scrollType);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.setScrollLeft", Id, newScrollLeft, scrollType);
         /**
          * Change the scrollTop of the editor's viewport.
          */
         public Task SetScrollTop(int newScrollTop, ScrollType? scrollType = null)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.setScrollTop", Id, newScrollTop, scrollType);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.setScrollTop", Id, newScrollTop, scrollType);
         /**
          * Change the scroll position of the editor's viewport.
          */
         public Task SetScrollPosition(NewScrollPosition position, ScrollType? scrollType = null)
-            => jsRuntime?.SafeInvokeAsync("blazorMonaco.editor.setScrollPosition", Id, position, scrollType);
+            => JsRuntime?.SafeInvokeAsync("blazorMonaco.editor.setScrollPosition", Id, position, scrollType);
         /**
          * Get an action that is a contribution to this editor.
          * @id Unique identifier of the contribution.
@@ -525,12 +522,12 @@ namespace BlazorMonaco.Editor
          * Create an "undo stop" in the undo-redo stack.
          */
         public Task<bool> PushUndoStop()
-            => jsRuntime.SafeInvokeAsync<bool>("blazorMonaco.editor.pushUndoStop", Id);
+            => JsRuntime.SafeInvokeAsync<bool>("blazorMonaco.editor.pushUndoStop", Id);
         /**
          * Remove the "undo stop" in the undo-redo stack.
          */
         public Task<bool> PopUndoStop()
-            => jsRuntime.SafeInvokeAsync<bool>("blazorMonaco.editor.popUndoStop", Id);
+            => JsRuntime.SafeInvokeAsync<bool>("blazorMonaco.editor.popUndoStop", Id);
         /**
          * Execute edits on the editor.
          * The edits will land on the undo-redo stack, but no "undo stop" will be pushed.
@@ -539,11 +536,11 @@ namespace BlazorMonaco.Editor
          * @param endCursorState Cursor state after the edits were applied.
          */
         public Task<bool> ExecuteEdits(string source, List<IdentifiedSingleEditOperation> edits, List<Selection> endCursorState)
-            => jsRuntime.SafeInvokeAsync<bool>("blazorMonaco.editor.executeEdits", Id, source, edits, endCursorState);
+            => JsRuntime.SafeInvokeAsync<bool>("blazorMonaco.editor.executeEdits", Id, source, edits, endCursorState);
         public Task<bool> ExecuteEdits(string source, List<IdentifiedSingleEditOperation> edits, CursorStateComputer endCursorState)
         {
             ExecuteEditsLambda = endCursorState;
-            return jsRuntime.SafeInvokeAsync<bool>("blazorMonaco.editor.executeEdits", Id, source, edits, "function");
+            return JsRuntime.SafeInvokeAsync<bool>("blazorMonaco.editor.executeEdits", Id, source, edits, "function");
         }
         /**
          * Execute multiple (concomitant) commands on the editor.
@@ -568,17 +565,9 @@ namespace BlazorMonaco.Editor
             oldDecorationIds = oldDecorationIds ?? new string[] { };
 
             // Convert the newDecorations object into a JsonElement to get rid of the properties with null values
-            var newDecorationsJson = JsonSerializer.Serialize(newDecorations, new JsonSerializerOptions
-            {
-#if !NET6_0_OR_GREATER
-                IgnoreNullValues = true,
-#else
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-#endif
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+            var newDecorationsJson = JsonSerializer.Serialize(newDecorations, JsonSerializerExt.DefaultOptions);
             var newDecorationsElement = JsonSerializer.Deserialize<JsonElement>(newDecorationsJson);
-            var newDecorationIds = await jsRuntime.SafeInvokeAsync<string[]>("blazorMonaco.editor.deltaDecorations", Id, oldDecorationIds, newDecorationsElement);
+            var newDecorationIds = await JsRuntime.SafeInvokeAsync<string[]>("blazorMonaco.editor.deltaDecorations", Id, oldDecorationIds, newDecorationsElement);
             _deltaDecorationIds.RemoveAll(d => oldDecorationIds.Any(o => o == d));
             _deltaDecorationIds.AddRange(newDecorationIds);
             return newDecorationIds;
@@ -591,18 +580,18 @@ namespace BlazorMonaco.Editor
          * Get the layout info for the editor.
          */
         public Task<EditorLayoutInfo> GetLayoutInfo()
-            => jsRuntime.SafeInvokeAsync<EditorLayoutInfo>("blazorMonaco.editor.getLayoutInfo", Id);
+            => JsRuntime.SafeInvokeAsync<EditorLayoutInfo>("blazorMonaco.editor.getLayoutInfo", Id);
         /**
          * Returns the ranges that are currently visible.
          * Does not account for horizontal scrolling.
          */
         public Task<List<Range>> GetVisibleRanges()
-            => jsRuntime.SafeInvokeAsync<List<Range>>("blazorMonaco.editor.getVisibleRanges", Id);
+            => JsRuntime.SafeInvokeAsync<List<Range>>("blazorMonaco.editor.getVisibleRanges", Id);
         /**
          * Get the vertical position (top offset) for the line's top w.r.t. to the first line.
          */
         public Task<double> GetTopForLineNumber(int lineNumber)
-            => jsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getTopForLineNumber", Id, lineNumber);
+            => JsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getTopForLineNumber", Id, lineNumber);
         /**
          * Get the vertical position (top offset) for the line's bottom w.r.t. to the first line.
          */
@@ -611,17 +600,17 @@ namespace BlazorMonaco.Editor
          * Get the vertical position (top offset) for the position w.r.t. to the first line.
          */
         public Task<double> GetTopForPosition(int lineNumber, int column)
-            => jsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getTopForPosition", Id, lineNumber, column);
+            => JsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getTopForPosition", Id, lineNumber, column);
         /**
          * Returns the editor's container dom node
          */
         public Task<string> GetContainerDomNodeId()
-            => jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getContainerDomNodeId", Id);
+            => JsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getContainerDomNodeId", Id);
         /**
          * Returns the editor's dom node
          */
         public Task<string> GetDomNodeId()
-            => jsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getDomNodeId", Id);
+            => JsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getDomNodeId", Id);
         /**
          * Add a content widget. Widgets must have unique ids, otherwise they will be overwritten.
          */
@@ -658,12 +647,12 @@ namespace BlazorMonaco.Editor
          * Use this method with caution.
          */
         public Task<int> GetOffsetForColumn(int lineNumber, int column)
-            => jsRuntime.SafeInvokeAsync<int>("blazorMonaco.editor.getOffsetForColumn", Id, lineNumber, column);
+            => JsRuntime.SafeInvokeAsync<int>("blazorMonaco.editor.getOffsetForColumn", Id, lineNumber, column);
         /**
          * Force an editor render now.
          */
         public Task Render(bool? forceRedraw = null)
-            => jsRuntime.SafeInvokeAsync("blazorMonaco.editor.render", Id, forceRedraw);
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.render", Id, forceRedraw);
         /**
          * Get the hit test target at coordinates `clientX` and `clientY`.
          * The coordinates are relative to the top-left of the viewport.
@@ -671,7 +660,7 @@ namespace BlazorMonaco.Editor
          * @returns Hit test target or null if the coordinates fall outside the editor or the editor has no model.
          */
         public Task<BaseMouseTarget> GetTargetAtClientPoint(int clientX, int clientY)
-            => jsRuntime.SafeInvokeAsync<BaseMouseTarget>("blazorMonaco.editor.getTargetAtClientPoint", Id, clientX, clientY);
+            => JsRuntime.SafeInvokeAsync<BaseMouseTarget>("blazorMonaco.editor.getTargetAtClientPoint", Id, clientX, clientY);
         /**
          * Get the visible position for `position`.
          * The result position takes scrolling into account and is relative to the top left corner of the editor.
@@ -680,7 +669,7 @@ namespace BlazorMonaco.Editor
          * Warning: the results of this method are inaccurate for positions that are outside the current editor viewport.
          */
         public Task<ScrolledVisiblePosition> GetScrolledVisiblePosition(Position position)
-            => jsRuntime.SafeInvokeAsync<ScrolledVisiblePosition>("blazorMonaco.editor.getScrolledVisiblePosition", Id, position);
+            => JsRuntime.SafeInvokeAsync<ScrolledVisiblePosition>("blazorMonaco.editor.getScrolledVisiblePosition", Id, position);
         /**
          * Apply the same font settings as the editor to `target`.
          */
