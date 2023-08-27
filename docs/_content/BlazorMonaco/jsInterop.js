@@ -958,7 +958,7 @@ window.blazorMonaco.languages = {
         monaco.languages.registerCompletionItemProvider(language, {
             triggerCharacters: triggerCharacters,
             provideCompletionItems: (model, position, context, cancellationToken) => {
-                return completionItemProviderRef.invokeMethodAsync("ProvideCompletionItems", decodeURI(model.uri.toString()), position, context).then(result => { return result; });
+                return completionItemProviderRef.invokeMethodAsync("ProvideCompletionItems", decodeURI(model.uri.toString()), position, context);
             },
             resolveCompletionItem: (completionItem, cancellationToken) => {
                 return completionItemProviderRef.invokeMethodAsync("ResolveCompletionItem", completionItem);
