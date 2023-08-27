@@ -6,6 +6,22 @@ window.blazorMonaco.editor = {
 
     //#region Utilities
 
+    convertUriToString: function (obj) {
+        if (obj == null)
+            return obj;
+        if (Array.isArray(obj))
+            return obj.map(this.convertUriToString);
+
+        Object.keys(obj).forEach(k => {
+            if (monaco.Uri.isUri(obj[k]))
+                obj[k] = obj[k].toString();
+            else if (typeof obj[k] === 'object')
+                blazorMonaco.editor.convertUriToString(obj[k]);
+        });
+
+        return obj;
+    },
+
     removeCircularReferences: function (orig) {
         if (Array.isArray(orig))
             return orig.map(this.removeCircularReferences);
@@ -154,13 +170,28 @@ window.blazorMonaco.editor = {
     setModelLanguage: function (uriStr, languageId) {
         var model = this.model.getModel(uriStr);
         if (model == null)
-            return null;
-        return monaco.editor.setModelLanguage(model, languageId);
+            return;
+        monaco.editor.setModelLanguage(model, languageId);
+    },
+
+    setModelMarkers: function (uriStr, owner, markers) {
+        var model = this.model.getModel(uriStr);
+        if (model == null)
+            return;
+        monaco.editor.setModelMarkers(model, owner, markers);
+    },
+
+    removeAllMarkers: function (owner) {
+        monaco.editor.removeAllMarkers(owner);
+    },
+
+    getModelMarkers: function (filter) {
+        var markers = monaco.editor.getModelMarkers(filter);
+        return blazorMonaco.editor.convertUriToString(markers);
     },
 
     setTheme: function (theme) {
         monaco.editor.setTheme(theme);
-        return true;
     },
 
     getEditorHolder: function (id, silent = false) {
@@ -509,10 +540,7 @@ window.blazorMonaco.editor = {
         let listener = function (e) {
             var eventJson = JSON.stringify(e);
             if (eventName == "OnDidChangeModel") {
-                eventJson = JSON.stringify({
-                    oldModelUri: e.oldModelUrl == null ? null : e.oldModelUrl.toString(),
-                    newModelUri: e.newModelUrl == null ? null : e.newModelUrl.toString(),
-                });
+                eventJson = JSON.stringify(blazorMonaco.editor.convertUriToString(e));
             }
             else if (eventName == "OnDidChangeConfiguration") {
                 eventJson = JSON.stringify(e._values);
@@ -892,6 +920,50 @@ window.blazorMonaco.editor = {
             let model = this.getModel(uriStr);
             return model.dispose();
         }
+    }
+
+    //#endregion
+}
+
+window.blazorMonaco.languages = {
+    //#region Static methods
+
+    registerCodeActionProvider: async function (language, codeActionProviderRef, metadata) {
+        monaco.languages.registerCodeActionProvider(language, {
+            provideCodeActions: (model, range, context, cancellationToken) => {
+                return codeActionProviderRef.invokeMethodAsync("ProvideCodeActions", decodeURI(model.uri.toString()), range, context)
+                    .then(result =>
+                    {
+                        (result.actions || []).forEach(action => {
+                            (action.edit.edits || []).forEach(edit => {
+                                if (edit.resource != null)
+                                    edit.resource = monaco.Uri.parse(edit.resource)
+                                if (edit.oldResource != null)
+                                    edit.oldResource = monaco.Uri.parse(edit.oldResource)
+                                if (edit.newResource != null)
+                                    edit.newResource = monaco.Uri.parse(edit.newResource)
+                            });
+                        });
+                        result.dispose = () => { };
+                        return result;
+                    });
+            },
+            resolveCodeAction: (codeAction, cancellationToken) => {
+                return codeActionProviderRef.invokeMethodAsync("ResolveCodeAction", codeAction);
+            }
+        }, metadata);
+    },
+
+    registerCompletionItemProvider: async function (language, triggerCharacters, completionItemProviderRef) {
+        monaco.languages.registerCompletionItemProvider(language, {
+            triggerCharacters: triggerCharacters,
+            provideCompletionItems: (model, position, context, cancellationToken) => {
+                return completionItemProviderRef.invokeMethodAsync("ProvideCompletionItems", decodeURI(model.uri.toString()), position, context);
+            },
+            resolveCompletionItem: (completionItem, cancellationToken) => {
+                return completionItemProviderRef.invokeMethodAsync("ResolveCompletionItem", completionItem);
+            }
+        });
     }
 
     //#endregion

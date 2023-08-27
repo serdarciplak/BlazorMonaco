@@ -45,7 +45,7 @@
     private async Task EditorOnDidInit()
     {
         // Get or create the original model
-        TextModel original_model = await Global.GetModel(jsRuntime, "sample-diff-editor-originalModel");
+        TextModel original_model = await BlazorMonaco.Editor.Global.GetModel(jsRuntime, "sample-diff-editor-originalModel");
         if (original_model == null)
         {
             var original_value = "\"use strict\";\n" +
@@ -57,11 +57,11 @@
                             "Person.prototype.getAge = function () {\n" +
                             "	return this.age;\n" +
                             "};\n";
-            original_model = await Global.CreateModel(jsRuntime, original_value, "javascript", "sample-diff-editor-originalModel");
+            original_model = await BlazorMonaco.Editor.Global.CreateModel(jsRuntime, original_value, "javascript", "sample-diff-editor-originalModel");
         }
 
         // Get or create the modified model
-        TextModel modified_model = await Global.GetModel(jsRuntime, "sample-diff-editor-modifiedModel");
+        TextModel modified_model = await BlazorMonaco.Editor.Global.GetModel(jsRuntime, "sample-diff-editor-modifiedModel");
         if (modified_model == null)
         {
             var modified_value = "\"don't use strict\";\n" +
@@ -74,7 +74,7 @@
                             "	return this.age_is_just_a_number;\n" +
                             "};\n" +
                             "//Really, it is just a number people!";
-            modified_model = await Global.CreateModel(jsRuntime, modified_value, "javascript", "sample-diff-editor-modifiedModel");
+            modified_model = await BlazorMonaco.Editor.Global.CreateModel(jsRuntime, modified_value, "javascript", "sample-diff-editor-modifiedModel");
         }
 
         // Set the editor model

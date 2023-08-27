@@ -370,15 +370,7 @@ namespace BlazorMonaco.Editor
         public Task UpdateOptions(DiffEditorOptions newOptions)
         {
             // Convert the options object into a JsonElement to get rid of the properties with null values
-            var optionsJson = JsonSerializer.Serialize(newOptions, new JsonSerializerOptions
-            {
-#if !NET6_0_OR_GREATER
-                IgnoreNullValues = true,
-#else
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-#endif
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+            var optionsJson = JsonSerializer.Serialize(newOptions, JsonSerializerExt.DefaultOptions);
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
             return JsRuntime.SafeInvokeAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
         }
