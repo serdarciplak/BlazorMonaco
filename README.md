@@ -171,7 +171,7 @@ await BlazorMonaco.Editor.Global.SetTheme(jsRuntime, "my-custom-theme");
 
 ## Documentation
 
-As BlazorMonaco is just a bridge between JavaScript and Blazor, you can use Monaco Editor's [documentation](https://microsoft.github.io/monaco-editor/api/index.html).
+As BlazorMonaco is just a bridge between JavaScript and Blazor, you can use Monaco Editor's [documentation](https://microsoft.github.io/monaco-editor/docs.html).
 
 ## Migration Guide
 
