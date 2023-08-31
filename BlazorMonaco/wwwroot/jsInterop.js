@@ -118,7 +118,7 @@ window.blazorMonaco.editor = {
         window.blazorMonaco.editors.push({ id: id + "_original", editor: editor.getOriginalEditor(), dotnetRef: dotnetRefOriginal });
         window.blazorMonaco.editors.push({ id: id + "_modified", editor: editor.getModifiedEditor(), dotnetRef: dotnetRefModified });
 
-        if (oldModel !== null)
+        if (oldModel !== null && oldModel?.original !== null && oldModel?.modified !== null)
             editor.setModel(oldModel);
     },
 
