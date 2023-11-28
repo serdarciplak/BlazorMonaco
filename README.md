@@ -12,7 +12,7 @@ Some less-frequently used Monaco Editor features are currently missing, but a go
 
 Current version of BlazorMonaco :
 * Uses `Monaco Editor v0.34.1`
-* Supports `netstandard2.0`, `net5.0`, `net6.0` and `net7.0`
+* Supports `netstandard2.0`, `net5.0`, `net6.0`, `net7.0` and `net8.0`
 
 ## Demo
 
