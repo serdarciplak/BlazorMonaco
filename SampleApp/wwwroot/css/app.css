@@ -116,6 +116,17 @@ app {
     color: red;
 }
 
+.loading-progress-text {
+    text-align: center;
+    margin-top: 50px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+    .loading-progress-text:after {
+        content: var(--blazor-load-percentage-text, "Loading");
+    }
+
 #blazor-error-ui {
     background: lightyellow;
     bottom: 0;
