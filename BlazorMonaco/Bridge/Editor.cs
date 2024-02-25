@@ -113,15 +113,18 @@ namespace BlazorMonaco.Editor
          */
         // Already implemented in StandaloneCodeEditor and DiffEditor classes
         // updateOptions(newOptions: IEditorOptions): void;
-        
+
         /**
          * Instructs the editor to remeasure its container. This method should
          * be called when the container of the editor gets resized.
          *
          * If a dimension is passed in, the passed in value will be used.
+         *
+         * By default, this will also render the editor immediately.
+         * If you prefer to delay rendering to the next animation frame, use postponeRendering == true.
          */
-        public Task Layout(Dimension dimension = null)
-            => JsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.layout", Id, dimension);
+        public Task Layout(Dimension dimension = null, bool? postponeRendering = null)
+            => JsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.layout", Id, dimension, postponeRendering);
         /**
          * Brings browser focus to the editor text
          */

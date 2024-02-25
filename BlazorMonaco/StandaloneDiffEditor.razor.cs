@@ -4,7 +4,6 @@ using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace BlazorMonaco.Editor
@@ -136,6 +135,7 @@ namespace BlazorMonaco.Editor
         [Parameter] public EventCallback<ConfigurationChangedEvent> OnDidChangeConfigurationOriginal { get; set; }
         [Parameter] public EventCallback<CursorPositionChangedEvent> OnDidChangeCursorPositionOriginal { get; set; }
         [Parameter] public EventCallback<CursorSelectionChangedEvent> OnDidChangeCursorSelectionOriginal { get; set; }
+        [Parameter] public EventCallback<ModelChangedEvent> OnWillChangeModelOriginal { get; set; }
         [Parameter] public EventCallback<ModelChangedEvent> OnDidChangeModelOriginal { get; set; }
         [Parameter] public EventCallback<ModelDecorationsChangedEvent> OnDidChangeModelDecorationsOriginal { get; set; }
         [Parameter] public EventCallback OnDidFocusEditorTextOriginal { get; set; }
@@ -170,6 +170,7 @@ namespace BlazorMonaco.Editor
         [Parameter] public EventCallback<ConfigurationChangedEvent> OnDidChangeConfigurationModified { get; set; }
         [Parameter] public EventCallback<CursorPositionChangedEvent> OnDidChangeCursorPositionModified { get; set; }
         [Parameter] public EventCallback<CursorSelectionChangedEvent> OnDidChangeCursorSelectionModified { get; set; }
+        [Parameter] public EventCallback<ModelChangedEvent> OnWillChangeModelModified { get; set; }
         [Parameter] public EventCallback<ModelChangedEvent> OnDidChangeModelModified { get; set; }
         [Parameter] public EventCallback<ModelDecorationsChangedEvent> OnDidChangeModelDecorationsModified { get; set; }
         [Parameter] public EventCallback OnDidFocusEditorTextModified { get; set; }
@@ -219,6 +220,7 @@ namespace BlazorMonaco.Editor
                 OriginalEditor.OnDidChangeConfiguration = OnDidChangeConfigurationOriginal;
                 OriginalEditor.OnDidChangeCursorPosition = OnDidChangeCursorPositionOriginal;
                 OriginalEditor.OnDidChangeCursorSelection = OnDidChangeCursorSelectionOriginal;
+                OriginalEditor.OnWillChangeModel = OnWillChangeModelOriginal;
                 OriginalEditor.OnDidChangeModel = OnDidChangeModelOriginal;
                 OriginalEditor.OnDidChangeModelDecorations = OnDidChangeModelDecorationsOriginal;
                 OriginalEditor.OnDidFocusEditorText = OnDidFocusEditorTextOriginal;
@@ -258,6 +260,7 @@ namespace BlazorMonaco.Editor
                 ModifiedEditor.OnDidChangeConfiguration = OnDidChangeConfigurationModified;
                 ModifiedEditor.OnDidChangeCursorPosition = OnDidChangeCursorPositionModified;
                 ModifiedEditor.OnDidChangeCursorSelection = OnDidChangeCursorSelectionModified;
+                ModifiedEditor.OnWillChangeModel = OnWillChangeModelModified;
                 ModifiedEditor.OnDidChangeModel = OnDidChangeModelModified;
                 ModifiedEditor.OnDidChangeModelDecorations = OnDidChangeModelDecorationsModified;
                 ModifiedEditor.OnDidFocusEditorText = OnDidFocusEditorTextModified;
@@ -293,6 +296,8 @@ namespace BlazorMonaco.Editor
         {
             if (OnDidUpdateDiff.HasDelegate)
                 await SetEventListener("OnDidUpdateDiff");
+            if (OnDidChangeModel.HasDelegate)
+                await SetEventListener("OnDidChangeModel");
             await base.SetEventListeners();
         }
 
@@ -302,6 +307,7 @@ namespace BlazorMonaco.Editor
             switch (eventName)
             {
                 case "OnDidUpdateDiff": await OnDidUpdateDiff.InvokeAsync(this); break;
+                case "OnDidChangeModel": await OnDidChangeModel.InvokeAsync(this); break;
             }
             await base.EventCallback(eventName, eventJson);
         }
@@ -320,6 +326,12 @@ namespace BlazorMonaco.Editor
         [Parameter]
         public EventCallback<DiffEditor> OnDidUpdateDiff { get; set; }
         /**
+         * An event emitted when the diff model is changed (i.e. the diff editor shows new content).
+         * @event
+         */
+        [Parameter]
+        public EventCallback<DiffEditor> OnDidChangeModel { get; set; }
+        /**
          * Saves current view state of the editor in a serializable object.
          */
         //saveViewState(): IDiffEditorViewState | null;
@@ -332,6 +344,7 @@ namespace BlazorMonaco.Editor
          */
         public Task<DiffEditorModel> GetModel()
             => JsRuntime.SafeInvokeAsync<DiffEditorModel>("blazorMonaco.editor.getInstanceDiffModel", Id);
+        //createViewModel(model: IDiffEditorModel) : IDiffEditorViewModel;
         /**
          * Sets the current model attached to this editor.
          * If the previous model was created by the editor via the value key in the options
@@ -342,6 +355,7 @@ namespace BlazorMonaco.Editor
          */
         public Task SetModel(DiffEditorModel model)
             => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.setInstanceDiffModel", Id, model);
+        //setModel(model: IDiffEditorModel | IDiffEditorViewModel | null) : void;
         /**
          * Get the `original` editor.
          */
@@ -355,16 +369,6 @@ namespace BlazorMonaco.Editor
          */
         //getLineChanges(): ILineChange[] | null;
         /**
-         * Get information based on computed diff about a line number from the original model.
-         * If the diff computation is not finished or the model is missing, will return null.
-         */
-        //getDiffLineInformationForOriginal(lineNumber: number): IDiffLineInformation | null;
-        /**
-         * Get information based on computed diff about a line number from the modified model.
-         * If the diff computation is not finished or the model is missing, will return null.
-         */
-        //getDiffLineInformationForModified(lineNumber: number): IDiffLineInformation | null;
-        /**
          * Update the editor's options after the editor has been created.
          */
         public Task UpdateOptions(DiffEditorOptions newOptions)
@@ -374,5 +378,17 @@ namespace BlazorMonaco.Editor
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
             return JsRuntime.SafeInvokeAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
         }
+        /**
+         * Jumps to the next or previous diff.
+         */
+        //goToDiff(target: 'next' | 'previous') : void;
+        /**
+         * Scrolls to the first diff.
+         * (Waits until the diff computation finished.)
+         */
+        //revealFirstDiff() : unknown;
+        //accessibleDiffViewerNext() : void;
+        //accessibleDiffViewerPrev() : void;
+        //handleInitialized() : void;
     }
 }

@@ -11,8 +11,8 @@ Blazor component for Microsoft's [Monaco Editor](https://github.com/Microsoft/mo
 Some less-frequently used Monaco Editor features are currently missing, but a good amount of the basic feature set is supported. The package is updated regularly to cover more features and use cases. Any contributions, comments or suggestions are greatly welcome. Please feel free to contact me at [twitter/serdarciplak](https://twitter.com/serdarciplak) or via GitHub.
 
 Current version of BlazorMonaco :
-* Uses `Monaco Editor v0.34.1`
-* Supports `netstandard2.0`, `net5.0`, `net6.0` and `net7.0`
+* Uses `Monaco Editor v0.46.0`
+* Supports `netstandard2.0`, `net5.0`, `net6.0`, `net7.0` and `net8.0`
 
 ## Demo
 
@@ -171,7 +171,7 @@ await BlazorMonaco.Editor.Global.SetTheme(jsRuntime, "my-custom-theme");
 
 ## Documentation
 
-As BlazorMonaco is just a bridge between JavaScript and Blazor, you can use Monaco Editor's [documentation](https://microsoft.github.io/monaco-editor/api/index.html).
+As BlazorMonaco is just a bridge between JavaScript and Blazor, you can use Monaco Editor's [documentation](https://microsoft.github.io/monaco-editor/docs.html).
 
 ## Migration Guide
 

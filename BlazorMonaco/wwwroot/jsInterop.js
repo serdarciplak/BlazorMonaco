@@ -118,7 +118,7 @@ window.blazorMonaco.editor = {
         window.blazorMonaco.editors.push({ id: id + "_original", editor: editor.getOriginalEditor(), dotnetRef: dotnetRefOriginal });
         window.blazorMonaco.editors.push({ id: id + "_modified", editor: editor.getModifiedEditor(), dotnetRef: dotnetRefModified });
 
-        if (oldModel !== null)
+        if (oldModel !== null && oldModel?.original !== null && oldModel?.modified !== null)
             editor.setModel(oldModel);
     },
 
@@ -405,14 +405,19 @@ window.blazorMonaco.editor = {
         return editor.getTargetAtClientPoint(clientX, clientY);
     },
 
-    getTopForLineNumber: function (id, lineNumber) {
+    getTopForLineNumber: function (id, lineNumber, includeViewZones) {
         let editor = this.getEditor(id);
-        return editor.getTopForLineNumber(lineNumber);
+        return editor.getTopForLineNumber(lineNumber, includeViewZones);
     },
 
     getTopForPosition: function (id, lineNumber, column) {
         let editor = this.getEditor(id);
         return editor.getTopForPosition(lineNumber, column);
+    },
+
+    writeScreenReaderContent: function (id, reason) {
+        let editor = this.getEditor(id);
+        editor.writeScreenReaderContent(reason);
     },
 
     getValue: function (id, preserveBOM, lineEnding) {
@@ -447,9 +452,9 @@ window.blazorMonaco.editor = {
         return editor.hasWidgetFocus();
     },
 
-    layout: function (id, dimension) {
+    layout: function (id, dimension, postponeRendering) {
         let editor = this.getEditor(id);
-        editor.layout(dimension);
+        editor.layout(dimension, postponeRendering);
     },
 
     pushUndoStop: function (id) {
@@ -557,6 +562,7 @@ window.blazorMonaco.editor = {
             case "OnDidChangeConfiguration": editor.onDidChangeConfiguration(listener); break;
             case "OnDidChangeCursorPosition": editor.onDidChangeCursorPosition(listener); break;
             case "OnDidChangeCursorSelection": editor.onDidChangeCursorSelection(listener); break;
+            case "OnWillChangeModel": editor.onWillChangeModel(listener); break;
             case "OnDidChangeModel": editor.onDidChangeModel(listener); break;
             case "OnDidChangeModelContent": editor.onDidChangeModelContent(listener); break;
             case "OnDidChangeModelDecorations": editor.onDidChangeModelDecorations(listener); break;
@@ -614,6 +620,11 @@ window.blazorMonaco.editor = {
     setScrollPosition: function (id, newPosition, scrollType) {
         let editor = this.getEditor(id);
         editor.setScrollPosition(newPosition, scrollType);
+    },
+
+    hasPendingScrollAnimation: function (id) {
+        let editor = this.getEditor(id);
+        return editor.hasPendingScrollAnimation();
     },
 
     setScrollTop: function (id, newScrollTop, scrollType) {
@@ -700,14 +711,14 @@ window.blazorMonaco.editor = {
             return model.getValueInRange(range, eol);
         },
 
-        getValueLengthInRange: function (uriStr, range) {
+        getValueLengthInRange: function (uriStr, range, eol) {
             let model = this.getModel(uriStr);
-            return model.getValueLengthInRange(range);
+            return model.getValueLengthInRange(range, eol);
         },
 
-        getCharacterCountInRange: function (uriStr, range) {
+        getCharacterCountInRange: function (uriStr, range, eol) {
             let model = this.getModel(uriStr);
-            return model.getCharacterCountInRange(range);
+            return model.getCharacterCountInRange(range, eol);
         },
 
         getLineCount: function (uriStr) {
@@ -852,15 +863,21 @@ window.blazorMonaco.editor = {
             return blazorMonaco.editor.removeCircularReferences(result);
         },
 
-        getDecorationsInRange: function (uriStr, range, ownerId, filterOutValidation) {
+        getDecorationsInRange: function (uriStr, range, ownerId, filterOutValidation, onlyMinimapDecorations, onlyMarginDecorations) {
             let model = this.getModel(uriStr);
-            let result = model.getDecorationsInRange(range, ownerId, filterOutValidation);
+            let result = model.getDecorationsInRange(range, ownerId, filterOutValidation, onlyMinimapDecorations, onlyMarginDecorations);
             return blazorMonaco.editor.removeCircularReferences(result);
         },
 
         getAllDecorations: function (uriStr, ownerId, filterOutValidation) {
             let model = this.getModel(uriStr);
             let result = model.getAllDecorations(ownerId, filterOutValidation);
+            return blazorMonaco.editor.removeCircularReferences(result);
+        },
+
+        getAllMarginDecorations: function (uriStr, ownerId) {
+            let model = this.getModel(uriStr);
+            let result = model.getAllMarginDecorations(ownerId);
             return blazorMonaco.editor.removeCircularReferences(result);
         },
 
