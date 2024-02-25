@@ -159,6 +159,8 @@ namespace BlazorMonaco.Editor
                 await SetEventListener("OnDidChangeCursorPosition");
             if (OnDidChangeCursorSelection.HasDelegate)
                 await SetEventListener("OnDidChangeCursorSelection");
+            if (OnWillChangeModel.HasDelegate)
+                await SetEventListener("OnWillChangeModel");
             if (OnDidChangeModel.HasDelegate)
                 await SetEventListener("OnDidChangeModel");
             if (OnDidChangeModelContent.HasDelegate)
@@ -213,6 +215,7 @@ namespace BlazorMonaco.Editor
                 case "OnDidChangeConfiguration": await OnDidChangeConfiguration.InvokeAsync(new ConfigurationChangedEvent(JsonSerializer.Deserialize<List<bool>>(eventJson, jsonOptions))); break;
                 case "OnDidChangeCursorPosition": await OnDidChangeCursorPosition.InvokeAsync(JsonSerializer.Deserialize<CursorPositionChangedEvent>(eventJson, jsonOptions)); break;
                 case "OnDidChangeCursorSelection": await OnDidChangeCursorSelection.InvokeAsync(JsonSerializer.Deserialize<CursorSelectionChangedEvent>(eventJson, jsonOptions)); break;
+                case "OnWillChangeModel": await OnWillChangeModel.InvokeAsync(JsonSerializer.Deserialize<ModelChangedEvent>(eventJson, jsonOptions)); break;
                 case "OnDidChangeModel": await OnDidChangeModel.InvokeAsync(JsonSerializer.Deserialize<ModelChangedEvent>(eventJson, jsonOptions)); break;
                 case "OnDidChangeModelContent": await OnDidChangeModelContent.InvokeAsync(JsonSerializer.Deserialize<ModelContentChangedEvent>(eventJson, jsonOptions)); break;
                 case "OnDidChangeModelDecorations": await OnDidChangeModelDecorations.InvokeAsync(JsonSerializer.Deserialize<ModelDecorationsChangedEvent>(eventJson, jsonOptions)); break;
@@ -282,6 +285,11 @@ namespace BlazorMonaco.Editor
          * @event
          */
         [Parameter] public EventCallback<CursorSelectionChangedEvent> OnDidChangeCursorSelection { get; set; }
+        /**
+         * An event emitted when the model of this editor is about to change (e.g. from `editor.setModel()`).
+         * @event
+         */
+        [Parameter] public EventCallback<ModelChangedEvent> OnWillChangeModel { get; set; }
         /**
          * An event emitted when the model of this editor has changed (e.g. `editor.setModel()`).
          * @event
@@ -506,11 +514,16 @@ namespace BlazorMonaco.Editor
         public Task SetScrollPosition(NewScrollPosition position, ScrollType? scrollType = null)
             => JsRuntime?.SafeInvokeAsync("blazorMonaco.editor.setScrollPosition", Id, position, scrollType);
         /**
+         * Check if the editor is currently scrolling towards a different scroll position.
+         */
+        public Task<bool> HasPendingScrollAnimation()
+            => JsRuntime?.SafeInvokeAsync<bool>("blazorMonaco.editor.hasPendingScrollAnimation", Id);
+        /**
          * Get an action that is a contribution to this editor.
          * @id Unique identifier of the contribution.
          * @return The action or null if action not found.
          */
-        //getAction(id: string): IEditorAction;
+        //getAction(id: string): IEditorAction | null;
         /**
          * Execute a command on the editor.
          * The edits will land on the undo-redo stack, but no "undo stop" will be pushed.
@@ -558,7 +571,8 @@ namespace BlazorMonaco.Editor
         //getDecorationsInRange(range: Range): IModelDecoration[] | null;
         /**
          * All decorations added through this call will get the ownerId of this editor.
-         * @deprecated
+         * @deprecated Use `createDecorationsCollection`
+         * @see createDecorationsCollection
          */
         public async Task<string[]> DeltaDecorations(string[] oldDecorationIds, ModelDeltaDecoration[] newDecorations)
         {
@@ -590,8 +604,8 @@ namespace BlazorMonaco.Editor
         /**
          * Get the vertical position (top offset) for the line's top w.r.t. to the first line.
          */
-        public Task<double> GetTopForLineNumber(int lineNumber)
-            => JsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getTopForLineNumber", Id, lineNumber);
+        public Task<double> GetTopForLineNumber(int lineNumber, bool? includeViewZones = null)
+            => JsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getTopForLineNumber", Id, lineNumber, includeViewZones);
         /**
          * Get the vertical position (top offset) for the line's bottom w.r.t. to the first line.
          */
@@ -601,6 +615,11 @@ namespace BlazorMonaco.Editor
          */
         public Task<double> GetTopForPosition(int lineNumber, int column)
             => JsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getTopForPosition", Id, lineNumber, column);
+        /**
+         * Write the screen reader content to be the current selection
+         */
+        public Task WriteScreenReaderContent(string reason)
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.writeScreenReaderContent", Id, reason);
         /**
          * Returns the editor's container dom node
          */
@@ -637,6 +656,19 @@ namespace BlazorMonaco.Editor
          * Remove an overlay widget.
          */
         //removeOverlayWidget(widget: IOverlayWidget): void;
+        /**
+         * Add a glyph margin widget. Widgets must have unique ids, otherwise they will be overwritten.
+         */
+        //addGlyphMarginWidget(widget: IGlyphMarginWidget) : void;
+        /**
+         * Layout/Reposition a glyph margin widget. This is a ping to the editor to call widget.getPosition()
+         * and update appropriately.
+         */
+        //layoutGlyphMarginWidget(widget: IGlyphMarginWidget) : void;
+        /**
+         * Remove a glyph margin widget.
+         */
+        //removeGlyphMarginWidget(widget: IGlyphMarginWidget) : void;
         /**
          * Change the view zones. View zones are lost when a new model is attached to the editor.
          */
@@ -675,5 +707,10 @@ namespace BlazorMonaco.Editor
          */
         //applyFontInfo(target: HTMLElement): void;
         //setBanner(bannerDomNode: HTMLElement | null, height: number): void;
+        /**
+         * Is called when the model has been set, view state was restored and options are updated.
+         * This is the best place to compute data for the viewport (such as tokens).
+         */
+        //handleInitialized? (): void;
     }
 }

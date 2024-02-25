@@ -78,14 +78,14 @@ namespace BlazorMonaco.Editor
          * @param range The range describing what text length to get.
          * @return The text length.
          */
-        public Task<int> GetValueLengthInRange(Range range)
-            => JsRuntime.SafeInvokeAsync<int>("blazorMonaco.editor.model.getValueLengthInRange", Uri, range);
+        public Task<int> GetValueLengthInRange(Range range, EndOfLinePreference? eol)
+            => JsRuntime.SafeInvokeAsync<int>("blazorMonaco.editor.model.getValueLengthInRange", Uri, range, eol);
         /**
          * Get the character count of text in a certain range.
          * @param range The range describing what text length to get.
          */
-        public Task<int> GetCharacterCountInRange(Range range)
-            => JsRuntime.SafeInvokeAsync<int>("blazorMonaco.editor.model.getCharacterCountInRange", Uri, range);
+        public Task<int> GetCharacterCountInRange(Range range, EndOfLinePreference? eol)
+            => JsRuntime.SafeInvokeAsync<int>("blazorMonaco.editor.model.getCharacterCountInRange", Uri, range, eol);
         /**
          * Get the number of lines in the model.
          */
@@ -309,10 +309,12 @@ namespace BlazorMonaco.Editor
          * @param range The range to search in
          * @param ownerId If set, it will ignore decorations belonging to other owners.
          * @param filterOutValidation If set, it will ignore decorations specific to validation (i.e. warnings, errors).
+         * @param onlyMinimapDecorations If set, it will return only decorations that render in the minimap.
+         * @param onlyMarginDecorations If set, it will return only decorations that render in the glyph margin.
          * @return An array with the decorations
          */
-        public Task<ModelDecoration[]> GetDecorationsInRange(Range range, int? ownerId, bool? filterOutValidation)
-            => JsRuntime.SafeInvokeAsync<ModelDecoration[]>("blazorMonaco.editor.model.getDecorationsInRange", Uri, range, ownerId, filterOutValidation);
+        public Task<ModelDecoration[]> GetDecorationsInRange(Range range, int? ownerId, bool? filterOutValidation, bool? onlyMinimapDecorations, bool? onlyMarginDecorations)
+            => JsRuntime.SafeInvokeAsync<ModelDecoration[]>("blazorMonaco.editor.model.getDecorationsInRange", Uri, range, ownerId, filterOutValidation, onlyMinimapDecorations, onlyMarginDecorations);
         /**
          * Gets all the decorations as an array.
          * @param ownerId If set, it will ignore decorations belonging to other owners.
@@ -320,6 +322,12 @@ namespace BlazorMonaco.Editor
          */
         public Task<List<ModelDecoration>> GetAllDecorations(int? ownerId, bool? filterOutValidation)
             => JsRuntime.SafeInvokeAsync<List<ModelDecoration>>("blazorMonaco.editor.model.getAllDecorations", Uri, ownerId, filterOutValidation);
+        /**
+         * Gets all decorations that render in the glyph margin as an array.
+         * @param ownerId If set, it will ignore decorations belonging to other owners.
+         */
+        public Task<List<ModelDecoration>> GetAllMarginDecorations(int? ownerId)
+            => JsRuntime.SafeInvokeAsync<List<ModelDecoration>>("blazorMonaco.editor.model.getAllMarginDecorations", Uri, ownerId);
         /**
          * Gets all the decorations that should be rendered in the overview ruler as an array.
          * @param ownerId If set, it will ignore decorations belonging to other owners.
