@@ -522,7 +522,7 @@ namespace BlazorMonaco
         //preventDefault() : void;
         //stopPropagation() : void;
     }
-    
+
     public class MouseEvent
     {
         public MouseEvent BrowserEvent { get; set; }
@@ -641,7 +641,7 @@ namespace BlazorMonaco
         //static isIPosition(obj: any) : obj is IPosition;
         //toJSON() : IPosition;
     }
-    
+
     /**
      * A range in the editor. (startLineNumber,startColumn) is <= (endLineNumber,endColumn)
      */
@@ -940,7 +940,7 @@ namespace BlazorMonaco.Editor
             DotNetObjectReference<Editor> dotnetObjectRef)
         {
             options = options ?? new StandaloneEditorConstructionOptions();
-            
+
             // Convert the options object into a JsonElement to get rid of the properties with null values
             var optionsJson = JsonSerializer.Serialize(options, JsonSerializerExt.DefaultOptions);
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
@@ -988,7 +988,7 @@ namespace BlazorMonaco.Editor
             DotNetObjectReference<Editor> dotnetObjectRefModified)
         {
             options = options ?? new StandaloneDiffEditorConstructionOptions();
-            
+
             // Convert the options object into a JsonElement to get rid of the properties with null values
             var optionsJson = JsonSerializer.Serialize(options, JsonSerializerExt.DefaultOptions);
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
@@ -1126,7 +1126,8 @@ namespace BlazorMonaco.Editor
         public static async Task<List<TextModel>> GetModels(IJSRuntime jsRuntime)
         {
             var result = await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<List<TextModel>>("blazorMonaco.editor.getModels");
-            result.ForEach(t => {
+            result.ForEach(t =>
+            {
                 if (t != null)
                     t.JsRuntime = JsRuntimeExt.UpdateRuntime(jsRuntime);
             });
@@ -4068,11 +4069,11 @@ namespace BlazorMonaco.Editor
          * Is the diff editor inside another editor
          * Defaults to false
          */
-        bool? IsInEmbeddedEditor{ get; set; }
+        bool? IsInEmbeddedEditor { get; set; }
         /**
          * If the diff editor should only show the difference review mode.
          */
-        bool? OnlyShowAccessibleDiffViewer{ get; set; }
+        bool? OnlyShowAccessibleDiffViewer { get; set; }
         /*hideUnchangedRegions?: {
             enabled?: boolean;
             revealLineCount?: number;
@@ -6762,6 +6763,12 @@ namespace BlazorMonaco.Languages
          */
         //export function registerDocumentFormattingEditProvider(languageSelector: LanguageSelector, provider: DocumentFormattingEditProvider) : IDisposable;
 
+        public static Task RegisterDocumentFormattingEditProvider(IJSRuntime jsRuntime, LanguageSelector language, DocumentFormattingEditProvider.ProvideDocumentFormattingEditsDelegate provideDocumentFormattingEdits)
+            => RegisterDocumentFormattingEditProvider(jsRuntime, language, new DocumentFormattingEditProvider(provideDocumentFormattingEdits));
+
+        public static Task RegisterDocumentFormattingEditProvider(IJSRuntime jsRuntime, LanguageSelector language, DocumentFormattingEditProvider documentFormattingEditProvider)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.languages.registerDocumentFormattingEditProvider", language, DotNetObjectReference.Create(documentFormattingEditProvider));
+
         /**
          * Register a formatter that can handle a range inside a model.
          */
@@ -6838,7 +6845,8 @@ namespace BlazorMonaco.Languages
      * Contains additional diagnostic information about the context in which
      * a [code action](#CodeActionProvider.provideCodeActions) is run.
      */
-    public class CodeActionContext {
+    public class CodeActionContext
+    {
         /**
          * An array of diagnostics.
          */
@@ -6857,7 +6865,8 @@ namespace BlazorMonaco.Languages
      * The code action interface defines the contract between extensions and
      * the [light bulb](https://code.visualstudio.com/docs/editor/editingevolved#_code-action) feature.
      */
-    public class CodeActionProvider {
+    public class CodeActionProvider
+    {
 
         /**
          * Provide commands for the given document and range.
@@ -7386,7 +7395,8 @@ namespace BlazorMonaco.Languages
      * Contains additional information about the context in which
      * {@link CompletionItemProvider.provideCompletionItems completion provider} is triggered.
      */
-    public class CompletionContext {
+    public class CompletionContext
+    {
         /**
          * How the completion was triggered.
          */
@@ -7410,7 +7420,8 @@ namespace BlazorMonaco.Languages
      * when a completion item is shown in the UI and gains focus this provider is asked to resolve
      * the item, like adding {@link CompletionItem.documentation doc-comment} or {@link CompletionItem.detail details}.
      */
-    public class CompletionItemProvider {
+    public class CompletionItemProvider
+    {
         public List<string> TriggerCharacters { get; set; }
 
         /**
@@ -7456,7 +7467,8 @@ namespace BlazorMonaco.Languages
         Explicit = 1
     }
 
-    public class InlineCompletionContext {
+    public class InlineCompletionContext
+    {
         /**
          * How the completion was triggered.
          */
@@ -7464,7 +7476,8 @@ namespace BlazorMonaco.Languages
         public SelectedSuggestionInfo SelectedSuggestionInfo { get; }
     }
 
-    public class SelectedSuggestionInfo {
+    public class SelectedSuggestionInfo
+    {
         public Range Range { get; set; }
         public string Text { get; set; }
         public CompletionItemKind CompletionKind { get; set; }
@@ -7573,7 +7586,8 @@ namespace BlazorMonaco.Languages
         Auto = 2
     }
 
-    public class CodeActionList /* TODO : IDisposable*/ {
+    public class CodeActionList /* TODO : IDisposable*/
+    {
         public List<CodeAction> Actions { get; set; }
     }
 
@@ -7971,6 +7985,12 @@ namespace BlazorMonaco.Languages
         insertSpaces: boolean;
     }*/
 
+    public class FormattingOptions
+    {
+        public int TabSize { get; set; }
+        public bool InsertSpaces { get; set; }
+    }
+
     /**
      * The document formatting provider interface defines the contract between extensions and
      * the formatting-feature.
@@ -7982,6 +8002,21 @@ namespace BlazorMonaco.Languages
          * /
         provideDocumentFormattingEdits(model: editor.ITextModel, options: FormattingOptions, token: CancellationToken): ProviderResult<TextEdit[]>;
     }*/
+
+    public class DocumentFormattingEditProvider
+    {
+        public string DisplayName { get; set; }
+
+        public delegate Task<TextEdit[]> ProvideDocumentFormattingEditsDelegate(string modelUri, FormattingOptions options);
+        public ProvideDocumentFormattingEditsDelegate ProvideDocumentFormattingEditsFunc { get; set; }
+        [JSInvokable]
+        public Task<TextEdit[]> ProvideDocumentFormattingEdits(string modelUri, FormattingOptions options) => ProvideDocumentFormattingEditsFunc.Invoke(modelUri, options);
+
+        public DocumentFormattingEditProvider(ProvideDocumentFormattingEditsDelegate provideDocumentFormattingEditsDelegate)
+        {
+            ProvideDocumentFormattingEditsFunc = provideDocumentFormattingEditsDelegate;
+        }
+    }
 
     /**
      * The document formatting provider interface defines the contract between extensions and
