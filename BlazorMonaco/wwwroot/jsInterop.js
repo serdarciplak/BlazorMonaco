@@ -985,7 +985,7 @@ window.blazorMonaco.languages = {
     registerDocumentFormattingEditProvider: async function (language, documentFormattingEditProviderRef) {
         monaco.languages.registerDocumentFormattingEditProvider(language, {
             provideDocumentFormattingEdits: (model, context, cancellationToken) => {
-                return completionItemProviderRef.invokeMethodAsync("ProvideDocumentFormattingEdits", decodeURI(model.uri.toString()), context);
+                return documentFormattingEditProviderRef.invokeMethodAsync("ProvideDocumentFormattingEdits", decodeURI(model.uri.toString()), context);
             }
         });
     }

@@ -932,8 +932,7 @@ window.blazorMonaco.languages = {
         monaco.languages.registerCodeActionProvider(language, {
             provideCodeActions: (model, range, context, cancellationToken) => {
                 return codeActionProviderRef.invokeMethodAsync("ProvideCodeActions", decodeURI(model.uri.toString()), range, context)
-                    .then(result =>
-                    {
+                    .then(result => {
                         (result.actions || []).forEach(action => {
                             (action.edit.edits || []).forEach(edit => {
                                 if (edit.resource != null)
@@ -962,6 +961,14 @@ window.blazorMonaco.languages = {
             },
             resolveCompletionItem: (completionItem, cancellationToken) => {
                 return completionItemProviderRef.invokeMethodAsync("ResolveCompletionItem", completionItem);
+            }
+        });
+    },
+
+    registerDocumentFormattingEditProvider: async function (language, documentFormattingEditProviderRef) {
+        monaco.languages.registerDocumentFormattingEditProvider(language, {
+            provideDocumentFormattingEdits: (model, context, cancellationToken) => {
+                return documentFormattingEditProviderRef.invokeMethodAsync("ProvideDocumentFormattingEdits", decodeURI(model.uri.toString()), context);
             }
         });
     }
