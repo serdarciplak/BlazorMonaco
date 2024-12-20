@@ -71,7 +71,10 @@ window.blazorMonaco.editor = {
 
         var oldEditor = this.getEditor(id, true);
         if (oldEditor !== null) {
-            options.value = oldEditor.getValue();
+            if (options.value == null) {
+                options.value = oldEditor.getValue();
+            }
+
             window.blazorMonaco.editors.splice(window.blazorMonaco.editors.findIndex(item => item.id === id), 1);
             oldEditor.dispose();
         }
