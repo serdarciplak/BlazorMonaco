@@ -6761,13 +6761,14 @@ namespace BlazorMonaco.Languages
         /**
          * Register a formatter that can handle only entire models.
          */
-        //export function registerDocumentFormattingEditProvider(languageSelector: LanguageSelector, provider: DocumentFormattingEditProvider) : IDisposable;
-
         public static Task RegisterDocumentFormattingEditProvider(IJSRuntime jsRuntime, LanguageSelector language, DocumentFormattingEditProvider.ProvideDocumentFormattingEditsDelegate provideDocumentFormattingEdits)
-            => RegisterDocumentFormattingEditProvider(jsRuntime, language, new DocumentFormattingEditProvider(provideDocumentFormattingEdits));
+            => RegisterDocumentFormattingEditProvider(jsRuntime, language, null, provideDocumentFormattingEdits);
+
+        public static Task RegisterDocumentFormattingEditProvider(IJSRuntime jsRuntime, LanguageSelector language, string displayName, DocumentFormattingEditProvider.ProvideDocumentFormattingEditsDelegate provideDocumentFormattingEdits)
+            => RegisterDocumentFormattingEditProvider(jsRuntime, language, new DocumentFormattingEditProvider(displayName, provideDocumentFormattingEdits));
 
         public static Task RegisterDocumentFormattingEditProvider(IJSRuntime jsRuntime, LanguageSelector language, DocumentFormattingEditProvider documentFormattingEditProvider)
-            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.languages.registerDocumentFormattingEditProvider", language, DotNetObjectReference.Create(documentFormattingEditProvider));
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.languages.registerDocumentFormattingEditProvider", language, documentFormattingEditProvider.DisplayName, DotNetObjectReference.Create(documentFormattingEditProvider));
 
         /**
          * Register a formatter that can handle a range inside a model.
@@ -7974,17 +7975,6 @@ namespace BlazorMonaco.Languages
     /**
      * Interface used to format a model
      */
-    /*export interface FormattingOptions {
-        /**
-         * Size of a tab in spaces.
-         * /
-        tabSize: number;
-        /**
-         * Prefer spaces over tabs.
-         * /
-        insertSpaces: boolean;
-    }*/
-
     public class FormattingOptions
     {
         public int TabSize { get; set; }
@@ -7995,25 +7985,17 @@ namespace BlazorMonaco.Languages
      * The document formatting provider interface defines the contract between extensions and
      * the formatting-feature.
      */
-    /*export interface DocumentFormattingEditProvider {
-        readonly displayName?: string;
-        /**
-         * Provide formatting edits for a whole document.
-         * /
-        provideDocumentFormattingEdits(model: editor.ITextModel, options: FormattingOptions, token: CancellationToken): ProviderResult<TextEdit[]>;
-    }*/
-
     public class DocumentFormattingEditProvider
     {
-        public string DisplayName { get; set; }
-
+        public string DisplayName { get; }
         public delegate Task<TextEdit[]> ProvideDocumentFormattingEditsDelegate(string modelUri, FormattingOptions options);
         public ProvideDocumentFormattingEditsDelegate ProvideDocumentFormattingEditsFunc { get; set; }
         [JSInvokable]
         public Task<TextEdit[]> ProvideDocumentFormattingEdits(string modelUri, FormattingOptions options) => ProvideDocumentFormattingEditsFunc.Invoke(modelUri, options);
 
-        public DocumentFormattingEditProvider(ProvideDocumentFormattingEditsDelegate provideDocumentFormattingEditsDelegate)
+        public DocumentFormattingEditProvider(string displayName, ProvideDocumentFormattingEditsDelegate provideDocumentFormattingEditsDelegate)
         {
+            DisplayName = displayName;
             ProvideDocumentFormattingEditsFunc = provideDocumentFormattingEditsDelegate;
         }
     }

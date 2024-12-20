@@ -963,14 +963,6 @@ window.blazorMonaco.languages = {
                 return completionItemProviderRef.invokeMethodAsync("ResolveCompletionItem", completionItem);
             }
         });
-    },
-
-    registerDocumentFormattingEditProvider: async function (language, documentFormattingEditProviderRef) {
-        monaco.languages.registerDocumentFormattingEditProvider(language, {
-            provideDocumentFormattingEdits: (model, context, cancellationToken) => {
-                return documentFormattingEditProviderRef.invokeMethodAsync("ProvideDocumentFormattingEdits", decodeURI(model.uri.toString()), context);
-            }
-        });
     }
 
     //#endregion

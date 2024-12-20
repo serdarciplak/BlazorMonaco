@@ -28,10 +28,11 @@
         <button @onclick="RegisterCodeActionProvider">RegisterCodeActionProvider</button> <span style="font-size:10px">Hover over the "this" on line:4</span>
     </div>
     <div style="margin:10px 0;">
-        <button @onclick="RegisterCompletionItemProvider">RegisterCompletionItemProvider</button> <span style="font-size:10px">Ctrl+Space on the "this" on line:4</span>
+        <button @onclick="RegisterDocumentFormattingEditProvider">RegisterDocumentFormattingEditProvider</button>
+        <span style="font-size:10px">Shift+Alt+F to trigger the action.</span>
     </div>
-        <div style="margin:10px 0;">
-        <button @onclick="RegisterDocumentFormattingEditProvider">RegisterDocumentFormattingEditProvider</button> <span style="font-size:10px">Shift+Alt+F to trigger the action.</span>
+    <div style="margin:10px 0;">
+        <button @onclick="RegisterCompletionItemProvider">RegisterCompletionItemProvider</button> <span style="font-size:10px">Ctrl+Space on the "this" on line:4</span>
     </div>
     <div style="margin:10px 0;">
         See the console for the button results.
@@ -196,6 +197,26 @@
         });
     }
 
+    private async Task RegisterDocumentFormattingEditProvider()
+    {
+        await BlazorMonaco.Languages.Global.RegisterDocumentFormattingEditProvider(jsRuntime, "javascript", async (modelUri, options) =>
+        {
+            var model = await _editor.GetModel();
+            var lines = await model.GetLineCount();
+            var columns = await model.GetLineMaxColumn(lines);
+
+            var value = await _editor.GetValue();
+            var result = value.Split(System.Environment.NewLine).Select(m => m.Trim()).ToArray();
+
+            return [
+                new TextEdit {
+                    Range = new BlazorMonaco.Range(1, 1, lines, columns),
+                    Text = string.Join(System.Environment.NewLine, result)
+                }
+            ];
+        });
+    }
+
     private async Task RegisterCompletionItemProvider()
     {
         // Register completion item to replace warning item
@@ -223,24 +244,6 @@
                 }
             };
             return completionList;
-        });
-    }
-
-    private async Task RegisterDocumentFormattingEditProvider()
-    {
-        await BlazorMonaco.Languages.Global.RegisterDocumentFormattingEditProvider(jsRuntime, "javascript", async (modelUri, context) =>
-        {
-            var value = await _editor.GetValue();
-            var model = await _editor.GetModel();
-            var lines = await model.GetLineCount();
-            var columns = await model.GetLineMaxColumn(lines);
-
-            var result = value.Split(System.Environment.NewLine).Select(m => m.Trim()).ToArray();
-
-            return [new TextEdit {
-                Range = new BlazorMonaco.Range(1, 1, lines, columns),
-                Text = string.Join(System.Environment.NewLine, result)
-            }];
         });
     }
 }
