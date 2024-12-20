@@ -970,6 +970,15 @@ window.blazorMonaco.languages = {
         }, metadata);
     },
 
+    registerDocumentFormattingEditProvider: async function (language, displayName, documentFormattingEditProviderRef) {
+        monaco.languages.registerDocumentFormattingEditProvider(language, {
+            displayName: displayName,
+            provideDocumentFormattingEdits: (model, options, cancellationToken) => {
+                return documentFormattingEditProviderRef.invokeMethodAsync("ProvideDocumentFormattingEdits", decodeURI(model.uri.toString()), options);
+            }
+        });
+    },
+
     registerCompletionItemProvider: async function (language, triggerCharacters, completionItemProviderRef) {
         monaco.languages.registerCompletionItemProvider(language, {
             triggerCharacters: triggerCharacters,

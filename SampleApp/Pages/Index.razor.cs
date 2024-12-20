@@ -162,6 +162,26 @@ public partial class Index
         });
     }
 
+    private async Task RegisterDocumentFormattingEditProvider()
+    {
+        await BlazorMonaco.Languages.Global.RegisterDocumentFormattingEditProvider(jsRuntime, "javascript", async (modelUri, options) =>
+        {
+            var model = await _editor.GetModel();
+            var lines = await model.GetLineCount();
+            var columns = await model.GetLineMaxColumn(lines);
+
+            var value = await _editor.GetValue();
+            var result = value.Split(System.Environment.NewLine).Select(m => m.Trim()).ToArray();
+
+            return [
+                new TextEdit {
+                    Range = new BlazorMonaco.Range(1, 1, lines, columns),
+                    Text = string.Join(System.Environment.NewLine, result)
+                }
+            ];
+        });
+    }
+
     private async Task RegisterCompletionItemProvider()
     {
         // Register completion item to replace warning item
