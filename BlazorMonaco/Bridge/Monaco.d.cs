@@ -1053,6 +1053,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<TextModel> CreateModel(string value, string language = null, string uri = null)
             => CreateModel(null, value, language, uri);
+
         public static async Task<TextModel> CreateModel(IJSRuntime jsRuntime, string value, string language = null, string uri = null)
         {
             var textModel = await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<TextModel>("blazorMonaco.editor.createModel", value, language, uri);
@@ -1067,6 +1068,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task SetModelLanguage(TextModel model, string languageId)
             => SetModelLanguage(null, model, languageId);
+
         public static Task SetModelLanguage(IJSRuntime jsRuntime, TextModel model, string mimeTypeOrLanguageId)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setModelLanguage", model.Uri, mimeTypeOrLanguageId);
 
@@ -1109,6 +1111,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<TextModel> GetModel(string uri)
             => GetModel(null, uri);
+
         public static async Task<TextModel> GetModel(IJSRuntime jsRuntime, string uri)
         {
             var textModel = await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<TextModel>("blazorMonaco.editor.getModel", uri);
@@ -1123,6 +1126,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<List<TextModel>> GetModels()
             => GetModels(null);
+
         public static async Task<List<TextModel>> GetModels(IJSRuntime jsRuntime)
         {
             var result = await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<List<TextModel>>("blazorMonaco.editor.getModels");
@@ -1176,6 +1180,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<string> Colorize(string text, string languageId, ColorizerOptions options)
             => Colorize(null, text, languageId, options);
+
         public static Task<string> Colorize(IJSRuntime jsRuntime, string text, string languageId, ColorizerOptions options)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<string>("blazorMonaco.editor.colorize", text, languageId, options);
 
@@ -1185,6 +1190,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<string> ColorizeModelLine(TextModel model, int lineNumber, int? tabSize = null)
             => ColorizeModelLine(null, model, lineNumber, tabSize);
+
         public static Task<string> ColorizeModelLine(IJSRuntime jsRuntime, TextModel model, int lineNumber, int? tabSize = null)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<string>("blazorMonaco.editor.colorizeModelLine", model.Uri, lineNumber, tabSize);
 
@@ -1199,6 +1205,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task DefineTheme(string themeName, StandaloneThemeData themeData)
             => DefineTheme(null, themeName, themeData);
+
         public static Task DefineTheme(IJSRuntime jsRuntime, string themeName, StandaloneThemeData themeData)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.defineTheme", themeName, themeData);
 
@@ -1208,6 +1215,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task SetTheme(string themeName)
             => SetTheme(null, themeName);
+
         public static Task SetTheme(IJSRuntime jsRuntime, string themeName)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setTheme", themeName);
 
@@ -1217,6 +1225,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task RemeasureFonts()
             => RemeasureFonts(null);
+
         public static Task RemeasureFonts(IJSRuntime jsRuntime)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.remeasureFonts");
 

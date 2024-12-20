@@ -5,12 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace BlazorMonaco.Editor
 {
-    public partial class StandaloneCodeEditor : CodeEditor
+    public partial class StandaloneCodeEditor
     {
         #region Blazor
 
@@ -78,7 +77,7 @@ namespace BlazorMonaco.Editor
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
             return JsRuntime.SafeInvokeAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
         }
-        
+
         [Obsolete("This method is deprecated. Use AddCommand(int keybinding, CommandHandler handler, string context = null) instead.")]
         public Task AddCommand(int keybinding, Action<StandaloneCodeEditor, int> handler)
         {
