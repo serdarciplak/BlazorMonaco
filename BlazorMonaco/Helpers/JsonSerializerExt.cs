@@ -21,7 +21,8 @@ namespace BlazorMonaco.Helpers
 
     internal static class JsonElementExt
     {
-        public static JsonElement NullElement {
+        public static JsonElement NullElement
+        {
             get
             {
                 using (var doc = JsonDocument.Parse("null"))
@@ -30,7 +31,7 @@ namespace BlazorMonaco.Helpers
                 }
             }
         }
-        
+
         public static string AsString(this JsonElement jsonElement)
         {
             return jsonElement.ValueKind == JsonValueKind.String ? jsonElement.GetString() : null;

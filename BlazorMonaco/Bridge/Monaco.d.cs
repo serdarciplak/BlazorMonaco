@@ -522,7 +522,7 @@ namespace BlazorMonaco
         //preventDefault() : void;
         //stopPropagation() : void;
     }
-    
+
     public class MouseEvent
     {
         public MouseEvent BrowserEvent { get; set; }
@@ -641,7 +641,7 @@ namespace BlazorMonaco
         //static isIPosition(obj: any) : obj is IPosition;
         //toJSON() : IPosition;
     }
-    
+
     /**
      * A range in the editor. (startLineNumber,startColumn) is <= (endLineNumber,endColumn)
      */
@@ -940,7 +940,7 @@ namespace BlazorMonaco.Editor
             DotNetObjectReference<Editor> dotnetObjectRef)
         {
             options = options ?? new StandaloneEditorConstructionOptions();
-            
+
             // Convert the options object into a JsonElement to get rid of the properties with null values
             var optionsJson = JsonSerializer.Serialize(options, JsonSerializerExt.DefaultOptions);
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
@@ -988,7 +988,7 @@ namespace BlazorMonaco.Editor
             DotNetObjectReference<Editor> dotnetObjectRefModified)
         {
             options = options ?? new StandaloneDiffEditorConstructionOptions();
-            
+
             // Convert the options object into a JsonElement to get rid of the properties with null values
             var optionsJson = JsonSerializer.Serialize(options, JsonSerializerExt.DefaultOptions);
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
@@ -1053,6 +1053,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<TextModel> CreateModel(string value, string language = null, string uri = null)
             => CreateModel(null, value, language, uri);
+
         public static async Task<TextModel> CreateModel(IJSRuntime jsRuntime, string value, string language = null, string uri = null)
         {
             var textModel = await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<TextModel>("blazorMonaco.editor.createModel", value, language, uri);
@@ -1067,6 +1068,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task SetModelLanguage(TextModel model, string languageId)
             => SetModelLanguage(null, model, languageId);
+
         public static Task SetModelLanguage(IJSRuntime jsRuntime, TextModel model, string mimeTypeOrLanguageId)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setModelLanguage", model.Uri, mimeTypeOrLanguageId);
 
@@ -1109,6 +1111,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<TextModel> GetModel(string uri)
             => GetModel(null, uri);
+
         public static async Task<TextModel> GetModel(IJSRuntime jsRuntime, string uri)
         {
             var textModel = await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<TextModel>("blazorMonaco.editor.getModel", uri);
@@ -1123,10 +1126,12 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<List<TextModel>> GetModels()
             => GetModels(null);
+
         public static async Task<List<TextModel>> GetModels(IJSRuntime jsRuntime)
         {
             var result = await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<List<TextModel>>("blazorMonaco.editor.getModels");
-            result.ForEach(t => {
+            result.ForEach(t =>
+            {
                 if (t != null)
                     t.JsRuntime = JsRuntimeExt.UpdateRuntime(jsRuntime);
             });
@@ -1175,6 +1180,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<string> Colorize(string text, string languageId, ColorizerOptions options)
             => Colorize(null, text, languageId, options);
+
         public static Task<string> Colorize(IJSRuntime jsRuntime, string text, string languageId, ColorizerOptions options)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<string>("blazorMonaco.editor.colorize", text, languageId, options);
 
@@ -1184,6 +1190,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<string> ColorizeModelLine(TextModel model, int lineNumber, int? tabSize = null)
             => ColorizeModelLine(null, model, lineNumber, tabSize);
+
         public static Task<string> ColorizeModelLine(IJSRuntime jsRuntime, TextModel model, int lineNumber, int? tabSize = null)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<string>("blazorMonaco.editor.colorizeModelLine", model.Uri, lineNumber, tabSize);
 
@@ -1198,6 +1205,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task DefineTheme(string themeName, StandaloneThemeData themeData)
             => DefineTheme(null, themeName, themeData);
+
         public static Task DefineTheme(IJSRuntime jsRuntime, string themeName, StandaloneThemeData themeData)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.defineTheme", themeName, themeData);
 
@@ -1207,6 +1215,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task SetTheme(string themeName)
             => SetTheme(null, themeName);
+
         public static Task SetTheme(IJSRuntime jsRuntime, string themeName)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setTheme", themeName);
 
@@ -1216,6 +1225,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task RemeasureFonts()
             => RemeasureFonts(null);
+
         public static Task RemeasureFonts(IJSRuntime jsRuntime)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.remeasureFonts");
 
@@ -4068,11 +4078,11 @@ namespace BlazorMonaco.Editor
          * Is the diff editor inside another editor
          * Defaults to false
          */
-        bool? IsInEmbeddedEditor{ get; set; }
+        bool? IsInEmbeddedEditor { get; set; }
         /**
          * If the diff editor should only show the difference review mode.
          */
-        bool? OnlyShowAccessibleDiffViewer{ get; set; }
+        bool? OnlyShowAccessibleDiffViewer { get; set; }
         /*hideUnchangedRegions?: {
             enabled?: boolean;
             revealLineCount?: number;
@@ -6838,7 +6848,8 @@ namespace BlazorMonaco.Languages
      * Contains additional diagnostic information about the context in which
      * a [code action](#CodeActionProvider.provideCodeActions) is run.
      */
-    public class CodeActionContext {
+    public class CodeActionContext
+    {
         /**
          * An array of diagnostics.
          */
@@ -6857,7 +6868,8 @@ namespace BlazorMonaco.Languages
      * The code action interface defines the contract between extensions and
      * the [light bulb](https://code.visualstudio.com/docs/editor/editingevolved#_code-action) feature.
      */
-    public class CodeActionProvider {
+    public class CodeActionProvider
+    {
 
         /**
          * Provide commands for the given document and range.
@@ -7386,7 +7398,8 @@ namespace BlazorMonaco.Languages
      * Contains additional information about the context in which
      * {@link CompletionItemProvider.provideCompletionItems completion provider} is triggered.
      */
-    public class CompletionContext {
+    public class CompletionContext
+    {
         /**
          * How the completion was triggered.
          */
@@ -7410,7 +7423,8 @@ namespace BlazorMonaco.Languages
      * when a completion item is shown in the UI and gains focus this provider is asked to resolve
      * the item, like adding {@link CompletionItem.documentation doc-comment} or {@link CompletionItem.detail details}.
      */
-    public class CompletionItemProvider {
+    public class CompletionItemProvider
+    {
         public List<string> TriggerCharacters { get; set; }
 
         /**
@@ -7456,7 +7470,8 @@ namespace BlazorMonaco.Languages
         Explicit = 1
     }
 
-    public class InlineCompletionContext {
+    public class InlineCompletionContext
+    {
         /**
          * How the completion was triggered.
          */
@@ -7464,7 +7479,8 @@ namespace BlazorMonaco.Languages
         public SelectedSuggestionInfo SelectedSuggestionInfo { get; }
     }
 
-    public class SelectedSuggestionInfo {
+    public class SelectedSuggestionInfo
+    {
         public Range Range { get; set; }
         public string Text { get; set; }
         public CompletionItemKind CompletionKind { get; set; }
@@ -7573,7 +7589,8 @@ namespace BlazorMonaco.Languages
         Auto = 2
     }
 
-    public class CodeActionList /* TODO : IDisposable*/ {
+    public class CodeActionList /* TODO : IDisposable*/
+    {
         public List<CodeAction> Actions { get; set; }
     }
 

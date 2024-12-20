@@ -152,7 +152,7 @@ private void EditorDidChangeCursorPosition(CursorPositionChangedEvent eventArgs)
 
 Monaco Editor JavaScript library defines some methods in the global scope. As C# does not allow global methods, BlazorMonaco groups those methods in two static classes named `BlazorMonaco.Editor.Global` and `BlazorMonaco.Language.Global`. If you need to use a Monaco Editor method in the global scope, check where in the JavaScript library that method is, and search for it in the corresponding Global class. They're defined as static methods.
 
-For example, you can use the `SetTheme` method as below. 
+For example, you can use the `SetTheme` method as below.
 
 ```csharp
 await BlazorMonaco.Editor.Global.SetTheme(jsRuntime, "my-custom-theme");
