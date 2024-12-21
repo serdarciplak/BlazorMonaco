@@ -127,11 +127,13 @@ public partial class Index
         await BlazorMonaco.Editor.Global.SetModelMarkers(jsRuntime, model, "default", markers);
 
         // Register quick fix for marker
-        await BlazorMonaco.Languages.Global.RegisterCodeActionProvider(jsRuntime, "javascript", (modelUri, range, context) =>
+        await BlazorMonaco.Languages.Global.RegisterCodeActionProvider(jsRuntime, "javascript", async (modelUri, range, context) =>
         {
+            var model = await BlazorMonaco.Editor.Global.GetModel(jsRuntime, modelUri);
+
             var codeActionList = new CodeActionList();
             if (context.Markers.Count == 0)
-                return Task.FromResult(codeActionList);
+                return codeActionList;
 
             codeActionList.Actions =
             [
@@ -158,7 +160,7 @@ public partial class Index
                     IsPreferred = true
                 }
             ];
-            return Task.FromResult(codeActionList);
+            return codeActionList;
         });
     }
 
@@ -185,8 +187,10 @@ public partial class Index
     private async Task RegisterCompletionItemProvider()
     {
         // Register completion item to replace warning item
-        await BlazorMonaco.Languages.Global.RegisterCompletionItemProvider(jsRuntime, "javascript", (modelUri, position, context) =>
+        await BlazorMonaco.Languages.Global.RegisterCompletionItemProvider(jsRuntime, "javascript", async (modelUri, position, context) =>
         {
+            var model = await BlazorMonaco.Editor.Global.GetModel(jsRuntime, modelUri);
+
             var completionList = new CompletionList()
             {
                 Suggestions =
@@ -208,7 +212,7 @@ public partial class Index
                     }
                 ]
             };
-            return Task.FromResult(completionList);
+            return completionList;
         });
     }
 }
