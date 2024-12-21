@@ -131,7 +131,7 @@ public partial class Index
         {
             var codeActionList = new CodeActionList();
             if (context.Markers.Count == 0)
-                return codeActionList;
+                return Task.FromResult(codeActionList);
 
             codeActionList.Actions =
             [
@@ -158,7 +158,7 @@ public partial class Index
                     IsPreferred = true
                 }
             ];
-            return codeActionList;
+            return Task.FromResult(codeActionList);
         });
     }
 
@@ -208,7 +208,7 @@ public partial class Index
                     }
                 ]
             };
-            return completionList;
+            return Task.FromResult(completionList);
         });
     }
 }

@@ -1,4 +1,4 @@
-﻿using BlazorMonaco.Editor;
+using BlazorMonaco.Editor;
 using BlazorMonaco.Helpers;
 using Microsoft.JSInterop;
 using System;
@@ -6762,19 +6762,21 @@ namespace BlazorMonaco.Languages
         /**
          * Register a code action provider (used by e.g. quick fix).
          */
+        [Obsolete("Please use the new RegisterCodeActionProvider method with async parameters instead.")]
         public static Task RegisterCodeActionProvider(IJSRuntime jsRuntime, LanguageSelector language, CodeActionProvider.ProvideCodeActionsDelegate provideCodeActions, CodeActionProvider.ResolveCodeActionDelegate resolveCodeAction = null, CodeActionProviderMetadata metadata = null)
             => RegisterCodeActionProvider(jsRuntime, language, new CodeActionProvider(provideCodeActions, resolveCodeAction), metadata);
+
+        public static Task RegisterCodeActionProvider(IJSRuntime jsRuntime, LanguageSelector language, CodeActionProvider.ProvideDelegate provideCodeActions, CodeActionProvider.ResolveDelegate resolveCodeAction = null, CodeActionProviderMetadata metadata = null)
+            => RegisterCodeActionProvider(jsRuntime, language, new CodeActionProvider(provideCodeActions, resolveCodeAction), metadata);
+
         public static Task RegisterCodeActionProvider(IJSRuntime jsRuntime, LanguageSelector language, CodeActionProvider codeActionProvider, CodeActionProviderMetadata metadata = null)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.languages.registerCodeActionProvider", language, DotNetObjectReference.Create(codeActionProvider), metadata);
 
         /**
          * Register a formatter that can handle only entire models.
          */
-        public static Task RegisterDocumentFormattingEditProvider(IJSRuntime jsRuntime, LanguageSelector language, DocumentFormattingEditProvider.ProvideDocumentFormattingEditsDelegate provideDocumentFormattingEdits)
-            => RegisterDocumentFormattingEditProvider(jsRuntime, language, null, provideDocumentFormattingEdits);
-
-        public static Task RegisterDocumentFormattingEditProvider(IJSRuntime jsRuntime, LanguageSelector language, string displayName, DocumentFormattingEditProvider.ProvideDocumentFormattingEditsDelegate provideDocumentFormattingEdits)
-            => RegisterDocumentFormattingEditProvider(jsRuntime, language, new DocumentFormattingEditProvider(displayName, provideDocumentFormattingEdits));
+        public static Task RegisterDocumentFormattingEditProvider(IJSRuntime jsRuntime, LanguageSelector language, DocumentFormattingEditProvider.ProvideDelegate provideDocumentFormattingEdits)
+            => RegisterDocumentFormattingEditProvider(jsRuntime, language, new DocumentFormattingEditProvider(null, provideDocumentFormattingEdits));
 
         public static Task RegisterDocumentFormattingEditProvider(IJSRuntime jsRuntime, LanguageSelector language, DocumentFormattingEditProvider documentFormattingEditProvider)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.languages.registerDocumentFormattingEditProvider", language, documentFormattingEditProvider.DisplayName, DotNetObjectReference.Create(documentFormattingEditProvider));
@@ -6797,8 +6799,13 @@ namespace BlazorMonaco.Languages
         /**
          * Register a completion item provider (use by e.g. suggestions).
          */
+        [Obsolete("Please use the new RegisterCompletionItemProvider method with async parameters instead.")]
         public static Task RegisterCompletionItemProvider(IJSRuntime jsRuntime, LanguageSelector language, CompletionItemProvider.ProvideCompletionItemsDelegate provideCompletionItems, CompletionItemProvider.ResolveCompletionItemDelegate resolveCompletionItem = null)
             => RegisterCompletionItemProvider(jsRuntime, language, new CompletionItemProvider(provideCompletionItems, resolveCompletionItem));
+
+        public static Task RegisterCompletionItemProvider(IJSRuntime jsRuntime, LanguageSelector language, CompletionItemProvider.ProvideDelegate provideCompletionItems, CompletionItemProvider.ResolveDelegate resolveCompletionItem = null)
+            => RegisterCompletionItemProvider(jsRuntime, language, new CompletionItemProvider(null, provideCompletionItems, resolveCompletionItem));
+
         public static Task RegisterCompletionItemProvider(IJSRuntime jsRuntime, LanguageSelector language, CompletionItemProvider completionItemProvider)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.languages.registerCompletionItemProvider", language, completionItemProvider.TriggerCharacters, DotNetObjectReference.Create(completionItemProvider));
 
@@ -6877,27 +6884,51 @@ namespace BlazorMonaco.Languages
      */
     public class CodeActionProvider
     {
-
         /**
          * Provide commands for the given document and range.
          */
+        [Obsolete("Please use the new async ProvideDelegate instead.")]
         public delegate CodeActionList ProvideCodeActionsDelegate(string modelUri, Range range, CodeActionContext context);
+        [Obsolete("Please use the new async ProvideMethod instead.")]
         public ProvideCodeActionsDelegate ProvideCodeActionsFunc { get; set; }
+        public delegate Task<CodeActionList> ProvideDelegate(string modelUri, Range range, CodeActionContext context);
+        public ProvideDelegate ProvideMethod { get; set; }
+
         [JSInvokable]
-        public CodeActionList ProvideCodeActions(string modelUri, Range range, CodeActionContext context) => ProvideCodeActionsFunc.Invoke(modelUri, range, context);
+        public Task<CodeActionList> ProvideCodeActions(string modelUri, Range range, CodeActionContext context)
+#pragma warning disable CS0618 // Type or member is obsolete
+            => ProvideMethod?.Invoke(modelUri, range, context)
+                ?? Task.FromResult(ProvideCodeActionsFunc?.Invoke(modelUri, range, context));
+#pragma warning restore CS0618 // Type or member is obsolete
 
         /**
          * Given a code action fill in the edit. Will only invoked when missing.
          */
+        [Obsolete("Please use the new async ResolveDelegate instead.")]
         public delegate CodeAction ResolveCodeActionDelegate(CodeAction codeAction);
+        [Obsolete("Please use the new async ResolveMethod instead.")]
         public ResolveCodeActionDelegate ResolveCodeActionFunc { get; set; }
-        [JSInvokable]
-        public CodeAction ResolveCodeAction(CodeAction codeAction) => ResolveCodeActionFunc?.Invoke(codeAction);
+        public delegate Task<CodeAction> ResolveDelegate(CodeAction codeAction);
+        public ResolveDelegate ResolveMethod { get; set; }
 
+        [JSInvokable]
+        public Task<CodeAction> ResolveCodeAction(CodeAction codeAction)
+#pragma warning disable CS0618 // Type or member is obsolete
+            => ResolveMethod?.Invoke(codeAction)
+                ?? Task.FromResult(ResolveCodeActionFunc?.Invoke(codeAction));
+#pragma warning restore CS0618 // Type or member is obsolete
+
+        [Obsolete("Please use the new constructor with async parameters instead.")]
         public CodeActionProvider(ProvideCodeActionsDelegate provideCodeActions, ResolveCodeActionDelegate resolveCodeAction = null)
         {
             ProvideCodeActionsFunc = provideCodeActions;
             ResolveCodeActionFunc = resolveCodeAction;
+        }
+
+        public CodeActionProvider(ProvideDelegate provideCodeActions, ResolveDelegate resolveCodeAction = null)
+        {
+            ProvideMethod = provideCodeActions;
+            ResolveMethod = resolveCodeAction;
         }
     }
 
@@ -7437,10 +7468,19 @@ namespace BlazorMonaco.Languages
         /**
          * Provide completion items for the given position and document.
          */
+        [Obsolete("Please use the new async ProvideDelegate instead.")]
         public delegate CompletionList ProvideCompletionItemsDelegate(string modelUri, Position position, CompletionContext context);
+        [Obsolete("Please use the new async ProvideMethod instead.")]
         public ProvideCompletionItemsDelegate ProvideCompletionItemsFunc { get; set; }
+        public delegate Task<CompletionList> ProvideDelegate(string modelUri, Position position, CompletionContext context);
+        public ProvideDelegate ProvideMethod { get; set; }
+
         [JSInvokable]
-        public CompletionList ProvideCompletionItems(string modelUri, Position position, CompletionContext context) => ProvideCompletionItemsFunc.Invoke(modelUri, position, context);
+        public Task<CompletionList> ProvideCompletionItems(string modelUri, Position position, CompletionContext context)
+#pragma warning disable CS0618 // Type or member is obsolete
+            => ProvideMethod?.Invoke(modelUri, position, context)
+                ?? Task.FromResult(ProvideCompletionItemsFunc?.Invoke(modelUri, position, context));
+#pragma warning restore CS0618 // Type or member is obsolete
 
         /**
          * Given a completion item fill in more data, like {@link CompletionItem.documentation doc-comment}
@@ -7448,15 +7488,32 @@ namespace BlazorMonaco.Languages
          *
          * The editor will only resolve a completion item once.
          */
+        [Obsolete("Please use the new async ResolveDelegate instead.")]
         public delegate CompletionItem ResolveCompletionItemDelegate(CompletionItem completionItem);
+        [Obsolete("Please use the new async ResolveMethod instead.")]
         public ResolveCompletionItemDelegate ResolveCompletionItemFunc { get; set; }
-        [JSInvokable]
-        public CompletionItem ResolveCompletionItem(CompletionItem completionItem) => ResolveCompletionItemFunc?.Invoke(completionItem);
+        public delegate Task<CompletionItem> ResolveDelegate(CompletionItem completionItem);
+        public ResolveDelegate ResolveMethod { get; set; }
 
+        [JSInvokable]
+        public Task<CompletionItem> ResolveCompletionItem(CompletionItem completionItem)
+#pragma warning disable CS0618 // Type or member is obsolete
+            => ResolveMethod?.Invoke(completionItem)
+                ?? Task.FromResult(ResolveCompletionItemFunc?.Invoke(completionItem));
+#pragma warning restore CS0618 // Type or member is obsolete
+
+        [Obsolete("Please use the new constructor with async parameters instead.")]
         public CompletionItemProvider(ProvideCompletionItemsDelegate provideCompletionItems, ResolveCompletionItemDelegate resolveCompletionItem = null)
         {
             ProvideCompletionItemsFunc = provideCompletionItems;
             ResolveCompletionItemFunc = resolveCompletionItem;
+        }
+
+        public CompletionItemProvider(List<string> triggerCharacters, ProvideDelegate provideCompletionItems, ResolveDelegate resolveCompletionItem = null)
+        {
+            TriggerCharacters = triggerCharacters;
+            ProvideMethod = provideCompletionItems;
+            ResolveMethod = resolveCompletionItem;
         }
     }
 
@@ -7997,15 +8054,22 @@ namespace BlazorMonaco.Languages
     public class DocumentFormattingEditProvider
     {
         public string DisplayName { get; }
-        public delegate Task<TextEdit[]> ProvideDocumentFormattingEditsDelegate(string modelUri, FormattingOptions options);
-        public ProvideDocumentFormattingEditsDelegate ProvideDocumentFormattingEditsFunc { get; set; }
-        [JSInvokable]
-        public Task<TextEdit[]> ProvideDocumentFormattingEdits(string modelUri, FormattingOptions options) => ProvideDocumentFormattingEditsFunc.Invoke(modelUri, options);
 
-        public DocumentFormattingEditProvider(string displayName, ProvideDocumentFormattingEditsDelegate provideDocumentFormattingEditsDelegate)
+        /**
+         * Provide formatting edits for a whole document.
+         */
+        public delegate Task<TextEdit[]> ProvideDelegate(string modelUri, FormattingOptions options);
+        public ProvideDelegate ProvideMethod { get; set; }
+
+        [JSInvokable]
+        public Task<TextEdit[]> ProvideDocumentFormattingEdits(string modelUri, FormattingOptions options)
+            => ProvideMethod?.Invoke(modelUri, options)
+                ?? Task.FromResult<TextEdit[]>(null);
+
+        public DocumentFormattingEditProvider(string displayName, ProvideDelegate provideDocumentFormattingEditsDelegate)
         {
             DisplayName = displayName;
-            ProvideDocumentFormattingEditsFunc = provideDocumentFormattingEditsDelegate;
+            ProvideMethod = provideDocumentFormattingEditsDelegate;
         }
     }
 
