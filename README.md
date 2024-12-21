@@ -1,10 +1,12 @@
-<p align="center"><img src="https://raw.githubusercontent.com/serdarciplak/BlazorMonaco/master/BlazorMonaco/icon.png" width="150" height="150" /></p>
+# BlazorMonaco
 
-<p align="center">
-<a href="https://www.nuget.org/packages/BlazorMonaco/"><img src="https://buildstats.info/nuget/BlazorMonaco" /></a>
-</p>
+[![Nuget](https://img.shields.io/nuget/v/BlazorMonaco)](https://www.nuget.org/packages/BlazorMonaco)
+[![Nuget](https://img.shields.io/nuget/dt/BlazorMonaco)](https://www.nuget.org/packages/BlazorMonaco)
+[![License-MIT](https://img.shields.io/badge/license-MIT-informational)](https://github.com/serdarciplak/BlazorMonaco/blob/master/LICENSE)
 
-<h1 align="center">BlazorMonaco</h1>
+<a href="#">
+    <img src="https://raw.githubusercontent.com/serdarciplak/BlazorMonaco/master/BlazorMonaco/icon.png" align="right" height="120" style="padding-left:20px;" />
+</a>
 
 Blazor component for Microsoft's [Monaco Editor](https://github.com/Microsoft/monaco-editor) which powers Visual Studio Code.
 
@@ -12,7 +14,7 @@ Some less-frequently used Monaco Editor features are currently missing, but a go
 
 Current version of BlazorMonaco :
 * Uses `Monaco Editor v0.46.0`
-* Supports `netstandard2.0`, `net5.0`, `net6.0`, `net7.0` and `net8.0`
+* Supports `netstandard2.0`, `net5.0`, `net6.0`, `net7.0`, `net8.0` and `net9.0`
 
 ## Demo
 
@@ -175,12 +177,12 @@ As BlazorMonaco is just a bridge between JavaScript and Blazor, you can use Mona
 
 ## Migration Guide
 
-After a major version update (like from `v2.x.x` to `v3.x.x`), you may need to make some changes in your integration. Please see the [MIGRATE.md](./MIGRATE.md) for details.
+After a major version update (like from `v2.x` to `v3.x`), you may need to make some changes in your integration. Please see the [MIGRATE.md](https://github.com/serdarciplak/BlazorMonaco/blob/master/MIGRATE.md) for details.
 
 ## Change Log
 
-You can view the history and the changes in the [CHANGELOG.md](./CHANGELOG.md)
+You can view the history and the changes in the [CHANGELOG.md](https://github.com/serdarciplak/BlazorMonaco/blob/master/CHANGELOG.md)
 
 ## License
 
-MIT, see the [LICENSE](./LICENSE) file for detail.
+MIT, see the [LICENSE](https://github.com/serdarciplak/BlazorMonaco/blob/master/LICENSE) file for details.
