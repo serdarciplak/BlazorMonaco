@@ -1,7 +1,8 @@
 # BlazorMonaco
 
-[![Nuget](https://img.shields.io/nuget/v/BlazorMonaco)](https://www.nuget.org/packages/BlazorMonaco)
 [![Nuget](https://img.shields.io/nuget/dt/BlazorMonaco)](https://www.nuget.org/packages/BlazorMonaco)
+[![Nuget](https://img.shields.io/nuget/v/BlazorMonaco)](https://www.nuget.org/packages/BlazorMonaco)
+[![MonacoEditor](https://img.shields.io/badge/monaco--editor-0.52.2-blue)](https://github.com/microsoft/monaco-editor)
 [![License-MIT](https://img.shields.io/badge/license-MIT-informational)](https://github.com/serdarciplak/BlazorMonaco/blob/master/LICENSE)
 
 <a href="#">
@@ -13,7 +14,7 @@ Blazor component for Microsoft's [Monaco Editor](https://github.com/Microsoft/mo
 Some less-frequently used Monaco Editor features are currently missing, but a good amount of the basic feature set is supported. The package is updated regularly to cover more features and use cases. Any contributions, comments or suggestions are greatly welcome. Please feel free to contact me at [twitter/serdarciplak](https://twitter.com/serdarciplak) or via GitHub.
 
 Current version of BlazorMonaco :
-* Uses `Monaco Editor v0.46.0`
+* Uses `Monaco Editor v0.52.2`
 * Supports `netstandard2.0`, `net5.0`, `net6.0`, `net7.0`, `net8.0` and `net9.0`
 
 ## Demo

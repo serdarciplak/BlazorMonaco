@@ -1,6 +1,7 @@
 # Change Log
 
 ## 3.3.0
+* Updated to Monaco Editor **v0.52.2**
 * Added support for **net9.0**
 * Added support for `RegisterDocumentFormattingEditProvider`.
 * Added async support for `RegisterCodeActionProvider` and `RegisterCompletionItemProvide`.
