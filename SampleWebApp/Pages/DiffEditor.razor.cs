@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using BlazorMonaco;
 using BlazorMonaco.Editor;
 
-namespace SampleServerApp.Pages;
+namespace SampleWebApp.Pages;
 
 public partial class DiffEditor
 {

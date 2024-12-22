@@ -4,7 +4,7 @@ using BlazorMonaco;
 using BlazorMonaco.Editor;
 using Microsoft.JSInterop;
 
-namespace SampleServerApp.Pages;
+namespace SampleWebApp.Pages;
 
 public partial class Test
 {

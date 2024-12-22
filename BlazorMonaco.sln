@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorMonaco", "BlazorMonac
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleWasmApp", "SampleWasmApp\SampleWasmApp.csproj", "{3688DF2B-E1A6-46CF-9F0F-D4AEE6127CAE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleServerApp", "SampleServerApp\SampleServerApp.csproj", "{903868ED-E270-4B94-B9A1-283F8FD7467F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleWebApp", "SampleWebApp\SampleWebApp.csproj", "{903868ED-E270-4B94-B9A1-283F8FD7467F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
