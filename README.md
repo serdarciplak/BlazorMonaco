@@ -31,7 +31,7 @@ You can see a working sample WebAssembly app [here](https://serdarciplak.github.
     Install-Package BlazorMonaco
     ```
 
-- Add the script tags below to your html's body tag. Note that these tags must be placed before the Blazor script tag (`blazor.webassembly.js`, `blazor.server.js` or `blazor.web.js`).
+- Add the script tags below to the end of your html body tag. Note that they must be placed before the Blazor script tag (`blazor.webassembly.js`, `blazor.server.js` or `blazor.web.js`).
 
     ```html
     <script src="_content/BlazorMonaco/jsInterop.js"></script>
@@ -41,43 +41,32 @@ You can see a working sample WebAssembly app [here](https://serdarciplak.github.
 
 - Everything resides in three namespaces. You can add the following using directives to your root `_Imports.razor` file, or any other place you may need them.
 
-    ```
+    ```razor
     @using BlazorMonaco
     @using BlazorMonaco.Editor
     @using BlazorMonaco.Languages
     ```
 
-- Add a `StandaloneCodeEditor` component in your razor file.
+- Add a `StandaloneCodeEditor` or a `StandaloneDiffEditor` component in your razor file and you'll see the editor rendered with the default options.
 
-    ```xml
+    ```razor
     <StandaloneCodeEditor />
+    <!-- or -->
+    <StandaloneDiffEditor />
     ```
+
+>**Note:** If you have any issues like the editor not being visible or not initializing correctly, please check the [troubleshooting](#troubleshooting) section below.
 
 ## Usage
 
-### Adding an editor instance
-
-- Add either a `StandaloneCodeEditor` or a `StandaloneDiffEditor` component in your razor file.
-
-    ```xml
-    <StandaloneCodeEditor Id="my-code-editor-instance-id" />
-    ```
-
-    ```xml
-    <StandaloneDiffEditor Id="my-diff-editor-instance-id" />
-    ```
-
 ### Providing initial options
 
-- To customize your editor instance's initial options, set the `ConstructionOptions` parameter of the instance, and provide a method that returns a `StandaloneEditorConstructionOptions` instance.
+To customize your editor's initial options, set the `ConstructionOptions` parameter and provide a method that returns a `StandaloneEditorConstructionOptions`.
 
-    ```xml
-    <StandaloneCodeEditor Id="my-editor-instance-id" ConstructionOptions="EditorConstructionOptions" />
-    ```
+```razor
+<StandaloneCodeEditor Id="my-code-editor" ConstructionOptions="EditorConstructionOptions" />
 
-- Then, add that method to your razor file's `@code` block and return a `StandaloneEditorConstructionOptions` instance with the values you need.
-
-    ```csharp
+@code {
     private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
     {
         return new StandaloneEditorConstructionOptions
@@ -89,71 +78,87 @@ You can see a working sample WebAssembly app [here](https://serdarciplak.github.
                     "}"
         };
     }
-    ```
+}
+```
 
 ### Listening to editor events
 
-- You can subscribe to editor events (e.g. `OnDidKeyUp` or `OnDidPaste`) via the editor event parameters.
+You can subscribe to editor events (e.g. `OnDidKeyUp` or `OnDidPaste`) via the editor event parameters.
 
-    ```xml
-    <StandaloneCodeEditor Id="my-editor-instance-id" OnDidChangeCursorPosition="EditorDidChangeCursorPosition" />
-    ```
+```razor
+<StandaloneCodeEditor Id="my-code-editor" OnDidChangeCursorPosition="EditorDidChangeCursorPosition" />
 
-- Then, add your event listener method to your razor file's `@code` block.
-
-    ```csharp
+@code {
     private void EditorDidChangeCursorPosition(CursorPositionChangedEvent eventArgs)
     {
         Console.WriteLine("EditorDidChangeCursorPosition");
     }
-    ```
+}
+```
 
-### Accessing a diff editor's inner editor instances and events
+### Accessing a diff editor's inner editors and events
 
-- `StandaloneDiffEditor` provides two properties named `OriginalEditor` and `ModifiedEditor` for accessing the inner editor instances. You can use them like any other `StandaloneCodeEditor` instance.
+`StandaloneDiffEditor` provides two properties named `OriginalEditor` and `ModifiedEditor` for accessing the inner editor instances. You can use them like any other `StandaloneCodeEditor` instance.
 
-- You can register to inner editors' events using the helper event parameters of the main `StandaloneDiffEditor` instance.
+You can register to inner editors' events using the helper event parameters of the main `StandaloneDiffEditor` instance.
 
-    ```xml
-    <StandaloneDiffEditor Id="my-editor-instance-id" OnKeyUpOriginal="OnKeyUpOriginal" OnKeyUpModified="OnKeyUpModified" />
-    ```
+```razor
+<StandaloneDiffEditor @ref="_diffEditor" Id="my-diff-editor" OnKeyUpOriginal="OnKeyUpOriginal" OnKeyUpModified="OnKeyUpModified" />
+
+@code {
+    private StandaloneDiffEditor _diffEditor;
+
+    private void OnKeyUpOriginal(KeyboardEvent keyboardEvent)
+    {
+        StandaloneCodeEditor originalEditor = _diffEditor.OriginalEditor;
+        Console.WriteLine("OnKeyUpOriginal : " + keyboardEvent.Code);
+    }
+
+    private void OnKeyUpModified(KeyboardEvent keyboardEvent)
+    {
+        StandaloneCodeEditor modifiedEditor = _diffEditor.ModifiedEditor;
+        Console.WriteLine("OnKeyUpModified : " + keyboardEvent.Code);
+    }
+}
+
+```
 
 ### Css styling
 
-- There are 3 css selectors you can use to customize the css styles for your editors.
-    - All editor instances are contained in a `div` element that has a css class of `monaco-editor-container`.
-    - The `Id` value you set for your editor instance is also set as the id of its container `div` element.
-    - If you set your editor's `CssClass` property, that value will be added to the class attribute of its container div element.
+There are 3 css selectors you can use to customize the css styles for your editors.
+- All editor instances are contained in a `div` element that has a css class of `monaco-editor-container`.
+- The `Id` value you set for your editor instance is also set as the id of its container `div` element.
+- If you set your editor's `CssClass` property, that value is added to the class attribute of its container div element.
 
-- That means, the razor component below;
+That means, the razor component below;
 
-    ```xml
-    <StandaloneCodeEditor Id="my-editor-id" CssClass="my-editor-class" />
-    ```
+```razor
+<StandaloneCodeEditor Id="my-editor-id" CssClass="my-editor-class" />
+```
 
-    is rendered with the html below;
+is rendered with the html below;
 
-    ```html
-    <div id="my-editor-id" class="monaco-editor-container my-editor-class">
-        ...
-    </div>
-    ```
+```html
+<div id="my-editor-id" class="monaco-editor-container my-editor-class">
+    ...
+</div>
+```
 
-- So, you can use css selectors like below to select any element in an editor and customize its styling.
+So, you can use css selectors like below to select any element in an editor and customize its styling.
 
-    ```css
-    #my-editor-id { /* applies to a specific editor instance */
-        height: 100px;
-    }
+```css
+#my-editor-id { /* applies to a specific editor instance */
+    height: 100px;
+}
 
-    .my-editor-class { /* applies to all editor instances with this class */
-        height: 100px;
-    }
+.my-editor-class { /* applies to all editor instances with this class */
+    height: 100px;
+}
 
-    .monaco-editor-container { /* applies to all editor instances */
-        height: 100px;
-    }
-    ```
+.monaco-editor-container { /* applies to all editor instances */
+    height: 100px;
+}
+```
 
 ### Global Methods
 
@@ -165,26 +170,70 @@ For example, you can use the `SetTheme` method like below.
 await BlazorMonaco.Editor.Global.SetTheme(jsRuntime, "my-custom-theme");
 ```
 
-### Using a custom Monaco Editor setup
+### Using a custom Monaco Editor installation
 
-- If you've made changes to Monaco Editor, and need to use this edited version instead of the unmodified version embedded in BlazorMonaco, modify the script tags like below.
+If you've made changes to Monaco Editor JS library, and need to use this edited version instead of the unmodified version embedded in BlazorMonaco, you can modify the script tags like below.
 
-    ```html
-    <script src="_content/BlazorMonaco/jsInterop.js"></script>
-    <script>var require = { paths: { vs: 'my-path/monaco-editor/min/vs' } };</script>
-    <script src="my-path/monaco-editor/min/vs/loader.js"></script>
-    <script src="my-path/monaco-editor/min/vs/editor/editor.main.js"></script>
-    ```
+```html
+<script src="_content/BlazorMonaco/jsInterop.js"></script>
+<script>var require = { paths: { vs: 'my-path/monaco-editor/min/vs' } };</script>
+<script src="my-path/monaco-editor/min/vs/loader.js"></script>
+<script src="my-path/monaco-editor/min/vs/editor/editor.main.js"></script>
+```
 
 ## Troubleshooting
 
-- **Q:** I have added a `StandaloneCodeEditor` as described above, but I cannot see it.
+- ***Q:*** I have added a `StandaloneCodeEditor` as described above, but it's not loading.
 
-  **A:** Most possibly, the editor is there but you cannot see it because it has a height of 0. How the height of a DOM element can be set depends on the styling of the element's parents. So, BlazorMonaco cannot internally manage the height of the editor instances. If you don't set an editor's height based on where you place it, the editor may be invisible as it has a height of `0px`. Please don't forget to set your editor instances' heights as needed.
+  ***A:*** Most possibly, the editor is actually loading but you cannot see it because it has a height of 0. How a DOM element's height can be set depends on its parent elements and their styling. So, BlazorMonaco cannot internally manage the height of the editor instances. If you don't set an editor's height, it may be invisible as it has a height of `0px`. Please add a CSS style to set your editor's height according to where it's placed.
 
-- **Q:**
+  ```css
+  #my-editor-id {
+      height: 100px;
+  }
+  ```
 
-  **A:**
+- ***Q:*** The editor does not initialize correctly in my Blazor web app.
+
+  ***A:*** To be able to work with the interactive MonacoEditor JS library, BlazorMonaco requires an interactive render mode. If you place the editor instance in a page that uses static server-side rendering (static SSR), the editor instance cannot initialize and work.
+
+  You can set an interactive render mode globally at the app level,
+  ```razor
+  <!-- In your App.razor file -->
+  <Routes @rendermode=InteractiveServer />
+  ```
+
+  only for a specific page,
+  ```razor
+  <!-- In the razor file of your page that contains the editor -->
+  @page "/editor-page"
+  @rendermode InteractiveServer
+
+  <StandaloneCodeEditor />
+  ```
+
+  or only for a component that wraps the editor instance.
+  ```razor
+  <!-- In the razor file of your interactive wrapper component -->
+  @rendermode InteractiveServer
+
+  <StandaloneCodeEditor />
+  ```
+
+- ***Q:*** The editor works OK the first time it's displayed. But it is broken if the user navigates to another page and returns back to the editor's page.
+
+  ***A:*** Please check that the page that contains the editor instance is not opened with Blazor enhanced navigation. Enhanced navigation undos dynamic changes made to the DOM by MonacoEditor JS library and breaks the editor. You need to disable enhanced navigation for pages that contain an editor.
+
+  You can set the `data-enhance-nav` attribute of your links to `false`,
+  ```html
+  <a href="editor-page" data-enhance-nav="false">Editor Page</a>
+  ```
+  set `forceLoad` parameter in your `NavigateTo()` calls to true,
+  ```csharp
+  Navigation.NavigateTo("editor-page", true);
+  ```
+  or use the Blazor docs [here](https://learn.microsoft.com/en-us/aspnet/core/blazor/fundamentals/routing?view=aspnetcore-9.0#enhanced-navigation-and-form-handling) to see all methods for disabling enhanced navigation.
+
 
 ## Documentation
 
