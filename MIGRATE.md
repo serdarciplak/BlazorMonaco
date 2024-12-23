@@ -8,18 +8,19 @@
 
     - The script tags you need to add to your html body are now cleaner. You need to update them.
 
-  ```html
-  <script src="_content/BlazorMonaco/jsInterop.js"></script>
-  <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
-  <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
-  ```
+        ```html
+        <script src="_content/BlazorMonaco/jsInterop.js"></script>
+        <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
+        <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
+        ```
 
 - Everything resides in two namespaces now. You need to update your using directives in your root `_Imports.razor` file or any other places you use them.
 
-  ```
-  @using BlazorMonaco
-  @using BlazorMonaco.Editor
-  ```
+    ```
+    @using BlazorMonaco
+    @using BlazorMonaco.Editor
+    @using BlazorMonaco.Language
+    ```
 
 - Class, property and object names are now better aligned with the original Monaco Editor JavaScript library. You need to update your usages with the new names. You'll notice right away that `MonacoEditor` is renamed as `StandaloneCodeEditor` and `MonacoDiffEditor` is renamed as `StandaloneDiffEditor`. Based on what you use, you'll notice more changes. Just check the namespace and class definitions. If Microsoft did not remove that thing in the new Monaco Editor version, it'll be there with a new name similar to the old one.
 
