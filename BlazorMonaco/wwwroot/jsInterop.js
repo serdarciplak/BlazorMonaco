@@ -1,4 +1,4 @@
-var require = { paths: { vs: '_content/BlazorMonaco/lib/monaco-editor/min/vs' } };
+var require = { paths: { vs: document.baseURI + '_content/BlazorMonaco/lib/monaco-editor/min/vs' } };
 window.blazorMonaco = window.blazorMonaco || {};
 window.blazorMonaco.editors = [];
 
