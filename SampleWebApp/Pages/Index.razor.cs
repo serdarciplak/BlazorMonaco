@@ -174,12 +174,12 @@ public partial class Index
             var columns = await model.GetLineMaxColumn(lines);
 
             var value = await _editor.GetValue();
-            var result = value.Split(System.Environment.NewLine).Select(m => m.Trim()).ToArray();
+            var result = value.Split("\n").Select(m => m.Trim()).ToArray();
 
             return [
                 new TextEdit {
                     Range = new BlazorMonaco.Range(1, 1, lines, columns),
-                    Text = string.Join(System.Environment.NewLine, result)
+                    Text = string.Join("\n", result)
                 }
             ];
         });
