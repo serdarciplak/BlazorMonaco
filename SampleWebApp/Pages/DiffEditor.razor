@@ -1,0 +1,33 @@
+@page "/diff-editor"
+@inject IJSRuntime jsRuntime
+
+<h3>Diff Editor</h3>
+
+<div>
+    <div style="margin:10px 0;">
+        New Value: <input type="text" @bind="_valueToSetOriginal" style="width: 400px;" />
+        <button @onclick="SetValueOriginal">Set Value Original</button>
+    </div>
+    <div style="margin:10px 0;">
+        New Value: <input type="text" @bind="_valueToSetModified" style="width: 400px;" />
+        <button @onclick="SetValueModified">Set Value Modified</button>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="GetValueOriginal">Get Value Original</button>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="GetValueModified">Get Value Modified</button>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="AddCommand">Add Command Original (Ctrl+Enter)</button>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="AddAction">Add Action Modified (Ctrl+B)</button>
+    </div>
+    <div style="margin:10px 0;">
+        See the console for results.
+    </div>
+</div>
+
+<StandaloneDiffEditor @ref="_diffEditor" Id="sample-diff-editor" ConstructionOptions="DiffEditorConstructionOptions"
+    OnDidInit="EditorOnDidInit" OnKeyUpOriginal="EditorOnKeyUpOriginal" OnKeyUpModified="EditorOnKeyUpModified" />

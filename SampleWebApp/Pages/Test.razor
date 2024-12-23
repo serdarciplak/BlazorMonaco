@@ -1,0 +1,22 @@
+@page "/test"
+
+<h3>Test</h3>
+
+<div>
+    <div style="margin:10px 0;">
+        <select @bind="_testName">
+            <option value="all">All</option>
+            @foreach (var test in _tests.Keys)
+            {
+                <option value="@test">@test</option>
+            }
+        </select>
+        <button @onclick="RunTest">Test</button>
+    </div>
+    <div style="margin:10px 0;">
+        See the console for results.
+    </div>
+</div>
+
+<StandaloneCodeEditor @ref="_editor" Id="sample-test-editor" ConstructionOptions="EditorConstructionOptions"
+    OnDidChangeConfiguration="OnDidChangeConfiguration" />
