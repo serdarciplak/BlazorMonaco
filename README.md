@@ -200,7 +200,7 @@ If you've made changes to Monaco Editor JS library, and need to use this edited 
   You can set an interactive render mode globally at the app level,
   ```razor
   <!-- In your App.razor file -->
-  <Routes @rendermode=InteractiveServer />
+  <Routes @rendermode="InteractiveServer" />
   ```
 
   only for a specific page,
@@ -220,7 +220,7 @@ If you've made changes to Monaco Editor JS library, and need to use this edited 
   <StandaloneCodeEditor />
   ```
 
-- ***Q:*** The editor works OK the first time it's displayed. But it is broken if the user navigates to another page and returns back to the editor's page.
+- ***Q:*** The editor works OK the first time it's displayed. But it is broken (as if its css style is incorrect), if the user navigates to another page and returns back to the editor's page.
 
   ***A:*** Please check that the page that contains the editor instance is not opened with Blazor enhanced navigation. Enhanced navigation undos dynamic changes made to the DOM by MonacoEditor JS library and breaks the editor. You need to disable enhanced navigation for pages that contain an editor.
 
@@ -233,7 +233,6 @@ If you've made changes to Monaco Editor JS library, and need to use this edited 
   Navigation.NavigateTo("editor-page", true);
   ```
   or use the Blazor docs [here](https://learn.microsoft.com/en-us/aspnet/core/blazor/fundamentals/routing?view=aspnetcore-9.0#enhanced-navigation-and-form-handling) to see all methods for disabling enhanced navigation.
-
 
 ## Documentation
 
