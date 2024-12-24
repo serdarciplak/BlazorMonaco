@@ -32,7 +32,7 @@ window.blazorMonaco.editor = {
         return editorHolder == null ? null : editorHolder.editor;
     },
 
-    getEditorLineNumberFromDotnet: function (editorId, lineNumber) {
+    getEditorLineNumber: function (editorId, lineNumber) {
         const editorHolder = this.getEditorHolder(editorId, true);
         if (editorHolder == null) {
             return "";
@@ -86,7 +86,7 @@ window.blazorMonaco.editor = {
         if (optionValue.renderType == monaco.editor.RenderLineNumbersType.Custom) {
             editor.updateOptions({
                 lineNumbers: (lineNumber) => {
-                    return this.getEditorLineNumberFromDotnet(editorId, lineNumber);
+                    return this.getEditorLineNumber(editorId, lineNumber);
                 }
             });
         }
@@ -170,7 +170,7 @@ window.blazorMonaco.editor = {
 
         if (options.lineNumbers == "function") {
             options.lineNumbers = (lineNumber) => {
-                return this.getEditorLineNumberFromDotnet(id, lineNumber);
+                return this.getEditorLineNumber(id, lineNumber);
             };
         }
 
@@ -198,7 +198,7 @@ window.blazorMonaco.editor = {
 
         if (options.lineNumbers == "function") {
             options.lineNumbers = (lineNumber) => {
-                return this.getEditorLineNumberFromDotnet(id, lineNumber);
+                return this.getEditorLineNumber(id, lineNumber);
             };
         }
 
