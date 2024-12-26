@@ -1,15 +1,16 @@
-﻿using BlazorMonaco.Editor;
+using BlazorMonaco.Editor;
 using BlazorMonaco.Helpers;
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 /*---------------------------------------------------------------------------------------------
-*  C# translation of the https://github.com/microsoft/monaco-editor/blob/main/website/typedoc/monaco.d.ts file
+*  C# translation of the monaco.d.ts file here : https://www.npmjs.com/package/monaco-editor/v/0.52.2?activeTab=code
 *--------------------------------------------------------------------------------------------*/
 
 //declare let MonacoEnvironment: monaco.Environment | undefined;
@@ -522,7 +523,7 @@ namespace BlazorMonaco
         //preventDefault() : void;
         //stopPropagation() : void;
     }
-    
+
     public class MouseEvent
     {
         public MouseEvent BrowserEvent { get; set; }
@@ -641,7 +642,7 @@ namespace BlazorMonaco
         //static isIPosition(obj: any) : obj is IPosition;
         //toJSON() : IPosition;
     }
-    
+
     /**
      * A range in the editor. (startLineNumber,startColumn) is <= (endLineNumber,endColumn)
      */
@@ -932,7 +933,7 @@ namespace BlazorMonaco.Editor
          * `domElement` should be empty (not contain other dom nodes).
          * The editor will read the size of `domElement`.
          */
-        internal static async Task<StandaloneCodeEditor> Create(
+        internal static async Task Create(
             IJSRuntime jsRuntime,
             string domElementId,
             StandaloneEditorConstructionOptions options,
@@ -940,14 +941,19 @@ namespace BlazorMonaco.Editor
             DotNetObjectReference<Editor> dotnetObjectRef)
         {
             options = options ?? new StandaloneEditorConstructionOptions();
-            
+
             // Convert the options object into a JsonElement to get rid of the properties with null values
             var optionsJson = JsonSerializer.Serialize(options, JsonSerializerExt.DefaultOptions);
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
 
             // Create the editor
+#if NET5_0_OR_GREATER
+            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setWasm", OperatingSystem.IsBrowser());
+#else
+            var isBrowser = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Create("BROWSER"));
+            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setWasm", isBrowser);
+#endif
             await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.create", domElementId, optionsDict, overrideServices, dotnetObjectRef);
-            return dotnetObjectRef.Value as StandaloneCodeEditor;
         }
 
         /**
@@ -978,7 +984,7 @@ namespace BlazorMonaco.Editor
          * `domElement` should be empty (not contain other dom nodes).
          * The editor will read the size of `domElement`.
          */
-        internal static async Task<StandaloneDiffEditor> CreateDiffEditor(
+        internal static async Task CreateDiffEditor(
             IJSRuntime jsRuntime,
             string domElementId,
             StandaloneDiffEditorConstructionOptions options,
@@ -988,14 +994,19 @@ namespace BlazorMonaco.Editor
             DotNetObjectReference<Editor> dotnetObjectRefModified)
         {
             options = options ?? new StandaloneDiffEditorConstructionOptions();
-            
+
             // Convert the options object into a JsonElement to get rid of the properties with null values
             var optionsJson = JsonSerializer.Serialize(options, JsonSerializerExt.DefaultOptions);
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
 
             // Create the editor
+#if NET5_0_OR_GREATER
+            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setWasm", OperatingSystem.IsBrowser());
+#else
+            var isBrowser = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Create("BROWSER"));
+            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setWasm", isBrowser);
+#endif
             await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.createDiffEditor", domElementId, optionsDict, overrideServices, dotnetObjectRef, dotnetObjectRefOriginal, dotnetObjectRefModified);
-            return dotnetObjectRef.Value as StandaloneDiffEditor;
         }
 
         //export function createMultiFileDiffEditor(domElement: HTMLElement, override?: IEditorOverrideServices): any;
@@ -1053,6 +1064,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<TextModel> CreateModel(string value, string language = null, string uri = null)
             => CreateModel(null, value, language, uri);
+
         public static async Task<TextModel> CreateModel(IJSRuntime jsRuntime, string value, string language = null, string uri = null)
         {
             var textModel = await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<TextModel>("blazorMonaco.editor.createModel", value, language, uri);
@@ -1067,6 +1079,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task SetModelLanguage(TextModel model, string languageId)
             => SetModelLanguage(null, model, languageId);
+
         public static Task SetModelLanguage(IJSRuntime jsRuntime, TextModel model, string mimeTypeOrLanguageId)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setModelLanguage", model.Uri, mimeTypeOrLanguageId);
 
@@ -1109,6 +1122,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<TextModel> GetModel(string uri)
             => GetModel(null, uri);
+
         public static async Task<TextModel> GetModel(IJSRuntime jsRuntime, string uri)
         {
             var textModel = await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<TextModel>("blazorMonaco.editor.getModel", uri);
@@ -1123,10 +1137,12 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<List<TextModel>> GetModels()
             => GetModels(null);
+
         public static async Task<List<TextModel>> GetModels(IJSRuntime jsRuntime)
         {
             var result = await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<List<TextModel>>("blazorMonaco.editor.getModels");
-            result.ForEach(t => {
+            result.ForEach(t =>
+            {
                 if (t != null)
                     t.JsRuntime = JsRuntimeExt.UpdateRuntime(jsRuntime);
             });
@@ -1175,6 +1191,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<string> Colorize(string text, string languageId, ColorizerOptions options)
             => Colorize(null, text, languageId, options);
+
         public static Task<string> Colorize(IJSRuntime jsRuntime, string text, string languageId, ColorizerOptions options)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<string>("blazorMonaco.editor.colorize", text, languageId, options);
 
@@ -1184,6 +1201,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task<string> ColorizeModelLine(TextModel model, int lineNumber, int? tabSize = null)
             => ColorizeModelLine(null, model, lineNumber, tabSize);
+
         public static Task<string> ColorizeModelLine(IJSRuntime jsRuntime, TextModel model, int lineNumber, int? tabSize = null)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync<string>("blazorMonaco.editor.colorizeModelLine", model.Uri, lineNumber, tabSize);
 
@@ -1198,6 +1216,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task DefineTheme(string themeName, StandaloneThemeData themeData)
             => DefineTheme(null, themeName, themeData);
+
         public static Task DefineTheme(IJSRuntime jsRuntime, string themeName, StandaloneThemeData themeData)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.defineTheme", themeName, themeData);
 
@@ -1207,6 +1226,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task SetTheme(string themeName)
             => SetTheme(null, themeName);
+
         public static Task SetTheme(IJSRuntime jsRuntime, string themeName)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setTheme", themeName);
 
@@ -1216,6 +1236,7 @@ namespace BlazorMonaco.Editor
         [Obsolete("This method is deprecated as it's WASM only. Use the overload that takes an IJSRuntime parameter.")]
         public static Task RemeasureFonts()
             => RemeasureFonts(null);
+
         public static Task RemeasureFonts(IJSRuntime jsRuntime)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.remeasureFonts");
 
@@ -1347,7 +1368,7 @@ namespace BlazorMonaco.Editor
          */
         public string Label { get; set; }
         /**
-         * Precondition rule.
+         * Precondition rule. The value should be a [context key expression](https://code.visualstudio.com/docs/getstarted/keybindings#_when-clause-contexts).
          */
         public string Precondition { get; set; }
         /**
@@ -1784,6 +1805,15 @@ namespace BlazorMonaco.Editor
         Gutter = 2
     }
 
+    /**
+     * Section header style.
+     */
+    public enum MinimapSectionHeaderStyle
+    {
+        Normal = 1,
+        Underlined = 2
+    }
+
     public class DecorationOptions
     {
         /**
@@ -1831,6 +1861,14 @@ namespace BlazorMonaco.Editor
          * The position in the minimap.
          */
         public MinimapPosition Position { get; set; }
+        /**
+         * If the decoration is for a section header, which header style.
+         */
+        public MinimapSectionHeaderStyle? SectionHeaderStyle { get; set; }
+        /**
+         * If the decoration is for a section header, the header text.
+         */
+        public string SectionHeaderText { get; set; }
     }
 
     /**
@@ -3105,6 +3143,9 @@ namespace BlazorMonaco.Editor
      */
     public class ModelContentChangedEvent
     {
+        /**
+         * The changes are ordered from the end of the document to the beginning, so they should be safe to apply in sequence.
+         */
         public List<ModelContentChange> Changes { get; set; }
         /**
          * The (new) end-of-line character.
@@ -3312,6 +3353,13 @@ namespace BlazorMonaco.Editor
          * Defaults to empty array.
          */
         public int[] Rulers { get; set; } // (number | IRulerOption)[];
+        /**
+         * Locales used for segmenting lines into words when doing word related navigations or operations.
+         *
+         * Specify the BCP 47 language tag of the word you wish to recognize (e.g., ja, zh-CN, zh-Hant-TW, etc.).
+         * Defaults to empty array
+         */
+        public List<string> WordSegmenterLocales { get; set; } // ?: string | string[];
         /**
          * A string containing the word separators used when doing word navigation.
          * Defaults to `~!@#$%^&*()-=+[{]}\\|;:\'",.<>/?
@@ -3667,6 +3715,7 @@ namespace BlazorMonaco.Editor
          */
         public SuggestOptions Suggest { get; set; }
         public InlineSuggestOptions InlineSuggest { get; set; }
+        public InlineEditOptions ExperimentalInlineEdit { get; set; }
         /**
          * Smart select options.
          */
@@ -3924,6 +3973,11 @@ namespace BlazorMonaco.Editor
          */
         public string PeekWidgetDefaultFocus { get; set; } // 'tree' | 'editor';
         /**
+         * Sets a placeholder for the editor.
+         * If set, the placeholder is shown if the editor is empty.
+        */
+        public string Placeholder { get; set; }
+        /**
          * Controls whether the definition link opens element in the peek widget.
          * Defaults to false.
          */
@@ -4006,6 +4060,11 @@ namespace BlazorMonaco.Editor
          */
         bool? UseInlineViewWhenSpaceIsLimited { get; set; }
         /**
+         * If set, the diff editor is optimized for small views.
+         * Defaults to `false`.
+        */
+        bool? CompactMode { get; set; }
+        /**
          * Timeout in milliseconds after which diff computation is cancelled.
          * Defaults to 5000.
          */
@@ -4030,6 +4089,10 @@ namespace BlazorMonaco.Editor
          * Default to true.
          */
         bool? RenderMarginRevertIcon { get; set; }
+        /**
+         * Indicates if the gutter menu should be rendered.
+        */
+        bool? RenderGutterMenu { get; set; }
         /**
          * Original model should be editable?
          * Defaults to false.
@@ -4063,16 +4126,20 @@ namespace BlazorMonaco.Editor
              * /
             showMoves?: boolean;
             showEmptyDecorations?: boolean;
+            /**
+             * Only applies when `renderSideBySide` is set to false.
+            * /
+            useTrueInlineView?: boolean;
         };*/
         /**
          * Is the diff editor inside another editor
          * Defaults to false
          */
-        bool? IsInEmbeddedEditor{ get; set; }
+        bool? IsInEmbeddedEditor { get; set; }
         /**
          * If the diff editor should only show the difference review mode.
          */
-        bool? OnlyShowAccessibleDiffViewer{ get; set; }
+        bool? OnlyShowAccessibleDiffViewer { get; set; }
         /*hideUnchangedRegions?: {
             enabled?: boolean;
             revealLineCount?: number;
@@ -4091,11 +4158,13 @@ namespace BlazorMonaco.Editor
         public bool? RenderSideBySide { get; set; }
         public int? RenderSideBySideInlineBreakpoint { get; set; }
         public bool? UseInlineViewWhenSpaceIsLimited { get; set; }
+        public bool? CompactMode { get; set; }
         public int? MaxComputationTime { get; set; }
         public int? MaxFileSize { get; set; }
         public bool? IgnoreTrimWhitespace { get; set; }
         public bool? RenderIndicators { get; set; }
         public bool? RenderMarginRevertIcon { get; set; }
+        public bool? RenderGutterMenu { get; set; }
         public bool? OriginalEditable { get; set; }
         public bool? DiffCodeLens { get; set; }
         public bool? RenderOverviewRuler { get; set; }
@@ -4275,11 +4344,13 @@ namespace BlazorMonaco.Editor
         public string MultipleDeclarations { get; set; }
         public string MultipleImplementations { get; set; }
         public string MultipleReferences { get; set; }
+        public string MultipleTests { get; set; }
         public string AlternativeDefinitionCommand { get; set; }
         public string AlternativeTypeDefinitionCommand { get; set; }
         public string AlternativeDeclarationCommand { get; set; }
         public string AlternativeImplementationCommand { get; set; }
         public string AlternativeReferenceCommand { get; set; }
+        public string AlternativeTestsCommand { get; set; }
     }
 
     /**
@@ -4548,6 +4619,22 @@ namespace BlazorMonaco.Editor
          * Relative size of the font in the minimap. Defaults to 1.
          */
         public float? Scale { get; set; }
+        /**
+         * Whether to show named regions as section headers. Defaults to true.
+         */
+        public bool? ShowRegionSectionHeaders { get; set; }
+        /**
+         * Whether to show MARK: comments as section headers. Defaults to true.
+         */
+        public bool? ShowMarkSectionHeaders { get; set; }
+        /**
+         * Font size of section headers. Defaults to 9.
+         */
+        public int? SectionHeaderFontSize { get; set; }
+        /**
+         * Spacing between the section header characters (in CSS px). Defaults to 1.
+         */
+        public int? SectionHeaderLetterSpacing { get; set; }
     }
 
     /**
@@ -4789,6 +4876,23 @@ namespace BlazorMonaco.Editor
          * Font family for inline suggestions.
          */
         public string FontFamily { get; set; }
+    }
+
+    public class InlineEditOptions
+    {
+        /**
+         * Enable or disable the rendering of automatic inline edit.
+        */
+        public bool? Enabled { get; set; }
+        public string ShowToolbar { get; set; } // 'always' | 'onHover' | 'never';
+        /**
+         * Font family for inline suggestions.
+         */
+        public string FontFamily { get; set; } // string | 'default';
+        /**
+         * Does not clear active inline suggestions when the editor loses focus.
+         */
+        public bool? KeepOnBlur { get; set; }
     }
 
     public class BracketPairColorizationOptions
@@ -5134,91 +5238,94 @@ namespace BlazorMonaco.Editor
         hover = 60,
         inDiffEditor = 61,
         inlineSuggest = 62,
-        letterSpacing = 63,
-        lightbulb = 64,
-        lineDecorationsWidth = 65,
-        lineHeight = 66,
-        lineNumbers = 67,
-        lineNumbersMinChars = 68,
-        linkedEditing = 69,
-        links = 70,
-        matchBrackets = 71,
-        minimap = 72,
-        mouseStyle = 73,
-        mouseWheelScrollSensitivity = 74,
-        mouseWheelZoom = 75,
-        multiCursorMergeOverlapping = 76,
-        multiCursorModifier = 77,
-        multiCursorPaste = 78,
-        multiCursorLimit = 79,
-        occurrencesHighlight = 80,
-        overviewRulerBorder = 81,
-        overviewRulerLanes = 82,
-        padding = 83,
-        pasteAs = 84,
-        parameterHints = 85,
-        peekWidgetDefaultFocus = 86,
-        definitionLinkOpensInPeek = 87,
-        quickSuggestions = 88,
-        quickSuggestionsDelay = 89,
-        readOnly = 90,
-        readOnlyMessage = 91,
-        renameOnType = 92,
-        renderControlCharacters = 93,
-        renderFinalNewline = 94,
-        renderLineHighlight = 95,
-        renderLineHighlightOnlyWhenFocus = 96,
-        renderValidationDecorations = 97,
-        renderWhitespace = 98,
-        revealHorizontalRightPadding = 99,
-        roundedSelection = 100,
-        rulers = 101,
-        scrollbar = 102,
-        scrollBeyondLastColumn = 103,
-        scrollBeyondLastLine = 104,
-        scrollPredominantAxis = 105,
-        selectionClipboard = 106,
-        selectionHighlight = 107,
-        selectOnLineNumbers = 108,
-        showFoldingControls = 109,
-        showUnused = 110,
-        snippetSuggestions = 111,
-        smartSelect = 112,
-        smoothScrolling = 113,
-        stickyScroll = 114,
-        stickyTabStops = 115,
-        stopRenderingLineAfter = 116,
-        suggest = 117,
-        suggestFontSize = 118,
-        suggestLineHeight = 119,
-        suggestOnTriggerCharacters = 120,
-        suggestSelection = 121,
-        tabCompletion = 122,
-        tabIndex = 123,
-        unicodeHighlighting = 124,
-        unusualLineTerminators = 125,
-        useShadowDOM = 126,
-        useTabStops = 127,
-        wordBreak = 128,
-        wordSeparators = 129,
-        wordWrap = 130,
-        wordWrapBreakAfterCharacters = 131,
-        wordWrapBreakBeforeCharacters = 132,
-        wordWrapColumn = 133,
-        wordWrapOverride1 = 134,
-        wordWrapOverride2 = 135,
-        wrappingIndent = 136,
-        wrappingStrategy = 137,
-        showDeprecated = 138,
-        inlayHints = 139,
-        editorClassName = 140,
-        pixelRatio = 141,
-        tabFocusMode = 142,
-        layoutInfo = 143,
-        wrappingInfo = 144,
-        defaultColorDecorators = 145,
-        colorDecoratorsActivatedOn = 146,
-        inlineCompletionsAccessibilityVerbose = 147
+        inlineEdit = 63,
+        letterSpacing = 64,
+        lightbulb = 65,
+        lineDecorationsWidth = 66,
+        lineHeight = 67,
+        lineNumbers = 68,
+        lineNumbersMinChars = 69,
+        linkedEditing = 70,
+        links = 71,
+        matchBrackets = 72,
+        minimap = 73,
+        mouseStyle = 74,
+        mouseWheelScrollSensitivity = 75,
+        mouseWheelZoom = 76,
+        multiCursorMergeOverlapping = 77,
+        multiCursorModifier = 78,
+        multiCursorPaste = 79,
+        multiCursorLimit = 80,
+        occurrencesHighlight = 81,
+        overviewRulerBorder = 82,
+        overviewRulerLanes = 83,
+        padding = 84,
+        pasteAs = 85,
+        parameterHints = 86,
+        peekWidgetDefaultFocus = 87,
+        placeholder = 88,
+        definitionLinkOpensInPeek = 89,
+        quickSuggestions = 90,
+        quickSuggestionsDelay = 91,
+        readOnly = 92,
+        readOnlyMessage = 93,
+        renameOnType = 94,
+        renderControlCharacters = 95,
+        renderFinalNewline = 96,
+        renderLineHighlight = 97,
+        renderLineHighlightOnlyWhenFocus = 98,
+        renderValidationDecorations = 99,
+        renderWhitespace = 100,
+        revealHorizontalRightPadding = 101,
+        roundedSelection = 102,
+        rulers = 103,
+        scrollbar = 104,
+        scrollBeyondLastColumn = 105,
+        scrollBeyondLastLine = 106,
+        scrollPredominantAxis = 107,
+        selectionClipboard = 108,
+        selectionHighlight = 109,
+        selectOnLineNumbers = 110,
+        showFoldingControls = 111,
+        showUnused = 112,
+        snippetSuggestions = 113,
+        smartSelect = 114,
+        smoothScrolling = 115,
+        stickyScroll = 116,
+        stickyTabStops = 117,
+        stopRenderingLineAfter = 118,
+        suggest = 119,
+        suggestFontSize = 120,
+        suggestLineHeight = 121,
+        suggestOnTriggerCharacters = 122,
+        suggestSelection = 123,
+        tabCompletion = 124,
+        tabIndex = 125,
+        unicodeHighlighting = 126,
+        unusualLineTerminators = 127,
+        useShadowDOM = 128,
+        useTabStops = 129,
+        wordBreak = 130,
+        wordSegmenterLocales = 131,
+        wordSeparators = 132,
+        wordWrap = 133,
+        wordWrapBreakAfterCharacters = 134,
+        wordWrapBreakBeforeCharacters = 135,
+        wordWrapColumn = 136,
+        wordWrapOverride1 = 137,
+        wordWrapOverride2 = 138,
+        wrappingIndent = 139,
+        wrappingStrategy = 140,
+        showDeprecated = 141,
+        inlayHints = 142,
+        editorClassName = 143,
+        pixelRatio = 144,
+        tabFocusMode = 145,
+        layoutInfo = 146,
+        wrappingInfo = 147,
+        defaultColorDecorators = 148,
+        colorDecoratorsActivatedOn = 149,
+        inlineCompletionsAccessibilityVerbose = 150
     }
 
     /*export const EditorOptions: {
@@ -5231,8 +5338,8 @@ namespace BlazorMonaco.Editor
         screenReaderAnnounceInlineSuggestion: IEditorOption<EditorOption.screenReaderAnnounceInlineSuggestion, boolean>;
         autoClosingBrackets: IEditorOption<EditorOption.autoClosingBrackets, 'always' | 'languageDefined' | 'beforeWhitespace' | 'never'>;
         autoClosingComments: IEditorOption<EditorOption.autoClosingComments, 'always' | 'languageDefined' | 'beforeWhitespace' | 'never'>;
-        autoClosingDelete: IEditorOption<EditorOption.autoClosingDelete, 'always' | 'never' | 'auto'>;
-        autoClosingOvertype: IEditorOption<EditorOption.autoClosingOvertype, 'always' | 'never' | 'auto'>;
+        autoClosingDelete: IEditorOption<EditorOption.autoClosingDelete, 'auto' | 'always' | 'never'>;
+        autoClosingOvertype: IEditorOption<EditorOption.autoClosingOvertype, 'auto' | 'always' | 'never'>;
         autoClosingQuotes: IEditorOption<EditorOption.autoClosingQuotes, 'always' | 'languageDefined' | 'beforeWhitespace' | 'never'>;
         autoIndent: IEditorOption<EditorOption.autoIndent, EditorAutoIndentStrategy>;
         automaticLayout: IEditorOption<EditorOption.automaticLayout, boolean>;
@@ -5244,7 +5351,7 @@ namespace BlazorMonaco.Editor
         codeLensFontFamily: IEditorOption<EditorOption.codeLensFontFamily, string>;
         codeLensFontSize: IEditorOption<EditorOption.codeLensFontSize, number>;
         colorDecorators: IEditorOption<EditorOption.colorDecorators, boolean>;
-        colorDecoratorActivatedOn: IEditorOption<EditorOption.colorDecoratorsActivatedOn, 'clickAndHover' | 'click' | 'hover'>;
+        colorDecoratorActivatedOn: IEditorOption<EditorOption.colorDecoratorsActivatedOn, 'hover' | 'clickAndHover' | 'click'>;
         colorDecoratorsLimit: IEditorOption<EditorOption.colorDecoratorsLimit, number>;
         columnSelection: IEditorOption<EditorOption.columnSelection, boolean>;
         comments: IEditorOption<EditorOption.comments, Readonly<Required<IEditorCommentsOptions>>>;
@@ -5311,6 +5418,7 @@ namespace BlazorMonaco.Editor
         pasteAs: IEditorOption<EditorOption.pasteAs, Readonly<Required<IPasteAsOptions>>>;
         parameterHints: IEditorOption<EditorOption.parameterHints, Readonly<Required<IEditorParameterHintOptions>>>;
         peekWidgetDefaultFocus: IEditorOption<EditorOption.peekWidgetDefaultFocus, 'tree' | 'editor'>;
+        placeholder: IEditorOption<EditorOption.placeholder, string>;
         definitionLinkOpensInPeek: IEditorOption<EditorOption.definitionLinkOpensInPeek, boolean>;
         quickSuggestions: IEditorOption<EditorOption.quickSuggestions, InternalQuickSuggestionsOptions>;
         quickSuggestionsDelay: IEditorOption<EditorOption.quickSuggestionsDelay, number>;
@@ -5343,6 +5451,7 @@ namespace BlazorMonaco.Editor
         stopRenderingLineAfter: IEditorOption<EditorOption.stopRenderingLineAfter, number>;
         suggest: IEditorOption<EditorOption.suggest, Readonly<Required<ISuggestOptions>>>;
         inlineSuggest: IEditorOption<EditorOption.inlineSuggest, Readonly<Required<IInlineSuggestOptions>>>;
+        inlineEdit: IEditorOption<EditorOption.inlineEdit, Readonly<Required<IInlineEditOptions>>>;
         inlineCompletionsAccessibilityVerbose: IEditorOption<EditorOption.inlineCompletionsAccessibilityVerbose, boolean>;
         suggestFontSize: IEditorOption<EditorOption.suggestFontSize, number>;
         suggestLineHeight: IEditorOption<EditorOption.suggestLineHeight, number>;
@@ -5351,12 +5460,13 @@ namespace BlazorMonaco.Editor
         tabCompletion: IEditorOption<EditorOption.tabCompletion, 'on' | 'off' | 'onlySnippets'>;
         tabIndex: IEditorOption<EditorOption.tabIndex, number>;
         unicodeHighlight: IEditorOption<EditorOption.unicodeHighlighting, any>;
-        unusualLineTerminators: IEditorOption<EditorOption.unusualLineTerminators, 'auto' | 'off' | 'prompt'>;
+        unusualLineTerminators: IEditorOption<EditorOption.unusualLineTerminators, 'off' | 'auto' | 'prompt'>;
         useShadowDOM: IEditorOption<EditorOption.useShadowDOM, boolean>;
         useTabStops: IEditorOption<EditorOption.useTabStops, boolean>;
         wordBreak: IEditorOption<EditorOption.wordBreak, 'normal' | 'keepAll'>;
+        wordSegmenterLocales: IEditorOption<EditorOption.wordSegmenterLocales, {}>;
         wordSeparators: IEditorOption<EditorOption.wordSeparators, string>;
-        wordWrap: IEditorOption<EditorOption.wordWrap, 'on' | 'off' | 'wordWrapColumn' | 'bounded'>;
+        wordWrap: IEditorOption<EditorOption.wordWrap, 'wordWrapColumn' | 'on' | 'off' | 'bounded'>;
         wordWrapBreakAfterCharacters: IEditorOption<EditorOption.wordWrapBreakAfterCharacters, string>;
         wordWrapBreakBeforeCharacters: IEditorOption<EditorOption.wordWrapBreakBeforeCharacters, string>;
         wordWrapColumn: IEditorOption<EditorOption.wordWrapColumn, number>;
@@ -5622,12 +5732,21 @@ namespace BlazorMonaco.Editor
          * The position preference for the overlay widget.
          * /
         preference: OverlayWidgetPositionPreference | IOverlayWidgetPositionCoordinates | null;
+        /**
+         * When set, stacks with other overlay widgets with the same preference,
+         * in an order determined by the ordinal value.
+         * /
+        stackOridinal?: number;
     }*/
 
     /**
      * An overlay widgets renders on top of the text.
      */
     /*export interface IOverlayWidget {
+        /**
+         * Event fired when the widget layout changes.
+         * /
+        onDidLayout?: IEvent<void>;
         /**
          * Render this overlay widget in a location where it could overflow the editor's view dom node.
          * /
@@ -5911,6 +6030,7 @@ namespace BlazorMonaco.Editor
     {
         public Range Range { get; set; }
         public string LanguageId { get; set; }
+        //readonly clipboardEvent?: ClipboardEvent;
     }
 
     public class DiffEditorConstructionOptions : DiffEditorOptions
@@ -6083,6 +6203,18 @@ namespace BlazorMonaco.Editor
          * @event
          * /
         readonly onDidChangeHiddenAreas: IEvent<void>;
+        /**
+         * Some editor operations fire multiple events at once.
+         * To allow users to react to multiple events fired by a single operation,
+         * the editor fires a begin update before the operation and an end update after the operation.
+         * Whenever the editor fires `onBeginUpdate`, it will also fire `onEndUpdate` once the operation finishes.
+         * Note that not all operations are bracketed by `onBeginUpdate` and `onEndUpdate`.
+        * /
+        readonly onBeginUpdate: IEvent<void>;
+        /**
+         * Fires after the editor completes the operation it fired `onBeginUpdate` for.
+        * /
+        readonly onEndUpdate: IEvent<void>;
         /**
          * Saves current view state of the editor in a serializable object.
          * /
@@ -6705,6 +6837,11 @@ namespace BlazorMonaco.Languages
         //export function registerRenameProvider(languageSelector: LanguageSelector, provider: RenameProvider) : IDisposable;
 
         /**
+        * Register a new symbol-name provider (e.g., when a symbol is being renamed, show new possible symbol-names)
+        */
+        //export function registerNewSymbolNameProvider(languageSelector: LanguageSelector, provider: NewSymbolNamesProvider): IDisposable;
+
+        /**
          * Register a signature help provider (used by e.g. parameter hints).
          */
         //export function registerSignatureHelpProvider(languageSelector: LanguageSelector, provider: SignatureHelpProvider) : IDisposable;
@@ -6752,15 +6889,24 @@ namespace BlazorMonaco.Languages
         /**
          * Register a code action provider (used by e.g. quick fix).
          */
+        [Obsolete("Please use the new RegisterCodeActionProvider method with async parameters instead.")]
         public static Task RegisterCodeActionProvider(IJSRuntime jsRuntime, LanguageSelector language, CodeActionProvider.ProvideCodeActionsDelegate provideCodeActions, CodeActionProvider.ResolveCodeActionDelegate resolveCodeAction = null, CodeActionProviderMetadata metadata = null)
             => RegisterCodeActionProvider(jsRuntime, language, new CodeActionProvider(provideCodeActions, resolveCodeAction), metadata);
+
+        public static Task RegisterCodeActionProvider(IJSRuntime jsRuntime, LanguageSelector language, CodeActionProvider.ProvideDelegate provideCodeActions, CodeActionProvider.ResolveDelegate resolveCodeAction = null, CodeActionProviderMetadata metadata = null)
+            => RegisterCodeActionProvider(jsRuntime, language, new CodeActionProvider(provideCodeActions, resolveCodeAction), metadata);
+
         public static Task RegisterCodeActionProvider(IJSRuntime jsRuntime, LanguageSelector language, CodeActionProvider codeActionProvider, CodeActionProviderMetadata metadata = null)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.languages.registerCodeActionProvider", language, DotNetObjectReference.Create(codeActionProvider), metadata);
 
         /**
          * Register a formatter that can handle only entire models.
          */
-        //export function registerDocumentFormattingEditProvider(languageSelector: LanguageSelector, provider: DocumentFormattingEditProvider) : IDisposable;
+        public static Task RegisterDocumentFormattingEditProvider(IJSRuntime jsRuntime, LanguageSelector language, DocumentFormattingEditProvider.ProvideDelegate provideDocumentFormattingEdits)
+            => RegisterDocumentFormattingEditProvider(jsRuntime, language, new DocumentFormattingEditProvider(null, provideDocumentFormattingEdits));
+
+        public static Task RegisterDocumentFormattingEditProvider(IJSRuntime jsRuntime, LanguageSelector language, DocumentFormattingEditProvider documentFormattingEditProvider)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.languages.registerDocumentFormattingEditProvider", language, documentFormattingEditProvider.DisplayName, DotNetObjectReference.Create(documentFormattingEditProvider));
 
         /**
          * Register a formatter that can handle a range inside a model.
@@ -6780,8 +6926,13 @@ namespace BlazorMonaco.Languages
         /**
          * Register a completion item provider (use by e.g. suggestions).
          */
+        [Obsolete("Please use the new RegisterCompletionItemProvider method with async parameters instead.")]
         public static Task RegisterCompletionItemProvider(IJSRuntime jsRuntime, LanguageSelector language, CompletionItemProvider.ProvideCompletionItemsDelegate provideCompletionItems, CompletionItemProvider.ResolveCompletionItemDelegate resolveCompletionItem = null)
             => RegisterCompletionItemProvider(jsRuntime, language, new CompletionItemProvider(provideCompletionItems, resolveCompletionItem));
+
+        public static Task RegisterCompletionItemProvider(IJSRuntime jsRuntime, LanguageSelector language, CompletionItemProvider.ProvideDelegate provideCompletionItems, CompletionItemProvider.ResolveDelegate resolveCompletionItem = null)
+            => RegisterCompletionItemProvider(jsRuntime, language, new CompletionItemProvider(null, provideCompletionItems, resolveCompletionItem));
+
         public static Task RegisterCompletionItemProvider(IJSRuntime jsRuntime, LanguageSelector language, CompletionItemProvider completionItemProvider)
             => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.languages.registerCompletionItemProvider", language, completionItemProvider.TriggerCharacters, DotNetObjectReference.Create(completionItemProvider));
 
@@ -6828,6 +6979,8 @@ namespace BlazorMonaco.Languages
          */
         //export function registerInlineCompletionsProvider(languageSelector: LanguageSelector, provider: InlineCompletionsProvider) : IDisposable;
 
+        //export function registerInlineEditProvider(languageSelector: LanguageSelector, provider: InlineEditProvider): IDisposable;
+
         /**
          * Register an inlay hints provider.
          */
@@ -6838,7 +6991,8 @@ namespace BlazorMonaco.Languages
      * Contains additional diagnostic information about the context in which
      * a [code action](#CodeActionProvider.provideCodeActions) is run.
      */
-    public class CodeActionContext {
+    public class CodeActionContext
+    {
         /**
          * An array of diagnostics.
          */
@@ -6857,28 +7011,59 @@ namespace BlazorMonaco.Languages
      * The code action interface defines the contract between extensions and
      * the [light bulb](https://code.visualstudio.com/docs/editor/editingevolved#_code-action) feature.
      */
-    public class CodeActionProvider {
-
+    public class CodeActionProvider
+    {
         /**
          * Provide commands for the given document and range.
          */
+        [Obsolete("Please use the new async ProvideDelegate instead.")]
         public delegate CodeActionList ProvideCodeActionsDelegate(string modelUri, Range range, CodeActionContext context);
+        [Obsolete("Please use the new async ProvideMethod instead.")]
         public ProvideCodeActionsDelegate ProvideCodeActionsFunc { get; set; }
+        public delegate Task<CodeActionList> ProvideDelegate(string modelUri, Range range, CodeActionContext context);
+        public ProvideDelegate ProvideMethod { get; set; }
+
+#if NET5_0_OR_GREATER
+        [DynamicDependency(nameof(ProvideCodeActions))]
+#endif
         [JSInvokable]
-        public CodeActionList ProvideCodeActions(string modelUri, Range range, CodeActionContext context) => ProvideCodeActionsFunc.Invoke(modelUri, range, context);
+        public Task<CodeActionList> ProvideCodeActions(string modelUri, Range range, CodeActionContext context)
+#pragma warning disable CS0618 // Type or member is obsolete
+            => ProvideMethod?.Invoke(modelUri, range, context)
+                ?? Task.FromResult(ProvideCodeActionsFunc?.Invoke(modelUri, range, context));
+#pragma warning restore CS0618 // Type or member is obsolete
 
         /**
          * Given a code action fill in the edit. Will only invoked when missing.
          */
+        [Obsolete("Please use the new async ResolveDelegate instead.")]
         public delegate CodeAction ResolveCodeActionDelegate(CodeAction codeAction);
+        [Obsolete("Please use the new async ResolveMethod instead.")]
         public ResolveCodeActionDelegate ResolveCodeActionFunc { get; set; }
-        [JSInvokable]
-        public CodeAction ResolveCodeAction(CodeAction codeAction) => ResolveCodeActionFunc?.Invoke(codeAction);
+        public delegate Task<CodeAction> ResolveDelegate(CodeAction codeAction);
+        public ResolveDelegate ResolveMethod { get; set; }
 
+#if NET5_0_OR_GREATER
+        [DynamicDependency(nameof(ResolveCodeAction))]
+#endif
+        [JSInvokable]
+        public Task<CodeAction> ResolveCodeAction(CodeAction codeAction)
+#pragma warning disable CS0618 // Type or member is obsolete
+            => ResolveMethod?.Invoke(codeAction)
+                ?? Task.FromResult(ResolveCodeActionFunc?.Invoke(codeAction));
+#pragma warning restore CS0618 // Type or member is obsolete
+
+        [Obsolete("Please use the new constructor with async parameters instead.")]
         public CodeActionProvider(ProvideCodeActionsDelegate provideCodeActions, ResolveCodeActionDelegate resolveCodeAction = null)
         {
             ProvideCodeActionsFunc = provideCodeActions;
             ResolveCodeActionFunc = resolveCodeAction;
+        }
+
+        public CodeActionProvider(ProvideDelegate provideCodeActions, ResolveDelegate resolveCodeAction = null)
+        {
+            ProvideMethod = provideCodeActions;
+            ResolveMethod = resolveCodeAction;
         }
     }
 
@@ -7162,19 +7347,56 @@ namespace BlazorMonaco.Languages
          * current position itself.
          * /
         range?: IRange;
+        /**
+         * Can increase the verbosity of the hover
+         * /
+        canIncreaseVerbosity?: boolean;
+        /**
+         * Can decrease the verbosity of the hover
+         * /
+        canDecreaseVerbosity?: boolean;
     }*/
 
     /**
      * The hover provider interface defines the contract between extensions and
      * the [hover](https://code.visualstudio.com/docs/editor/intellisense)-feature.
      */
-    /*export interface HoverProvider {
+    /*export interface HoverProvider<THover = Hover> {
         /**
-         * Provide a hover for the given position and document. Multiple hovers at the same
+         * Provide a hover for the given position, context and document. Multiple hovers at the same
          * position will be merged by the editor. A hover can have a range which defaults
          * to the word range at the position when omitted.
          * /
-        provideHover(model: editor.ITextModel, position: Position, token: CancellationToken): ProviderResult<Hover>;
+        provideHover(model: editor.ITextModel, position: Position, token: CancellationToken, context?: HoverContext<THover>): ProviderResult<THover>;
+    }*/
+
+    /*export interface HoverContext<THover = Hover> {
+        /**
+         * Hover verbosity request
+         * /
+        verbosityRequest?: HoverVerbosityRequest<THover>;
+    }*/
+
+    /*export interface HoverVerbosityRequest<THover = Hover> {
+        /**
+         * The delta by which to increase/decrease the hover verbosity level
+         * /
+        verbosityDelta: number;
+        /**
+         * The previous hover for the same position
+         * /
+        previousHover: THover;
+    }*/
+
+    /*export enum HoverVerbosityAction {
+        /**
+         * Increase the verbosity of the hover
+         * /
+        Increase = 0,
+        /**
+         * Decrease the verbosity of the hover
+         * /
+        Decrease = 1
     }*/
 
     public enum CompletionItemKind
@@ -7373,6 +7595,24 @@ namespace BlazorMonaco.Languages
     }
 
     /**
+     * Info provided on partial acceptance.
+     */
+    public class PartialAcceptInfo
+    {
+        public PartialAcceptTriggerKind Kind { get; set; }
+    }
+
+    /**
+     * How a partial acceptance was triggered.
+     */
+    public enum PartialAcceptTriggerKind
+    {
+        Word = 0,
+        Line = 1,
+        Suggest = 2
+    }
+
+    /**
      * How a suggest provider was triggered.
      */
     public enum CompletionTriggerKind
@@ -7386,7 +7626,8 @@ namespace BlazorMonaco.Languages
      * Contains additional information about the context in which
      * {@link CompletionItemProvider.provideCompletionItems completion provider} is triggered.
      */
-    public class CompletionContext {
+    public class CompletionContext
+    {
         /**
          * How the completion was triggered.
          */
@@ -7410,16 +7651,29 @@ namespace BlazorMonaco.Languages
      * when a completion item is shown in the UI and gains focus this provider is asked to resolve
      * the item, like adding {@link CompletionItem.documentation doc-comment} or {@link CompletionItem.detail details}.
      */
-    public class CompletionItemProvider {
+    public class CompletionItemProvider
+    {
         public List<string> TriggerCharacters { get; set; }
 
         /**
          * Provide completion items for the given position and document.
          */
+        [Obsolete("Please use the new async ProvideDelegate instead.")]
         public delegate CompletionList ProvideCompletionItemsDelegate(string modelUri, Position position, CompletionContext context);
+        [Obsolete("Please use the new async ProvideMethod instead.")]
         public ProvideCompletionItemsDelegate ProvideCompletionItemsFunc { get; set; }
+        public delegate Task<CompletionList> ProvideDelegate(string modelUri, Position position, CompletionContext context);
+        public ProvideDelegate ProvideMethod { get; set; }
+
+#if NET5_0_OR_GREATER
+        [DynamicDependency(nameof(ProvideCompletionItems))]
+#endif
         [JSInvokable]
-        public CompletionList ProvideCompletionItems(string modelUri, Position position, CompletionContext context) => ProvideCompletionItemsFunc.Invoke(modelUri, position, context);
+        public Task<CompletionList> ProvideCompletionItems(string modelUri, Position position, CompletionContext context)
+#pragma warning disable CS0618 // Type or member is obsolete
+            => ProvideMethod?.Invoke(modelUri, position, context)
+                ?? Task.FromResult(ProvideCompletionItemsFunc?.Invoke(modelUri, position, context));
+#pragma warning restore CS0618 // Type or member is obsolete
 
         /**
          * Given a completion item fill in more data, like {@link CompletionItem.documentation doc-comment}
@@ -7427,15 +7681,35 @@ namespace BlazorMonaco.Languages
          *
          * The editor will only resolve a completion item once.
          */
+        [Obsolete("Please use the new async ResolveDelegate instead.")]
         public delegate CompletionItem ResolveCompletionItemDelegate(CompletionItem completionItem);
+        [Obsolete("Please use the new async ResolveMethod instead.")]
         public ResolveCompletionItemDelegate ResolveCompletionItemFunc { get; set; }
-        [JSInvokable]
-        public CompletionItem ResolveCompletionItem(CompletionItem completionItem) => ResolveCompletionItemFunc?.Invoke(completionItem);
+        public delegate Task<CompletionItem> ResolveDelegate(CompletionItem completionItem);
+        public ResolveDelegate ResolveMethod { get; set; }
 
+#if NET5_0_OR_GREATER
+        [DynamicDependency(nameof(ResolveCompletionItem))]
+#endif
+        [JSInvokable]
+        public Task<CompletionItem> ResolveCompletionItem(CompletionItem completionItem)
+#pragma warning disable CS0618 // Type or member is obsolete
+            => ResolveMethod?.Invoke(completionItem)
+                ?? Task.FromResult(ResolveCompletionItemFunc?.Invoke(completionItem));
+#pragma warning restore CS0618 // Type or member is obsolete
+
+        [Obsolete("Please use the new constructor with async parameters instead.")]
         public CompletionItemProvider(ProvideCompletionItemsDelegate provideCompletionItems, ResolveCompletionItemDelegate resolveCompletionItem = null)
         {
             ProvideCompletionItemsFunc = provideCompletionItems;
             ResolveCompletionItemFunc = resolveCompletionItem;
+        }
+
+        public CompletionItemProvider(List<string> triggerCharacters, ProvideDelegate provideCompletionItems, ResolveDelegate resolveCompletionItem = null)
+        {
+            TriggerCharacters = triggerCharacters;
+            ProvideMethod = provideCompletionItems;
+            ResolveMethod = resolveCompletionItem;
         }
     }
 
@@ -7456,7 +7730,8 @@ namespace BlazorMonaco.Languages
         Explicit = 1
     }
 
-    public class InlineCompletionContext {
+    public class InlineCompletionContext
+    {
         /**
          * How the completion was triggered.
          */
@@ -7464,7 +7739,8 @@ namespace BlazorMonaco.Languages
         public SelectedSuggestionInfo SelectedSuggestionInfo { get; }
     }
 
-    public class SelectedSuggestionInfo {
+    public class SelectedSuggestionInfo
+    {
         public Range Range { get; set; }
         public string Text { get; set; }
         public CompletionItemKind CompletionKind { get; set; }
@@ -7536,7 +7812,7 @@ namespace BlazorMonaco.Languages
         /**
          * Will be called when an item is partially accepted.
          * /
-        handlePartialAccept? (completions: T, item: T['items'][number], acceptedCharacters: number): void;
+        handlePartialAccept?(completions: T, item: T['items'][number], acceptedCharacters: number, info: PartialAcceptInfo): void;
         /**
          * Will be called when a completions list is no longer in use and can be garbage-collected.
         * /
@@ -7573,7 +7849,8 @@ namespace BlazorMonaco.Languages
         Auto = 2
     }
 
-    public class CodeActionList /* TODO : IDisposable*/ {
+    public class CodeActionList /* TODO : IDisposable*/
+    {
         public List<CodeAction> Actions { get; set; }
     }
 
@@ -7740,7 +8017,7 @@ namespace BlazorMonaco.Languages
      */
     /*export interface MultiDocumentHighlightProvider
     {
-        selector: LanguageFilter;
+        readonly selector: LanguageSelector;
         /**
          * Provide a Map of Uri --> document highlights, like all occurrences of a variable or
          * all exit-points of a function.
@@ -7960,28 +8237,40 @@ namespace BlazorMonaco.Languages
     /**
      * Interface used to format a model
      */
-    /*export interface FormattingOptions {
-        /**
-         * Size of a tab in spaces.
-         * /
-        tabSize: number;
-        /**
-         * Prefer spaces over tabs.
-         * /
-        insertSpaces: boolean;
-    }*/
+    public class FormattingOptions
+    {
+        public int TabSize { get; set; }
+        public bool InsertSpaces { get; set; }
+    }
 
     /**
      * The document formatting provider interface defines the contract between extensions and
      * the formatting-feature.
      */
-    /*export interface DocumentFormattingEditProvider {
-        readonly displayName?: string;
+    public class DocumentFormattingEditProvider
+    {
+        public string DisplayName { get; }
+
         /**
          * Provide formatting edits for a whole document.
-         * /
-        provideDocumentFormattingEdits(model: editor.ITextModel, options: FormattingOptions, token: CancellationToken): ProviderResult<TextEdit[]>;
-    }*/
+         */
+        public delegate Task<TextEdit[]> ProvideDelegate(string modelUri, FormattingOptions options);
+        public ProvideDelegate ProvideMethod { get; set; }
+
+#if NET5_0_OR_GREATER
+        [DynamicDependency(nameof(ProvideDocumentFormattingEdits))]
+#endif
+        [JSInvokable]
+        public Task<TextEdit[]> ProvideDocumentFormattingEdits(string modelUri, FormattingOptions options)
+            => ProvideMethod?.Invoke(modelUri, options)
+                ?? Task.FromResult<TextEdit[]>(null);
+
+        public DocumentFormattingEditProvider(string displayName, ProvideDelegate provideDocumentFormattingEditsDelegate)
+        {
+            DisplayName = displayName;
+            ProvideMethod = provideDocumentFormattingEditsDelegate;
+        }
+    }
 
     /**
      * The document formatting provider interface defines the contract between extensions and
@@ -8253,6 +8542,27 @@ namespace BlazorMonaco.Languages
         resolveRenameLocation?(model: editor.ITextModel, position: Position, token: CancellationToken): ProviderResult<RenameLocation & Rejection>;
     }*/
 
+    public enum NewSymbolNameTag
+    {
+        AIGenerated = 1
+    }
+
+    public enum NewSymbolNameTriggerKind
+    {
+        Invoke = 0,
+        Automatic = 1
+    }
+
+    /*export interface NewSymbolName {
+        readonly newSymbolName: string;
+        readonly tags?: readonly NewSymbolNameTag[];
+    }*/
+
+    /*export interface NewSymbolNamesProvider {
+        supportsAutomaticNewSymbolNamesTriggerKind?: Promise<boolean | undefined>;
+        provideNewSymbolNames(model: editor.ITextModel, range: IRange, triggerKind: NewSymbolNameTriggerKind, token: CancellationToken): ProviderResult<NewSymbolName[]>;
+    }*/
+
     public class Command
     {
         public string Id { get; set; }
@@ -8260,6 +8570,11 @@ namespace BlazorMonaco.Languages
         public string Tooltip { get; set; }
         public List<object> Arguments { get; set; }
     }
+
+    /*export interface CommentThreadRevealOptions {
+        preserveFocus: boolean;
+        focusReply: boolean;
+    }*/
 
     /*export interface CommentAuthorInformation
     {
@@ -8272,7 +8587,7 @@ namespace BlazorMonaco.Languages
         body: string;
         range: IRange | undefined;
         uri: Uri;
-        owner: string;
+        uniqueOwner: string;
         isReply: boolean;
     }*/
 
@@ -8381,12 +8696,36 @@ namespace BlazorMonaco.Languages
          *
          * @param document The document to provide mapped edits for.
          * @param codeBlocks Code blocks that come from an LLM's reply.
-         * 						"Insert at cursor" in the panel chat only sends one edit that the user clicks on, but inline chat can send multiple blocks and let the lang server decide what to do with them.
+         * 						"Apply in Editor" in the panel chat only sends one edit that the user clicks on, but inline chat can send multiple blocks and let the lang server decide what to do with them.
          * @param context The context for providing mapped edits.
          * @param token A cancellation token.
          * @returns A provider result of text edits.
          * /
         provideMappedEdits(document: editor.ITextModel, codeBlocks: string[], context: MappedEditsContext, token: CancellationToken) : Promise<WorkspaceEdit | null>;
+    }*/
+
+    public class InlineEdit
+    {
+        public string Text { get; set; }
+        public Range Range { get; set; }
+        public Command Accepted { get; set; }
+        public Command Rejected { get; set; }
+    }
+
+    public class InlineEditContext
+    {
+        public InlineEditTriggerKind TriggerKind { get; set; }
+    }
+
+    public enum InlineEditTriggerKind
+    {
+        Invoke = 0,
+        Automatic = 1
+    }
+
+    /*export interface InlineEditProvider<T extends IInlineEdit = IInlineEdit> {
+        provideInlineEdit(model: editor.ITextModel, context: IInlineEditContext, token: CancellationToken): ProviderResult<T>;
+        freeInlineEdit(edit: T): void;
     }*/
 
     /*export interface ILanguageExtensionPoint {
@@ -9367,9 +9706,10 @@ namespace BlazorMonaco.Languages.Typescript
         length: number | undefined;
         messageText: string | DiagnosticMessageChain;
     }*/
-    /*interface EmitOutput {
+    /*export interface EmitOutput {
         outputFiles: OutputFile[];
         emitSkipped: boolean;
+        diagnostics?: Diagnostic[];
     }*/
     /*interface OutputFile {
         name: string;
@@ -9600,7 +9940,7 @@ namespace BlazorMonaco.Languages.Typescript
          * Get transpiled output for the given file.
          * @returns `typescript.EmitOutput`
          * /
-        getEmitOutput(fileName: string): Promise<EmitOutput>;
+        getEmitOutput(fileName: string, emitOnlyDtsFiles?: boolean, forceDtsEmit?: boolean): Promise<EmitOutput>;
         /**
          * Get possible code fixes at the given position in the file.
          * @param formatOptions `typescript.FormatCodeOptions`

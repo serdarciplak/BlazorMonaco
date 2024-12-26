@@ -31,7 +31,7 @@ namespace BlazorMonaco.Editor
         protected IJSRuntime JsRuntime { get; set; }
 
         internal DotNetObjectReference<Editor> _dotnetObjectRef;
-        
+
         protected override void OnInitialized()
         {
             base.OnInitialized();
@@ -79,12 +79,15 @@ namespace BlazorMonaco.Editor
         }
 
         protected Func<int, string> LineNumbersLambda { get; set; }
-        
+
         [JSInvokable]
         public string LineNumbersCallback(int lineNumber)
         {
             return LineNumbersLambda?.Invoke(lineNumber) ?? lineNumber.ToString();
         }
+
+        public Task ReloadLineNumbers()
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.reloadLineNumbers", Id);
 
         #endregion
 

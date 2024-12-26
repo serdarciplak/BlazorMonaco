@@ -5,12 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace BlazorMonaco.Editor
 {
-    public partial class StandaloneCodeEditor : CodeEditor
+    public partial class StandaloneCodeEditor
     {
         #region Blazor
 
@@ -78,7 +77,7 @@ namespace BlazorMonaco.Editor
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
             return JsRuntime.SafeInvokeAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
         }
-        
+
         [Obsolete("This method is deprecated. Use AddCommand(int keybinding, CommandHandler handler, string context = null) instead.")]
         public Task AddCommand(int keybinding, Action<StandaloneCodeEditor, int> handler)
         {
@@ -244,7 +243,6 @@ namespace BlazorMonaco.Editor
         [JSInvokable]
         public List<Selection> ExecuteEditsCallback(List<ValidEditOperation> inverseEditOperations)
         {
-            Console.WriteLine("ExecuteEditsCallback is called : " + JsonSerializer.Serialize(inverseEditOperations));
             return ExecuteEditsLambda?.Invoke(inverseEditOperations);
         }
 
@@ -393,6 +391,18 @@ namespace BlazorMonaco.Editor
          * @event
          */
         //readonly onDidChangeHiddenAreas: IEvent<void>;
+        /**
+         * Some editor operations fire multiple events at once.
+         * To allow users to react to multiple events fired by a single operation,
+         * the editor fires a begin update before the operation and an end update after the operation.
+         * Whenever the editor fires `onBeginUpdate`, it will also fire `onEndUpdate` once the operation finishes.
+         * Note that not all operations are bracketed by `onBeginUpdate` and `onEndUpdate`.
+        */
+        //readonly onBeginUpdate: IEvent<void>;
+        /**
+         * Fires after the editor completes the operation it fired `onBeginUpdate` for.
+        */
+        //readonly onEndUpdate: IEvent<void>;
         /**
          * Saves current view state of the editor in a serializable object.
          */

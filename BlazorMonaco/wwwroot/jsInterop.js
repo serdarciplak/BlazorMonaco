@@ -1,10 +1,96 @@
-var require = { paths: { vs: '_content/BlazorMonaco/lib/monaco-editor/min/vs' } };
+var require = { paths: { vs: document.baseURI + '_content/BlazorMonaco/lib/monaco-editor/min/vs' } };
 window.blazorMonaco = window.blazorMonaco || {};
 window.blazorMonaco.editors = [];
 
 window.blazorMonaco.editor = {
 
     //#region Utilities
+
+    getEditorHolder: function (id, silent = false) {
+        let editorHolder = window.blazorMonaco.editors.find(e => e.id === id);
+        if (!editorHolder) {
+            if (silent != false) {
+                if (silent != true) // If silent is null, log a warning
+                    console.log("BlazorMonaco: Warning : Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length);
+                return null;
+            }
+            throw "Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length;
+        }
+        else if (!editorHolder.editor) {
+            if (silent != false) {
+                if (silent != true) // If silent is null, log a warning
+                    console.log("BlazorMonaco: Warning : editor is null for editorHolder: " + editorHolder);
+                return null;
+            }
+            throw "editor is null for editorHolder: " + editorHolder;
+        }
+        return editorHolder;
+    },
+
+    getEditor: function (id, silent = false) {
+        let editorHolder = this.getEditorHolder(id, silent);
+        return editorHolder == null ? null : editorHolder.editor;
+    },
+
+    getEditorLineNumber: function (editorId, lineNumber) {
+        const editorHolder = this.getEditorHolder(editorId, true);
+        if (editorHolder == null) {
+            return "";
+        }
+
+        let lineNumbersCache = editorHolder.lineNumbersCache;
+        if (lineNumbersCache == null) {
+            lineNumbersCache = editorHolder.lineNumbersCache = {};
+            lineNumbersCache.Promises = {};
+        }
+
+        let lineNumberVal = lineNumbersCache[lineNumber];
+        if (lineNumberVal != null) {
+            return lineNumberVal;
+        }
+
+        lineNumbersCache[lineNumber] = "";
+        lineNumbersCache.Promises[lineNumber] = editorHolder.dotnetRef.invokeMethodAsync("LineNumbersCallback", lineNumber)
+            .then(result => {
+                lineNumbersCache[lineNumber] = result;
+                delete lineNumbersCache.Promises[lineNumber];
+                if (Object.keys(lineNumbersCache.Promises).length == 0) {
+                    this.redrawLineNumbers(editorId);
+                }
+            })
+            .catch(err => {
+                console.log("BlazorMonaco: LineNumbersCallback(" + lineNumber + ") failed with error : " + err);
+                delete lineNumbersCache.Promises[lineNumber];
+                if (Object.keys(lineNumbersCache.Promises).length == 0) {
+                    this.redrawLineNumbers(editorId);
+                }
+            });
+        return "";
+    },
+
+    reloadLineNumbers: function (editorId) {
+        const editorHolder = this.getEditorHolder(editorId, true);
+        if (editorHolder == null) {
+            return;
+        }
+        editorHolder.lineNumbersCache = null;
+        this.redrawLineNumbers(editorId);
+    },
+
+    redrawLineNumbers: function (editorId) {
+        const editor = this.getEditor(editorId, true);
+        if (editor == null) {
+            return;
+        }
+        const optionValue = editor.getOption(monaco.editor.EditorOptions.lineNumbers.id);
+        if (optionValue.renderType == monaco.editor.RenderLineNumbersType.Custom) {
+            editor.updateOptions({
+                lineNumbers: (lineNumber) => {
+                    return this.getEditorLineNumber(editorId, lineNumber);
+                }
+            });
+        }
+    },
 
     convertUriToString: function (obj) {
         if (obj == null)
@@ -44,6 +130,10 @@ window.blazorMonaco.editor = {
         return cloned;
     },
 
+    setWasm: function (isWasm) {
+        window.blazorMonaco.isWasm = isWasm;
+    },
+
     //#endregion
 
     //#region Static methods
@@ -66,23 +156,28 @@ window.blazorMonaco.editor = {
     },
 
     create: function (id, options, override, dotnetRef) {
+        if (typeof monaco === 'undefined') {
+            console.error("BlazorMonaco: monaco is undefined. Please check that you have the script tag for editor.main.js in your html file");
+            return;
+        }
+
         if (options == null)
             options = {};
 
         var oldEditor = this.getEditor(id, true);
         if (oldEditor !== null) {
-            options.value = oldEditor.getValue();
+            if (options.value == null) {
+                options.value = oldEditor.getValue();
+            }
+
             window.blazorMonaco.editors.splice(window.blazorMonaco.editors.findIndex(item => item.id === id), 1);
             oldEditor.dispose();
         }
 
-        if (typeof monaco === 'undefined')
-            console.log("WARNING : Please check that you have the script tag for editor.main.js in your index.html file");
-
         if (options.lineNumbers == "function") {
-            options.lineNumbers = function (lineNumber) {
-                return dotnetRef.invokeMethod("LineNumbersCallback", lineNumber);
-            }
+            options.lineNumbers = (lineNumber) => {
+                return this.getEditorLineNumber(id, lineNumber);
+            };
         }
 
         var editor = monaco.editor.create(document.getElementById(id), options, override);
@@ -90,6 +185,11 @@ window.blazorMonaco.editor = {
     },
 
     createDiffEditor: function (id, options, override, dotnetRef, dotnetRefOriginal, dotnetRefModified) {
+        if (typeof monaco === 'undefined') {
+            console.error("BlazorMonaco: monaco is undefined. Please check that you have the script tag for editor.main.js in your html file");
+            return;
+        }
+
         if (options == null)
             options = {};
 
@@ -104,13 +204,10 @@ window.blazorMonaco.editor = {
             oldEditor.dispose();
         }
 
-        if (typeof monaco === 'undefined')
-            console.log("WARNING : Please check that you have the script tag for editor.main.js in your index.html file");
-
         if (options.lineNumbers == "function") {
-            options.lineNumbers = function (lineNumber) {
-                return dotnetRef.invokeMethod("LineNumbersCallback", lineNumber);
-            }
+            options.lineNumbers = (lineNumber) => {
+                return this.getEditorLineNumber(id, lineNumber);
+            };
         }
 
         var editor = monaco.editor.createDiffEditor(document.getElementById(id), options, override);
@@ -194,32 +291,6 @@ window.blazorMonaco.editor = {
         monaco.editor.setTheme(theme);
     },
 
-    getEditorHolder: function (id, silent = false) {
-        let editorHolder = window.blazorMonaco.editors.find(e => e.id === id);
-        if (!editorHolder) {
-            if (silent != false) {
-                if (silent != true) // If silent is null, log a warning
-                    console.log("WARNING : Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length);
-                return null;
-            }
-            throw "Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length;
-        }
-        else if (!editorHolder.editor) {
-            if (silent != false) {
-                if (silent != true) // If silent is null, log a warning
-                    console.log("WARNING : editor is null for editorHolder: " + editorHolder);
-                return null;
-            }
-            throw "editor is null for editorHolder: " + editorHolder;
-        }
-        return editorHolder;
-    },
-
-    getEditor: function (id, silent = false) {
-        let editorHolder = this.getEditorHolder(id, silent);
-        return editorHolder == null ? null : editorHolder.editor;
-    },
-
     //#endregion
 
     //#region Instance methods
@@ -265,8 +336,14 @@ window.blazorMonaco.editor = {
     executeEdits: function (id, source, edits, endCursorState) {
         let editorHolder = this.getEditorHolder(id);
         if (endCursorState == "function") {
-            endCursorState = (inverseEditOperations) => {
-                return editorHolder.dotnetRef.invokeMethod("ExecuteEditsCallback", inverseEditOperations);
+            if (window.blazorMonaco.isWasm) {
+                endCursorState = (inverseEditOperations) => {
+                    return editorHolder.dotnetRef.invokeMethod("ExecuteEditsCallback", inverseEditOperations);
+                }
+            }
+            else {
+                console.warn("BlazorMonaco: Editor.ExecuteEdits() supports endCursorState lambda only in Blazor Wasm apps. Please use the other ExecuteEdits override that takes List<Selection> instead.");
+                endCursorState = null;
             }
         }
         return editorHolder.editor.executeEdits(source, edits, endCursorState);
@@ -949,8 +1026,7 @@ window.blazorMonaco.languages = {
         monaco.languages.registerCodeActionProvider(language, {
             provideCodeActions: (model, range, context, cancellationToken) => {
                 return codeActionProviderRef.invokeMethodAsync("ProvideCodeActions", decodeURI(model.uri.toString()), range, context)
-                    .then(result =>
-                    {
+                    .then(result => {
                         (result.actions || []).forEach(action => {
                             (action.edit.edits || []).forEach(edit => {
                                 if (edit.resource != null)
@@ -969,6 +1045,15 @@ window.blazorMonaco.languages = {
                 return codeActionProviderRef.invokeMethodAsync("ResolveCodeAction", codeAction);
             }
         }, metadata);
+    },
+
+    registerDocumentFormattingEditProvider: async function (language, displayName, documentFormattingEditProviderRef) {
+        monaco.languages.registerDocumentFormattingEditProvider(language, {
+            displayName: displayName,
+            provideDocumentFormattingEdits: (model, options, cancellationToken) => {
+                return documentFormattingEditProviderRef.invokeMethodAsync("ProvideDocumentFormattingEdits", decodeURI(model.uri.toString()), options);
+            }
+        });
     },
 
     registerCompletionItemProvider: async function (language, triggerCharacters, completionItemProviderRef) {

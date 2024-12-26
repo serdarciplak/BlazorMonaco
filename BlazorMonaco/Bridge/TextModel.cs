@@ -9,7 +9,8 @@ namespace BlazorMonaco.Editor
     /**
      * A model.
      */
-    public class TextModel {
+    public class TextModel
+    {
         [JsonIgnore]
         public IJSRuntime JsRuntime { get; set; }
 

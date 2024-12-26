@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace BlazorMonaco.Editor
 {
-    public partial class StandaloneDiffEditor : DiffEditor
+    public partial class StandaloneDiffEditor
     {
         #region Blazor
 
@@ -16,7 +16,12 @@ namespace BlazorMonaco.Editor
         public Func<StandaloneDiffEditor, StandaloneDiffEditorConstructionOptions> ConstructionOptions { get; set; }
 
         protected readonly Dictionary<string, List<ActionDescriptor>> _actions = new Dictionary<string, List<ActionDescriptor>>();
+
         protected readonly Dictionary<string, List<CommandHandler>> _commands = new Dictionary<string, List<CommandHandler>>();
+
+        public new StandaloneCodeEditor OriginalEditor => _originalEditor as StandaloneCodeEditor;
+
+        public new StandaloneCodeEditor ModifiedEditor => _modifiedEditor as StandaloneCodeEditor;
 
         [JSInvokable]
         public void ActionCallback(string actionId)
@@ -69,6 +74,7 @@ namespace BlazorMonaco.Editor
                 handler?.Invoke(this, keybinding);
             });
         }
+
         public Task<string> AddCommand(int keybinding, CommandHandler handler, string context = null)
         {
             if (_commands.ContainsKey(keybinding.ToString()))
@@ -99,6 +105,7 @@ namespace BlazorMonaco.Editor
             };
             return AddAction(actionDescriptor);
         }
+
         public Task AddAction(ActionDescriptor actionDescriptor)
         {
             if (_actions.ContainsKey(actionDescriptor.Id))
@@ -110,9 +117,6 @@ namespace BlazorMonaco.Editor
             _actions[actionDescriptor.Id] = new List<ActionDescriptor> { actionDescriptor };
             return JsRuntime.SafeInvokeAsync("blazorMonaco.editor.addAction", Id, actionDescriptor);
         }
-
-        public new StandaloneCodeEditor OriginalEditor => _originalEditor as StandaloneCodeEditor;
-        public new StandaloneCodeEditor ModifiedEditor => _modifiedEditor as StandaloneCodeEditor;
     }
 
     /**

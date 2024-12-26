@@ -1,10 +1,10 @@
 {
-  "version": "1.0",
-  "defaultProvider": "cdnjs",
-  "libraries": [
-    {
-      "library": "monaco-editor@0.46.0",
-      "destination": "wwwroot/lib/monaco-editor/"
-    }
-  ]
+    "version": "1.0",
+    "defaultProvider": "cdnjs",
+    "libraries": [
+        {
+            "library": "monaco-editor@0.52.2",
+            "destination": "wwwroot/lib/monaco-editor/"
+        }
+    ]
 }
