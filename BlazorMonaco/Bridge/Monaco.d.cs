@@ -946,6 +946,7 @@ namespace BlazorMonaco.Editor
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
 
             // Create the editor
+            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setWasm", OperatingSystem.IsBrowser());
             await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.create", domElementId, optionsDict, overrideServices, dotnetObjectRef);
             return dotnetObjectRef.Value as StandaloneCodeEditor;
         }

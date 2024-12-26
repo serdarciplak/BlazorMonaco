@@ -130,6 +130,10 @@ window.blazorMonaco.editor = {
         return cloned;
     },
 
+    setWasm: function (isWasm) {
+        window.blazorMonaco.isWasm = isWasm;
+    },
+
     //#endregion
 
     //#region Static methods
@@ -328,8 +332,14 @@ window.blazorMonaco.editor = {
     executeEdits: function (id, source, edits, endCursorState) {
         let editorHolder = this.getEditorHolder(id);
         if (endCursorState == "function") {
-            endCursorState = (inverseEditOperations) => {
-                return editorHolder.dotnetRef.invokeMethod("ExecuteEditsCallback", inverseEditOperations);
+            if (window.blazorMonaco.isWasm) {
+                endCursorState = (inverseEditOperations) => {
+                    return editorHolder.dotnetRef.invokeMethod("ExecuteEditsCallback", inverseEditOperations);
+                }
+            }
+            else {
+                console.warn("BlazorMonaco.Editor.ExecuteEdits() supports endCursorState lambda only in Blazor Wasm apps. Please use the other ExecuteEdits override that takes List<Selection> instead.");
+                endCursorState = null;
             }
         }
         return editorHolder.editor.executeEdits(source, edits, endCursorState);

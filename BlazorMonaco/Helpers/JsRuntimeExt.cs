@@ -16,7 +16,7 @@ namespace BlazorMonaco.Helpers
             }
             else
             {
-                // The static instance in not used in server-side apps. jsRuntime has to be non-null there.
+                // The static instance is not used in server-side apps. jsRuntime has to be non-null there.
                 return jsRuntime;
             }
         }
