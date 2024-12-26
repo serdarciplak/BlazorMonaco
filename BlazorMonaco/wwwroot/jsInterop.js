@@ -11,7 +11,7 @@ window.blazorMonaco.editor = {
         if (!editorHolder) {
             if (silent != false) {
                 if (silent != true) // If silent is null, log a warning
-                    console.log("WARNING : Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length);
+                    console.log("BlazorMonaco: Warning : Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length);
                 return null;
             }
             throw "Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length;
@@ -19,7 +19,7 @@ window.blazorMonaco.editor = {
         else if (!editorHolder.editor) {
             if (silent != false) {
                 if (silent != true) // If silent is null, log a warning
-                    console.log("WARNING : editor is null for editorHolder: " + editorHolder);
+                    console.log("BlazorMonaco: Warning : editor is null for editorHolder: " + editorHolder);
                 return null;
             }
             throw "editor is null for editorHolder: " + editorHolder;
@@ -59,7 +59,7 @@ window.blazorMonaco.editor = {
                 }
             })
             .catch(err => {
-                console.log("BlazorMonaco: Error in LineNumbersCallback(" + lineNumber + ") : " + err);
+                console.log("BlazorMonaco: LineNumbersCallback(" + lineNumber + ") failed with error : " + err);
                 delete lineNumbersCache.Promises[lineNumber];
                 if (Object.keys(lineNumbersCache.Promises).length == 0) {
                     this.redrawLineNumbers(editorId);
@@ -156,6 +156,11 @@ window.blazorMonaco.editor = {
     },
 
     create: function (id, options, override, dotnetRef) {
+        if (typeof monaco === 'undefined') {
+            console.error("BlazorMonaco: monaco is undefined. Please check that you have the script tag for editor.main.js in your html file");
+            return;
+        }
+
         if (options == null)
             options = {};
 
@@ -169,9 +174,6 @@ window.blazorMonaco.editor = {
             oldEditor.dispose();
         }
 
-        if (typeof monaco === 'undefined')
-            console.log("WARNING : Please check that you have the script tag for editor.main.js in your index.html file");
-
         if (options.lineNumbers == "function") {
             options.lineNumbers = (lineNumber) => {
                 return this.getEditorLineNumber(id, lineNumber);
@@ -183,6 +185,11 @@ window.blazorMonaco.editor = {
     },
 
     createDiffEditor: function (id, options, override, dotnetRef, dotnetRefOriginal, dotnetRefModified) {
+        if (typeof monaco === 'undefined') {
+            console.error("BlazorMonaco: monaco is undefined. Please check that you have the script tag for editor.main.js in your html file");
+            return;
+        }
+
         if (options == null)
             options = {};
 
@@ -196,9 +203,6 @@ window.blazorMonaco.editor = {
             window.blazorMonaco.editors.splice(window.blazorMonaco.editors.findIndex(item => item.id === id), 1);
             oldEditor.dispose();
         }
-
-        if (typeof monaco === 'undefined')
-            console.log("WARNING : Please check that you have the script tag for editor.main.js in your index.html file");
 
         if (options.lineNumbers == "function") {
             options.lineNumbers = (lineNumber) => {
@@ -338,7 +342,7 @@ window.blazorMonaco.editor = {
                 }
             }
             else {
-                console.warn("BlazorMonaco.Editor.ExecuteEdits() supports endCursorState lambda only in Blazor Wasm apps. Please use the other ExecuteEdits override that takes List<Selection> instead.");
+                console.warn("BlazorMonaco: Editor.ExecuteEdits() supports endCursorState lambda only in Blazor Wasm apps. Please use the other ExecuteEdits override that takes List<Selection> instead.");
                 endCursorState = null;
             }
         }
