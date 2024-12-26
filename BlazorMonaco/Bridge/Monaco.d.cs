@@ -3,6 +3,7 @@ using BlazorMonaco.Helpers;
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -946,7 +947,12 @@ namespace BlazorMonaco.Editor
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
 
             // Create the editor
+#if NET5_0_OR_GREATER
             await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setWasm", OperatingSystem.IsBrowser());
+#else
+            var isBrowser = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Create("BROWSER"));
+            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setWasm", isBrowser);
+#endif
             await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.create", domElementId, optionsDict, overrideServices, dotnetObjectRef);
             return dotnetObjectRef.Value as StandaloneCodeEditor;
         }
@@ -7013,6 +7019,9 @@ namespace BlazorMonaco.Languages
         public delegate Task<CodeActionList> ProvideDelegate(string modelUri, Range range, CodeActionContext context);
         public ProvideDelegate ProvideMethod { get; set; }
 
+#if NET5_0_OR_GREATER
+        [DynamicDependency(nameof(ProvideCodeActions))]
+#endif
         [JSInvokable]
         public Task<CodeActionList> ProvideCodeActions(string modelUri, Range range, CodeActionContext context)
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -7030,6 +7039,9 @@ namespace BlazorMonaco.Languages
         public delegate Task<CodeAction> ResolveDelegate(CodeAction codeAction);
         public ResolveDelegate ResolveMethod { get; set; }
 
+#if NET5_0_OR_GREATER
+        [DynamicDependency(nameof(ResolveCodeAction))]
+#endif
         [JSInvokable]
         public Task<CodeAction> ResolveCodeAction(CodeAction codeAction)
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -7649,6 +7661,9 @@ namespace BlazorMonaco.Languages
         public delegate Task<CompletionList> ProvideDelegate(string modelUri, Position position, CompletionContext context);
         public ProvideDelegate ProvideMethod { get; set; }
 
+#if NET5_0_OR_GREATER
+        [DynamicDependency(nameof(ProvideCompletionItems))]
+#endif
         [JSInvokable]
         public Task<CompletionList> ProvideCompletionItems(string modelUri, Position position, CompletionContext context)
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -7669,6 +7684,9 @@ namespace BlazorMonaco.Languages
         public delegate Task<CompletionItem> ResolveDelegate(CompletionItem completionItem);
         public ResolveDelegate ResolveMethod { get; set; }
 
+#if NET5_0_OR_GREATER
+        [DynamicDependency(nameof(ResolveCompletionItem))]
+#endif
         [JSInvokable]
         public Task<CompletionItem> ResolveCompletionItem(CompletionItem completionItem)
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -8235,6 +8253,9 @@ namespace BlazorMonaco.Languages
         public delegate Task<TextEdit[]> ProvideDelegate(string modelUri, FormattingOptions options);
         public ProvideDelegate ProvideMethod { get; set; }
 
+#if NET5_0_OR_GREATER
+        [DynamicDependency(nameof(ProvideDocumentFormattingEdits))]
+#endif
         [JSInvokable]
         public Task<TextEdit[]> ProvideDocumentFormattingEdits(string modelUri, FormattingOptions options)
             => ProvideMethod?.Invoke(modelUri, options)
