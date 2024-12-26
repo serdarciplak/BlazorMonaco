@@ -933,7 +933,7 @@ namespace BlazorMonaco.Editor
          * `domElement` should be empty (not contain other dom nodes).
          * The editor will read the size of `domElement`.
          */
-        internal static async Task<StandaloneCodeEditor> Create(
+        internal static async Task Create(
             IJSRuntime jsRuntime,
             string domElementId,
             StandaloneEditorConstructionOptions options,
@@ -954,7 +954,6 @@ namespace BlazorMonaco.Editor
             await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setWasm", isBrowser);
 #endif
             await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.create", domElementId, optionsDict, overrideServices, dotnetObjectRef);
-            return dotnetObjectRef.Value as StandaloneCodeEditor;
         }
 
         /**
@@ -985,7 +984,7 @@ namespace BlazorMonaco.Editor
          * `domElement` should be empty (not contain other dom nodes).
          * The editor will read the size of `domElement`.
          */
-        internal static async Task<StandaloneDiffEditor> CreateDiffEditor(
+        internal static async Task CreateDiffEditor(
             IJSRuntime jsRuntime,
             string domElementId,
             StandaloneDiffEditorConstructionOptions options,
@@ -1001,8 +1000,13 @@ namespace BlazorMonaco.Editor
             var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
 
             // Create the editor
+#if NET5_0_OR_GREATER
+            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setWasm", OperatingSystem.IsBrowser());
+#else
+            var isBrowser = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Create("BROWSER"));
+            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setWasm", isBrowser);
+#endif
             await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.createDiffEditor", domElementId, optionsDict, overrideServices, dotnetObjectRef, dotnetObjectRefOriginal, dotnetObjectRefModified);
-            return dotnetObjectRef.Value as StandaloneDiffEditor;
         }
 
         //export function createMultiFileDiffEditor(domElement: HTMLElement, override?: IEditorOverrideServices): any;
