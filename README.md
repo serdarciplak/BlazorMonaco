@@ -55,7 +55,7 @@ You can see a working sample WebAssembly app [here](https://serdarciplak.github.
     <StandaloneDiffEditor />
     ```
 
->**Note:** If you have any issues like the editor not being visible or not initializing correctly, please check the [troubleshooting](#troubleshooting) section below.
+>**Note:** If you have any issues like the editor not being visible or not initializing correctly, please check the [troubleshooting](https://github.com/serdarciplak/BlazorMonaco/blob/master/README.md#troubleshooting) section below.
 
 ## Usage
 

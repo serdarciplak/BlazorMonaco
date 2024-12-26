@@ -1,10 +1,11 @@
 # BlazorMonaco Changelog
 
 ## 3.3.0
-* Updated to Monaco Editor **v0.52.2**
+- Updated to Monaco Editor **v0.52.2**
 - Added support for **net9.0**
 - Added support for `RegisterDocumentFormattingEditProvider`.
 - Added async support for `RegisterCodeActionProvider` and `RegisterCompletionItemProvide`.
+- Fixes and improvements for usage in web and server apps.
 - Changed behaviour of overwriting options' value when recreating editor with the same ID. Now, the value is overwritten only if a new value is not provided.
 
 ## 3.2.0
