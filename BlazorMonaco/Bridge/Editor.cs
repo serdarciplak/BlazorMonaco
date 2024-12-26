@@ -86,6 +86,9 @@ namespace BlazorMonaco.Editor
             return LineNumbersLambda?.Invoke(lineNumber) ?? lineNumber.ToString();
         }
 
+        public Task ReloadLineNumbers()
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.reloadLineNumbers", Id);
+
         #endregion
 
         /**

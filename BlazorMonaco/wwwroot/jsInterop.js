@@ -6,6 +6,92 @@ window.blazorMonaco.editor = {
 
     //#region Utilities
 
+    getEditorHolder: function (id, silent = false) {
+        let editorHolder = window.blazorMonaco.editors.find(e => e.id === id);
+        if (!editorHolder) {
+            if (silent != false) {
+                if (silent != true) // If silent is null, log a warning
+                    console.log("WARNING : Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length);
+                return null;
+            }
+            throw "Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length;
+        }
+        else if (!editorHolder.editor) {
+            if (silent != false) {
+                if (silent != true) // If silent is null, log a warning
+                    console.log("WARNING : editor is null for editorHolder: " + editorHolder);
+                return null;
+            }
+            throw "editor is null for editorHolder: " + editorHolder;
+        }
+        return editorHolder;
+    },
+
+    getEditor: function (id, silent = false) {
+        let editorHolder = this.getEditorHolder(id, silent);
+        return editorHolder == null ? null : editorHolder.editor;
+    },
+
+    getEditorLineNumber: function (editorId, lineNumber) {
+        const editorHolder = this.getEditorHolder(editorId, true);
+        if (editorHolder == null) {
+            return "";
+        }
+
+        let lineNumbersCache = editorHolder.lineNumbersCache;
+        if (lineNumbersCache == null) {
+            lineNumbersCache = editorHolder.lineNumbersCache = {};
+            lineNumbersCache.Promises = {};
+        }
+
+        let lineNumberVal = lineNumbersCache[lineNumber];
+        if (lineNumberVal != null) {
+            return lineNumberVal;
+        }
+
+        lineNumbersCache[lineNumber] = "";
+        lineNumbersCache.Promises[lineNumber] = editorHolder.dotnetRef.invokeMethodAsync("LineNumbersCallback", lineNumber)
+            .then(result => {
+                lineNumbersCache[lineNumber] = result;
+                delete lineNumbersCache.Promises[lineNumber];
+                if (Object.keys(lineNumbersCache.Promises).length == 0) {
+                    this.redrawLineNumbers(editorId);
+                }
+            })
+            .catch(err => {
+                console.log("BlazorMonaco: Error in LineNumbersCallback(" + lineNumber + ") : " + err);
+                delete lineNumbersCache.Promises[lineNumber];
+                if (Object.keys(lineNumbersCache.Promises).length == 0) {
+                    this.redrawLineNumbers(editorId);
+                }
+            });
+        return "";
+    },
+
+    reloadLineNumbers: function (editorId) {
+        const editorHolder = this.getEditorHolder(editorId, true);
+        if (editorHolder == null) {
+            return;
+        }
+        editorHolder.lineNumbersCache = null;
+        this.redrawLineNumbers(editorId);
+    },
+
+    redrawLineNumbers: function (editorId) {
+        const editor = this.getEditor(editorId, true);
+        if (editor == null) {
+            return;
+        }
+        const optionValue = editor.getOption(monaco.editor.EditorOptions.lineNumbers.id);
+        if (optionValue.renderType == monaco.editor.RenderLineNumbersType.Custom) {
+            editor.updateOptions({
+                lineNumbers: (lineNumber) => {
+                    return this.getEditorLineNumber(editorId, lineNumber);
+                }
+            });
+        }
+    },
+
     convertUriToString: function (obj) {
         if (obj == null)
             return obj;
@@ -83,9 +169,9 @@ window.blazorMonaco.editor = {
             console.log("WARNING : Please check that you have the script tag for editor.main.js in your index.html file");
 
         if (options.lineNumbers == "function") {
-            options.lineNumbers = function (lineNumber) {
-                return dotnetRef.invokeMethod("LineNumbersCallback", lineNumber);
-            }
+            options.lineNumbers = (lineNumber) => {
+                return this.getEditorLineNumber(id, lineNumber);
+            };
         }
 
         var editor = monaco.editor.create(document.getElementById(id), options, override);
@@ -111,9 +197,9 @@ window.blazorMonaco.editor = {
             console.log("WARNING : Please check that you have the script tag for editor.main.js in your index.html file");
 
         if (options.lineNumbers == "function") {
-            options.lineNumbers = function (lineNumber) {
-                return dotnetRef.invokeMethod("LineNumbersCallback", lineNumber);
-            }
+            options.lineNumbers = (lineNumber) => {
+                return this.getEditorLineNumber(id, lineNumber);
+            };
         }
 
         var editor = monaco.editor.createDiffEditor(document.getElementById(id), options, override);
@@ -195,32 +281,6 @@ window.blazorMonaco.editor = {
 
     setTheme: function (theme) {
         monaco.editor.setTheme(theme);
-    },
-
-    getEditorHolder: function (id, silent = false) {
-        let editorHolder = window.blazorMonaco.editors.find(e => e.id === id);
-        if (!editorHolder) {
-            if (silent != false) {
-                if (silent != true) // If silent is null, log a warning
-                    console.log("WARNING : Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length);
-                return null;
-            }
-            throw "Couldn't find the editor with id: " + id + " editors.length: " + window.blazorMonaco.editors.length;
-        }
-        else if (!editorHolder.editor) {
-            if (silent != false) {
-                if (silent != true) // If silent is null, log a warning
-                    console.log("WARNING : editor is null for editorHolder: " + editorHolder);
-                return null;
-            }
-            throw "editor is null for editorHolder: " + editorHolder;
-        }
-        return editorHolder;
-    },
-
-    getEditor: function (id, silent = false) {
-        let editorHolder = this.getEditorHolder(id, silent);
-        return editorHolder == null ? null : editorHolder.editor;
     },
 
     //#endregion
