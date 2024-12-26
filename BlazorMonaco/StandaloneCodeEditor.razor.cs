@@ -243,7 +243,6 @@ namespace BlazorMonaco.Editor
         [JSInvokable]
         public List<Selection> ExecuteEditsCallback(List<ValidEditOperation> inverseEditOperations)
         {
-            Console.WriteLine("ExecuteEditsCallback is called : " + JsonSerializer.Serialize(inverseEditOperations));
             return ExecuteEditsLambda?.Invoke(inverseEditOperations);
         }
 
