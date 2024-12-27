@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleWasmApp", "SampleWasm
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleWebApp", "SampleWebApp\SampleWebApp.csproj", "{903868ED-E270-4B94-B9A1-283F8FD7467F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleAutoApp.Client", "SampleAutoApp\SampleAutoApp.Client\SampleAutoApp.Client.csproj", "{4BAD88CF-1432-4DFD-BA68-6C8B872AA8BE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleAutoApp", "SampleAutoApp\SampleAutoApp\SampleAutoApp.csproj", "{0C77835C-8BB4-41D6-9E2E-DAC5F0767DD0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{903868ED-E270-4B94-B9A1-283F8FD7467F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{903868ED-E270-4B94-B9A1-283F8FD7467F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{903868ED-E270-4B94-B9A1-283F8FD7467F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4BAD88CF-1432-4DFD-BA68-6C8B872AA8BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BAD88CF-1432-4DFD-BA68-6C8B872AA8BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BAD88CF-1432-4DFD-BA68-6C8B872AA8BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BAD88CF-1432-4DFD-BA68-6C8B872AA8BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C77835C-8BB4-41D6-9E2E-DAC5F0767DD0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C77835C-8BB4-41D6-9E2E-DAC5F0767DD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C77835C-8BB4-41D6-9E2E-DAC5F0767DD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C77835C-8BB4-41D6-9E2E-DAC5F0767DD0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

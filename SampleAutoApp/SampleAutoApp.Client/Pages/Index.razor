@@ -1,0 +1,48 @@
+﻿@page "/"
+@inject IJSRuntime jsRuntime
+
+<h3>Code Editor</h3>
+
+<div>
+    <div style="margin:10px 0;">
+        Theme:
+        <select @onchange="ChangeTheme">
+            <option value="vs">Visual Studio</option>
+            <option value="vs-dark">Visual Studio Dark</option>
+            <option value="hc-black">High Contrast Black</option>
+        </select>
+    </div>
+    <div style="margin:10px 0;">
+        New Value: <input type="text" @bind="_valueToSet" style="width: 400px;" />
+        <button @onclick="SetValue">Set Value</button>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="GetValue">Get Value</button>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="AddCommand">Add Command</button>
+        <span style="font-size:10px">Ctrl+Enter to trigger the command.</span>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="AddAction">Add Action</button>
+        <span style="font-size:10px">Ctrl+B to trigger the action.</span>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="RegisterCodeActionProvider">RegisterCodeActionProvider</button>
+        <span style="font-size:10px">Hover over the "this" on line:4</span>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="RegisterDocumentFormattingEditProvider">RegisterDocumentFormattingEditProvider</button>
+        <span style="font-size:10px">Shift+Alt+F to trigger the action.</span>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="RegisterCompletionItemProvider">RegisterCompletionItemProvider</button>
+        <span style="font-size:10px">Ctrl+Space on the "this" on line:4</span>
+    </div>
+    <div style="margin:10px 0;">
+        See the console for the button results.
+    </div>
+</div>
+
+<StandaloneCodeEditor @ref="_editor" Id="sample-code-editor" ConstructionOptions="EditorConstructionOptions"
+    OnDidInit="EditorOnDidInit" OnContextMenu="OnContextMenu" />
