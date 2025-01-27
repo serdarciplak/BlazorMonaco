@@ -216,7 +216,14 @@ namespace BlazorMonaco.Editor
                 case "OnDidChangeCursorSelection": await OnDidChangeCursorSelection.InvokeAsync(JsonSerializer.Deserialize<CursorSelectionChangedEvent>(eventJson, jsonOptions)); break;
                 case "OnWillChangeModel": await OnWillChangeModel.InvokeAsync(JsonSerializer.Deserialize<ModelChangedEvent>(eventJson, jsonOptions)); break;
                 case "OnDidChangeModel": await OnDidChangeModel.InvokeAsync(JsonSerializer.Deserialize<ModelChangedEvent>(eventJson, jsonOptions)); break;
-                case "OnDidChangeModelContent": await OnDidChangeModelContent.InvokeAsync(JsonSerializer.Deserialize<ModelContentChangedEvent>(eventJson, jsonOptions)); break;
+                case "OnDidChangeModelContent":
+                    await OnDidChangeModelContent.InvokeAsync(JsonSerializer.Deserialize<ModelContentChangedEvent>(eventJson, jsonOptions));
+
+                    Contents = await GetValue();
+
+                    if (ContentsChanged.HasDelegate)
+                        await ContentsChanged.InvokeAsync(Contents);
+                    break;
                 case "OnDidChangeModelDecorations": await OnDidChangeModelDecorations.InvokeAsync(JsonSerializer.Deserialize<ModelDecorationsChangedEvent>(eventJson, jsonOptions)); break;
                 case "OnDidChangeModelLanguage": await OnDidChangeModelLanguage.InvokeAsync(JsonSerializer.Deserialize<ModelLanguageChangedEvent>(eventJson, jsonOptions)); break;
                 case "OnDidChangeModelLanguageConfiguration": await OnDidChangeModelLanguageConfiguration.InvokeAsync(JsonSerializer.Deserialize<ModelLanguageConfigurationChangedEvent>(eventJson, jsonOptions)); break;
@@ -245,6 +252,9 @@ namespace BlazorMonaco.Editor
         {
             return ExecuteEditsLambda?.Invoke(inverseEditOperations);
         }
+
+        [Parameter] public string Contents { get; set; }
+        [Parameter] public EventCallback<string> ContentsChanged { get; set; }
 
         #endregion
 
