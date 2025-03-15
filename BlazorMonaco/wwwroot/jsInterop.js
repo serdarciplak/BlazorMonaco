@@ -1066,6 +1066,31 @@ window.blazorMonaco.languages = {
                 return completionItemProviderRef.invokeMethodAsync("ResolveCompletionItem", completionItem);
             }
         });
+    },
+
+    registerHoverProvider: async function (language, hoverProviderRef) {
+        monaco.languages.registerHoverProvider(language, {
+            provideHover: (model, position, token) => {
+                return hoverProviderRef.invokeMethodAsync("ProvideHover", decodeURI(model.uri.toString()), position)
+                    .then(result => {
+                        if (result) {
+                            // If there are Uris in the markdown strings, make sure they're properly converted
+                            if (result.contents) {
+                                result.contents.forEach(content => {
+                                    if (content.uris) {
+                                        Object.keys(content.uris).forEach(key => {
+                                            if (typeof content.uris[key] === 'string') {
+                                                content.uris[key] = monaco.Uri.parse(content.uris[key]);
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        }
+                        return result;
+                    });
+            }
+        });
     }
 
     //#endregion

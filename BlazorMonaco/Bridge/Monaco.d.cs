@@ -6849,8 +6849,11 @@ namespace BlazorMonaco.Languages
         /**
          * Register a hover provider (used by e.g. editor hover).
          */
-        //export function registerHoverProvider(languageSelector: LanguageSelector, provider: HoverProvider) : IDisposable;
+        public static Task RegisterHoverProviderAsync(IJSRuntime jsRuntime, LanguageSelector language, HoverProvider.ProvideDelegate provideHover)
+            => RegisterHoverProviderAsync(jsRuntime, language, new HoverProvider(provideHover));
 
+        public static Task RegisterHoverProviderAsync(IJSRuntime jsRuntime, LanguageSelector language, HoverProvider hoverProvider)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.languages.registerHoverProvider", language, DotNetObjectReference.Create(hoverProvider));
         /**
          * Register a document symbol provider (used by e.g. outline).
          */
@@ -7336,26 +7339,13 @@ namespace BlazorMonaco.Languages
      * A hover represents additional information for a symbol or word. Hovers are
      * rendered in a tooltip-like widget.
      */
-    /*export interface Hover {
-        /**
-         * The contents of this hover.
-         * /
-        contents: IMarkdownString[];
-        /**
-         * The range to which this hover applies. When missing, the
-         * editor will use the range at the current position or the
-         * current position itself.
-         * /
-        range?: IRange;
-        /**
-         * Can increase the verbosity of the hover
-         * /
-        canIncreaseVerbosity?: boolean;
-        /**
-         * Can decrease the verbosity of the hover
-         * /
-        canDecreaseVerbosity?: boolean;
-    }*/
+    public class Hover
+    {
+        public MarkdownString[] Contents { get; set; }
+        public Range Range { get; set; }
+        public bool CanIncreaseVerbositry { get; set; }
+        public bool CanDecreaseVerbositry { get; set; }
+    }
 
     /**
      * The hover provider interface defines the contract between extensions and
@@ -7369,6 +7359,27 @@ namespace BlazorMonaco.Languages
          * /
         provideHover(model: editor.ITextModel, position: Position, token: CancellationToken, context?: HoverContext<THover>): ProviderResult<THover>;
     }*/
+
+    public class HoverProvider
+    {
+        /**
+         * Provide a hover for the given position and document.
+         */
+        public delegate Task<Hover> ProvideDelegate(string modelUri, Position position);
+        public ProvideDelegate ProvideMethod { get; set; }
+
+#if NET5_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.DynamicDependency(nameof(ProvideHover))]
+#endif
+        [JSInvokable]
+        public Task<Hover> ProvideHover(string modelUri, Position position)
+            => ProvideMethod?.Invoke(modelUri, position) ?? Task.FromResult<Hover>(null);
+
+        public HoverProvider(ProvideDelegate provideHover)
+        {
+            ProvideMethod = provideHover;
+        }
+    }
 
     /*export interface HoverContext<THover = Hover> {
         /**

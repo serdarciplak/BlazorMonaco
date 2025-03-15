@@ -4,6 +4,7 @@ using BlazorMonaco;
 using BlazorMonaco.Editor;
 using BlazorMonaco.Languages;
 using Microsoft.AspNetCore.Components;
+using Range = BlazorMonaco.Range;
 
 namespace SampleWebApp.Pages;
 
@@ -182,6 +183,46 @@ public partial class Index
                     Text = string.Join("\n", result)
                 }
             ];
+        });
+    }
+
+    private async Task RegisterHoverProvider()
+    {
+        await BlazorMonaco.Languages.Global.RegisterHoverProviderAsync(jsRuntime, "javascript", async (uri, position) =>
+        {
+            var model = await BlazorMonaco.Editor.Global.GetModel(jsRuntime, uri);
+            if (model == null)
+                return null;
+
+            // Do we have a word we are hovering over? If not bail.
+            var word = await model.GetWordAtPosition(position);
+            if (word == null)
+            {
+                return null;
+            }
+
+
+            return new Hover
+            {
+                Contents = new[]
+                {
+                    new MarkdownString
+                    {
+                        Value = "**The current word**", IsTrusted = true, SupportThemeIcons = false
+                    },
+                    new MarkdownString
+                    {
+                        Value = word.Word, IsTrusted = true, SupportThemeIcons = false
+                    }
+                },
+                Range = new Range
+                {
+                    StartLineNumber = position.LineNumber,
+                    EndLineNumber = position.LineNumber,
+                    StartColumn = position.Column,
+                    EndColumn = word.StartColumn + word.EndColumn
+                }
+            };
         });
     }
 
