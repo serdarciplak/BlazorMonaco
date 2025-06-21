@@ -1286,10 +1286,10 @@ namespace BlazorMonaco.Editor
     }
     public class BuiltinTheme
     {
-        const string Vs = "vs";
-        const string VsDark = "vs-dark";
-        const string HcBlack = "hc-black";
-        const string HcLight = "hc-light";
+        public const string Vs = "vs";
+        public const string VsDark = "vs-dark";
+        public const string HcBlack = "hc-black";
+        public const string HcLight = "hc-light";
     }
 
     public class StandaloneThemeData
