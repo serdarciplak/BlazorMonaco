@@ -47,11 +47,14 @@ namespace BlazorMonaco.Editor
                 var options = ConstructionOptions?.Invoke(this);
 
                 // Prepare the line numbers callback
-                LineNumbersLambda = options?.LineNumbersLambda;
-                if (LineNumbersLambda != null)
+                if (options != null)
                 {
-                    options.LineNumbers = "function";
-                    options.LineNumbersLambda = null;
+                    LineNumbersLambda = options.LineNumbersLambda;
+                    if (LineNumbersLambda != null)
+                    {
+                        options.LineNumbers = "function";
+                        options.LineNumbersLambda = null;
+                    }
                 }
 
                 // Create the bridges for the inner editors
@@ -108,9 +111,9 @@ namespace BlazorMonaco.Editor
 
         public Task AddAction(ActionDescriptor actionDescriptor)
         {
-            if (_actions.ContainsKey(actionDescriptor.Id))
+            if (_actions.TryGetValue(actionDescriptor.Id, out var action))
             {
-                _actions[actionDescriptor.Id].Add(actionDescriptor);
+                action.Add(actionDescriptor);
                 return Task.CompletedTask;
             }
 
