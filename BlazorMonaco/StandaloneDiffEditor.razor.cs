@@ -67,12 +67,19 @@ namespace BlazorMonaco.Editor
                     }
                 }
 
-                // Create the bridges for the inner editors
-                OriginalEditor = StandaloneCodeEditor.CreateVirtualEditor(JsRuntime, Id + "_original");
-                ModifiedEditor = StandaloneCodeEditor.CreateVirtualEditor(JsRuntime, Id + "_modified");
+                try
+                {
+                    // Create the bridges for the inner editors
+                    OriginalEditor = StandaloneCodeEditor.CreateVirtualEditor(JsRuntime, Id + "_original");
+                    ModifiedEditor = StandaloneCodeEditor.CreateVirtualEditor(JsRuntime, Id + "_modified");
 
-                // Create the editor
-                await Global.CreateDiffEditor(JsRuntime, Id, options, null, _dotnetObjectRef, OriginalEditor._dotnetObjectRef, ModifiedEditor._dotnetObjectRef);
+                    // Create the editor
+                    await Global.CreateDiffEditor(JsRuntime, Id, options, null, _dotnetObjectRef, OriginalEditor._dotnetObjectRef, ModifiedEditor._dotnetObjectRef);
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Gracefully handle the case where the component is disposed before it is initialized.
+                }
             }
             await base.OnAfterRenderAsync(firstRender);
         }
