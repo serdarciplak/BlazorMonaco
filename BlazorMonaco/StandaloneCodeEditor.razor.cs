@@ -67,8 +67,15 @@ namespace BlazorMonaco.Editor
                     }
                 }
 
-                // Create the editor
-                await Global.Create(JsRuntime, Id, options, null, _dotnetObjectRef);
+                try
+                {
+                    // Create the editor
+                    await Global.Create(JsRuntime, Id, options, null, _dotnetObjectRef);
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Gracefully handle the case where the component is disposed before it is initialized.
+                }
             }
             await base.OnAfterRenderAsync(firstRender);
         }
