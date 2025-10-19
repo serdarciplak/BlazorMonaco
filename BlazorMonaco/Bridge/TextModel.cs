@@ -3,6 +3,11 @@ using Microsoft.JSInterop;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable InvalidXmlDocComment
+// ReSharper disable GrammarMistakeInComment
 
 namespace BlazorMonaco.Editor
 {

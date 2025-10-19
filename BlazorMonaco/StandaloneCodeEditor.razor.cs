@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+// ReSharper disable InvalidXmlDocComment
+// ReSharper disable GrammarMistakeInComment
 
 namespace BlazorMonaco.Editor
 {
@@ -16,8 +18,8 @@ namespace BlazorMonaco.Editor
         [Parameter]
         public Func<StandaloneCodeEditor, StandaloneEditorConstructionOptions> ConstructionOptions { get; set; }
 
-        protected readonly Dictionary<string, List<ActionDescriptor>> _actions = new Dictionary<string, List<ActionDescriptor>>();
-        protected readonly Dictionary<string, List<CommandHandler>> _commands = new Dictionary<string, List<CommandHandler>>();
+        private readonly Dictionary<string, List<ActionDescriptor>> _actions = new Dictionary<string, List<ActionDescriptor>>();
+        private readonly Dictionary<string, List<CommandHandler>> _commands = new Dictionary<string, List<CommandHandler>>();
 
         [JSInvokable]
         public void ActionCallback(string actionId)
