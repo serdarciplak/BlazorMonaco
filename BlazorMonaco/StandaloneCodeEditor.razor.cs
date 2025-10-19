@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+// ReSharper disable InvalidXmlDocComment
+// ReSharper disable GrammarMistakeInComment
 
 namespace BlazorMonaco.Editor
 {
@@ -16,8 +18,8 @@ namespace BlazorMonaco.Editor
         [Parameter]
         public Func<StandaloneCodeEditor, StandaloneEditorConstructionOptions> ConstructionOptions { get; set; }
 
-        protected readonly Dictionary<string, List<ActionDescriptor>> _actions = new Dictionary<string, List<ActionDescriptor>>();
-        protected readonly Dictionary<string, List<CommandHandler>> _commands = new Dictionary<string, List<CommandHandler>>();
+        private readonly Dictionary<string, List<ActionDescriptor>> _actions = new Dictionary<string, List<ActionDescriptor>>();
+        private readonly Dictionary<string, List<CommandHandler>> _commands = new Dictionary<string, List<CommandHandler>>();
 
         [JSInvokable]
         public void ActionCallback(string actionId)
@@ -37,14 +39,14 @@ namespace BlazorMonaco.Editor
 
         internal static StandaloneCodeEditor CreateVirtualEditor(IJSRuntime jsRuntime, string id, string cssClass = null)
         {
-            var virtual_editor = new StandaloneCodeEditor
+            var virtualEditor = new StandaloneCodeEditor
             {
                 Id = id,
                 CssClass = cssClass,
                 JsRuntime = jsRuntime
             };
-            virtual_editor._dotnetObjectRef = DotNetObjectReference.Create<Editor>(virtual_editor);
-            return virtual_editor;
+            virtualEditor._dotnetObjectRef = DotNetObjectReference.Create<Editor>(virtualEditor);
+            return virtualEditor;
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -55,11 +57,14 @@ namespace BlazorMonaco.Editor
                 var options = ConstructionOptions?.Invoke(this);
 
                 // Prepare the line numbers callback
-                LineNumbersLambda = options?.LineNumbersLambda;
-                if (LineNumbersLambda != null)
+                if (options != null)
                 {
-                    options.LineNumbers = "function";
-                    options.LineNumbersLambda = null;
+                    LineNumbersLambda = options.LineNumbersLambda;
+                    if (LineNumbersLambda != null)
+                    {
+                        options.LineNumbers = "function";
+                        options.LineNumbersLambda = null;
+                    }
                 }
 
                 // Create the editor
@@ -112,15 +117,15 @@ namespace BlazorMonaco.Editor
                 KeybindingContext = keybindingContext,
                 ContextMenuGroupId = contextMenuGroupId,
                 ContextMenuOrder = (float)contextMenuOrder,
-                Run = (editor) => action(editor, keybindings)
+                Run = editor => action(editor, keybindings)
             };
             return AddAction(actionDescriptor);
         }
         public Task AddAction(ActionDescriptor actionDescriptor)
         {
-            if (_actions.ContainsKey(actionDescriptor.Id))
+            if (_actions.TryGetValue(actionDescriptor.Id, out var action))
             {
-                _actions[actionDescriptor.Id].Add(actionDescriptor);
+                action.Add(actionDescriptor);
                 return Task.CompletedTask;
             }
 
@@ -138,7 +143,7 @@ namespace BlazorMonaco.Editor
 
         private readonly List<string> _deltaDecorationIds = new List<string>();
         public Task ResetDeltaDecorations()
-            => DeltaDecorations(_deltaDecorationIds.ToArray(), new ModelDeltaDecoration[0]);
+            => DeltaDecorations(_deltaDecorationIds.ToArray(), Array.Empty<ModelDeltaDecoration>());
 
         internal override async Task SetEventListeners()
         {

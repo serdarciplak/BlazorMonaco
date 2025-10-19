@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
+// ReSharper disable InvalidXmlDocComment
+// ReSharper disable GrammarMistakeInComment
 
 namespace BlazorMonaco.Editor
 {
@@ -15,13 +17,21 @@ namespace BlazorMonaco.Editor
         [Parameter]
         public Func<StandaloneDiffEditor, StandaloneDiffEditorConstructionOptions> ConstructionOptions { get; set; }
 
-        protected readonly Dictionary<string, List<ActionDescriptor>> _actions = new Dictionary<string, List<ActionDescriptor>>();
+        private readonly Dictionary<string, List<ActionDescriptor>> _actions = new Dictionary<string, List<ActionDescriptor>>();
 
-        protected readonly Dictionary<string, List<CommandHandler>> _commands = new Dictionary<string, List<CommandHandler>>();
+        private readonly Dictionary<string, List<CommandHandler>> _commands = new Dictionary<string, List<CommandHandler>>();
 
-        public new StandaloneCodeEditor OriginalEditor => _originalEditor as StandaloneCodeEditor;
+        public new StandaloneCodeEditor OriginalEditor
+        {
+            get => base.OriginalEditor as StandaloneCodeEditor;
+            protected set => base.OriginalEditor = value;
+        }
 
-        public new StandaloneCodeEditor ModifiedEditor => _modifiedEditor as StandaloneCodeEditor;
+        public new StandaloneCodeEditor ModifiedEditor
+        {
+            get => base.ModifiedEditor as StandaloneCodeEditor;
+            protected set => base.ModifiedEditor = value;
+        }
 
         [JSInvokable]
         public void ActionCallback(string actionId)
@@ -47,16 +57,19 @@ namespace BlazorMonaco.Editor
                 var options = ConstructionOptions?.Invoke(this);
 
                 // Prepare the line numbers callback
-                LineNumbersLambda = options?.LineNumbersLambda;
-                if (LineNumbersLambda != null)
+                if (options != null)
                 {
-                    options.LineNumbers = "function";
-                    options.LineNumbersLambda = null;
+                    LineNumbersLambda = options.LineNumbersLambda;
+                    if (LineNumbersLambda != null)
+                    {
+                        options.LineNumbers = "function";
+                        options.LineNumbersLambda = null;
+                    }
                 }
 
                 // Create the bridges for the inner editors
-                _originalEditor = StandaloneCodeEditor.CreateVirtualEditor(JsRuntime, Id + "_original");
-                _modifiedEditor = StandaloneCodeEditor.CreateVirtualEditor(JsRuntime, Id + "_modified");
+                OriginalEditor = StandaloneCodeEditor.CreateVirtualEditor(JsRuntime, Id + "_original");
+                ModifiedEditor = StandaloneCodeEditor.CreateVirtualEditor(JsRuntime, Id + "_modified");
 
                 // Create the editor
                 await Global.CreateDiffEditor(JsRuntime, Id, options, null, _dotnetObjectRef, OriginalEditor._dotnetObjectRef, ModifiedEditor._dotnetObjectRef);
@@ -108,9 +121,9 @@ namespace BlazorMonaco.Editor
 
         public Task AddAction(ActionDescriptor actionDescriptor)
         {
-            if (_actions.ContainsKey(actionDescriptor.Id))
+            if (_actions.TryGetValue(actionDescriptor.Id, out var action))
             {
-                _actions[actionDescriptor.Id].Add(actionDescriptor);
+                action.Add(actionDescriptor);
                 return Task.CompletedTask;
             }
 
@@ -125,9 +138,6 @@ namespace BlazorMonaco.Editor
     public class DiffEditor : Editor
     {
         #region Blazor
-
-        protected CodeEditor _originalEditor;
-        protected CodeEditor _modifiedEditor;
 
         #region Events for the original editor (left)
         [Parameter] public EventCallback OnDidDisposeOriginal { get; set; }
@@ -214,7 +224,7 @@ namespace BlazorMonaco.Editor
 
                 #region Initialize the original editor
 
-                _originalEditor = _originalEditor ?? new CodeEditor();
+                OriginalEditor = OriginalEditor ?? new CodeEditor();
                 OriginalEditor.OnDidDispose = OnDidDisposeOriginal;
                 OriginalEditor.OnDidInit = OnDidInitOriginal;
                 OriginalEditor.OnDidChangeModelContent = OnDidChangeModelContentOriginal;
@@ -253,7 +263,7 @@ namespace BlazorMonaco.Editor
 
                 #region Initialize the modified editor
 
-                _modifiedEditor = _modifiedEditor ?? new CodeEditor();
+                ModifiedEditor = ModifiedEditor ?? new CodeEditor();
                 ModifiedEditor.OnDidCompositionEnd = OnDidCompositionEndModified;
                 ModifiedEditor.OnDidDispose = OnDidDisposeModified;
                 ModifiedEditor.OnDidInit = OnDidInitModified;
@@ -363,11 +373,11 @@ namespace BlazorMonaco.Editor
         /**
          * Get the `original` editor.
          */
-        public CodeEditor OriginalEditor => _originalEditor;
+        public CodeEditor OriginalEditor { get; protected set; }
         /**
          * Get the `modified` editor.
          */
-        public CodeEditor ModifiedEditor => _modifiedEditor;
+        public CodeEditor ModifiedEditor { get; protected set; }
         /**
          * Get the computed diff information.
          */

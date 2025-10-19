@@ -3,11 +3,22 @@ using BlazorMonaco.Helpers;
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+#if NET5_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
+// ReSharper disable UnusedMember.Global
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable InconsistentNaming
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable InvalidXmlDocComment
+// ReSharper disable IdentifierTypo
+// ReSharper disable CommentTypo
+// ReSharper disable GrammarMistakeInComment
 
 /*---------------------------------------------------------------------------------------------
 *  C# translation of the monaco.d.ts file here : https://www.npmjs.com/package/monaco-editor/v/0.52.2?activeTab=code
@@ -1286,10 +1297,10 @@ namespace BlazorMonaco.Editor
     }
     public class BuiltinTheme
     {
-        const string Vs = "vs";
-        const string VsDark = "vs-dark";
-        const string HcBlack = "hc-black";
-        const string HcLight = "hc-light";
+        public const string Vs = "vs";
+        public const string VsDark = "vs-dark";
+        public const string HcBlack = "hc-black";
+        public const string HcLight = "hc-light";
     }
 
     public class StandaloneThemeData
@@ -7075,6 +7086,12 @@ namespace BlazorMonaco.Languages
      */
     public class CodeActionProviderMetadata
     {
+        public CodeActionProviderMetadata(List<string> providedCodeActionKinds, List<CodeActionProviderMetadataDocumentation> documentation)
+        {
+            ProvidedCodeActionKinds = providedCodeActionKinds;
+            Documentation = documentation;
+        }
+
         /**
          * List of code action kinds that a {@link CodeActionProvider} may return.
          *
@@ -7089,6 +7106,12 @@ namespace BlazorMonaco.Languages
 
     public class CodeActionProviderMetadataDocumentation
     {
+        public CodeActionProviderMetadataDocumentation(string kind, Command command)
+        {
+            Kind = kind;
+            Command = command;
+        }
+
         public string Kind { get; }
         public Command Command { get; }
     }
@@ -7743,6 +7766,12 @@ namespace BlazorMonaco.Languages
 
     public class InlineCompletionContext
     {
+        public InlineCompletionContext(InlineCompletionTriggerKind triggerKind, SelectedSuggestionInfo selectedSuggestionInfo)
+        {
+            TriggerKind = triggerKind;
+            SelectedSuggestionInfo = selectedSuggestionInfo;
+        }
+
         /**
          * How the completion was triggered.
          */
@@ -8890,8 +8919,6 @@ namespace BlazorMonaco.Languages
 
 namespace BlazorMonaco.Worker
 {
-
-
     /*export interface IMirrorTextModel {
         readonly version: number;
     }*/
