@@ -6860,8 +6860,11 @@ namespace BlazorMonaco.Languages
         /**
          * Register a hover provider (used by e.g. editor hover).
          */
-        //export function registerHoverProvider(languageSelector: LanguageSelector, provider: HoverProvider) : IDisposable;
+        public static Task RegisterHoverProviderAsync(IJSRuntime jsRuntime, LanguageSelector language, HoverProvider.ProvideDelegate provideHover)
+            => RegisterHoverProviderAsync(jsRuntime, language, new HoverProvider(provideHover));
 
+        public static Task RegisterHoverProviderAsync(IJSRuntime jsRuntime, LanguageSelector language, HoverProvider hoverProvider)
+            => JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.languages.registerHoverProvider", language, DotNetObjectReference.Create(hoverProvider));
         /**
          * Register a document symbol provider (used by e.g. outline).
          */
@@ -7359,68 +7362,85 @@ namespace BlazorMonaco.Languages
      * A hover represents additional information for a symbol or word. Hovers are
      * rendered in a tooltip-like widget.
      */
-    /*export interface Hover {
+    public class Hover
+    {
         /**
          * The contents of this hover.
-         * /
-        contents: IMarkdownString[];
+         */
+        public MarkdownString[] Contents { get; set; }
         /**
          * The range to which this hover applies. When missing, the
          * editor will use the range at the current position or the
          * current position itself.
-         * /
-        range?: IRange;
+         */
+        public Range Range { get; set; }
         /**
          * Can increase the verbosity of the hover
-         * /
-        canIncreaseVerbosity?: boolean;
+         */
+        public bool CanIncreaseVerbosity { get; set; }
         /**
          * Can decrease the verbosity of the hover
-         * /
-        canDecreaseVerbosity?: boolean;
-    }*/
+         */
+        public bool CanDecreaseVerbosity { get; set; }
+    }
 
     /**
      * The hover provider interface defines the contract between extensions and
      * the [hover](https://code.visualstudio.com/docs/editor/intellisense)-feature.
      */
-    /*export interface HoverProvider<THover = Hover> {
+    public class HoverProvider
+    {
         /**
          * Provide a hover for the given position, context and document. Multiple hovers at the same
          * position will be merged by the editor. A hover can have a range which defaults
          * to the word range at the position when omitted.
-         * /
-        provideHover(model: editor.ITextModel, position: Position, token: CancellationToken, context?: HoverContext<THover>): ProviderResult<THover>;
-    }*/
+         */
+        public delegate Task<Hover> ProvideDelegate(string modelUri, Position position, /* TODO token: CancellationToken,*/ HoverContext context);
+        public ProvideDelegate ProvideMethod { get; set; }
 
-    /*export interface HoverContext<THover = Hover> {
+#if NET5_0_OR_GREATER
+        [DynamicDependency(nameof(ProvideHover))]
+#endif
+        [JSInvokable]
+        public Task<Hover> ProvideHover(string modelUri, Position position, HoverContext context)
+            => ProvideMethod?.Invoke(modelUri, position, context)
+               ?? Task.FromResult<Hover>(null);
+
+        public HoverProvider(ProvideDelegate provideHover)
+        {
+            ProvideMethod = provideHover;
+        }
+    }
+
+    public class HoverContext {
         /**
          * Hover verbosity request
-         * /
-        verbosityRequest?: HoverVerbosityRequest<THover>;
-    }*/
+         */
+        public HoverVerbosityRequest VerbosityRequest { get; set; }
+    }
 
-    /*export interface HoverVerbosityRequest<THover = Hover> {
+    public class HoverVerbosityRequest {
         /**
          * The delta by which to increase/decrease the hover verbosity level
-         * /
-        verbosityDelta: number;
+         */
+        public float VerbosityDelta { get; set; }
+
         /**
          * The previous hover for the same position
-         * /
-        previousHover: THover;
-    }*/
+         */
+        public Hover PreviousHover { get; set; }
+    }
 
-    /*export enum HoverVerbosityAction {
+    public enum HoverVerbosityAction {
         /**
          * Increase the verbosity of the hover
-         * /
+         */
         Increase = 0,
         /**
          * Decrease the verbosity of the hover
-         * /
+         */
         Decrease = 1
-    }*/
+    }
 
     public enum CompletionItemKind
     {

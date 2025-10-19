@@ -1017,6 +1017,14 @@ window.blazorMonaco.editor = {
 window.blazorMonaco.languages = {
     //#region Static methods
 
+    registerHoverProvider: async function (language, hoverProviderRef) {
+        await monaco.languages.registerHoverProvider(language, {
+            provideHover: (model, position, cancellationToken, context) => {
+                return hoverProviderRef.invokeMethodAsync("ProvideHover", decodeURI(model.uri.toString()), position, context);
+            }
+        });
+    },
+
     registerCodeActionProvider: async function (language, codeActionProviderRef, metadata) {
         await monaco.languages.registerCodeActionProvider(language, {
             provideCodeActions: (model, range, context, cancellationToken) => {
