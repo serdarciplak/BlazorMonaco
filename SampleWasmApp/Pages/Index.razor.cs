@@ -114,6 +114,37 @@ public partial class Index
         await _editor.AddAction(actionDescriptor);
     }
 
+    private async Task RegisterHoverProvider()
+    {
+        await BlazorMonaco.Languages.Global.RegisterHoverProviderAsync(jsRuntime, "javascript", async (uri, position, context) =>
+        {
+            var model = await BlazorMonaco.Editor.Global.GetModel(jsRuntime, uri);
+            if (model == null)
+                return null;
+
+            // Do we have a word we are hovering over? If not bail.
+            var word = await model.GetWordAtPosition(position);
+            if (word == null)
+                return null;
+
+            return new Hover
+            {
+                Contents =
+                [
+                    new MarkdownString { Value = "**The current word**", SupportThemeIcons = false },
+                    new MarkdownString { Value = word.Word, SupportThemeIcons = false }
+                ],
+                Range = new BlazorMonaco.Range
+                {
+                    StartLineNumber = position.LineNumber,
+                    EndLineNumber = position.LineNumber,
+                    StartColumn = word.StartColumn,
+                    EndColumn = word.EndColumn
+                }
+            };
+        });
+    }
+
     private async Task RegisterCodeActionProvider()
     {
         if (_editor == null)
