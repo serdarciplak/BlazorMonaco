@@ -194,7 +194,7 @@ public partial class Index
                             new WorkspaceTextEdit
                             {
                                 ResourceUri = modelUri,
-                                TextEdit = new TextEditWithInsertAsSnippet
+                                TextEdit = new TextEditWithOptions
                                 {
                                     Range = range,
                                     Text = "THIS"

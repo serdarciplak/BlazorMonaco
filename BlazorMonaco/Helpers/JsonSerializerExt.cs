@@ -110,18 +110,20 @@ namespace BlazorMonaco.Helpers
                 return null;
             }
 
-            var isTextEdit = false;
+            var type = typeof(CustomEdit);
             while (readerClone.Read() && readerClone.TokenType != JsonTokenType.EndObject)
             {
                 if (readerClone.TokenType != JsonTokenType.PropertyName)
                     continue;
 
                 var propertyName = readerClone.GetString();
-                if (propertyName == "textEdit")
-                    isTextEdit = true;
+                switch (propertyName)
+                {
+                    case "textEdit": type = typeof(WorkspaceTextEdit); break;
+                    case "options": type = typeof(WorkspaceFileEdit); break;
+                }
             }
 
-            var type = isTextEdit ? typeof(WorkspaceTextEdit) : typeof(WorkspaceFileEdit);
             var deserialized = JsonSerializer.Deserialize(ref reader, type, options);
             return (IWorkspaceEdit)deserialized;
         }

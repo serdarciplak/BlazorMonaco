@@ -318,6 +318,11 @@ window.blazorMonaco.editor = {
         return editor.deltaDecorations(oldDecorations, newDecorations);
     },
 
+    removeDecorations: function (id, decorationsIds) {
+        let editor = this.getEditor(id);
+        return editor.removeDecorations(decorationsIds);
+    },
+
     dispose: function (id) {
         let editor = this.getEditor(id);
         editor.dispose();
@@ -477,14 +482,29 @@ window.blazorMonaco.editor = {
         return editor.getTargetAtClientPoint(clientX, clientY);
     },
 
+    getFontSizeAtPosition: function (id, position) {
+        let editor = this.getEditor(id);
+        return editor.getFontSizeAtPosition(position);
+    },
+
     getTopForLineNumber: function (id, lineNumber, includeViewZones) {
         let editor = this.getEditor(id);
         return editor.getTopForLineNumber(lineNumber, includeViewZones);
     },
 
+    getBottomForLineNumber: function (id, lineNumber) {
+        let editor = this.getEditor(id);
+        return editor.getBottomForLineNumber(lineNumber);
+    },
+
     getTopForPosition: function (id, lineNumber, column) {
         let editor = this.getEditor(id);
         return editor.getTopForPosition(lineNumber, column);
+    },
+
+    getLineHeightForPosition: function (id, position) {
+        let editor = this.getEditor(id);
+        return editor.getLineHeightForPosition(position);
     },
 
     writeScreenReaderContent: function (id, reason) {
@@ -858,6 +878,11 @@ window.blazorMonaco.editor = {
             return model.validateRange(range);
         },
 
+        isValidRange: function (uriStr, range) {
+            let model = this.getModel(uriStr);
+            return model.isValidRange(range);
+        },
+
         getOffsetAt: function (uriStr, position) {
             let model = this.getModel(uriStr);
             return model.getOffsetAt(position);
@@ -923,27 +948,27 @@ window.blazorMonaco.editor = {
             return model.getDecorationRange(id);
         },
 
-        getLineDecorations: function (uriStr, lineNumber, ownerId, filterOutValidation) {
+        getLineDecorations: function (uriStr, lineNumber, ownerId, filterOutValidation, filterFontDecorations) {
             let model = this.getModel(uriStr);
-            let result = model.getLineDecorations(lineNumber, ownerId, filterOutValidation);
+            let result = model.getLineDecorations(lineNumber, ownerId, filterOutValidation, filterFontDecorations);
             return blazorMonaco.editor.removeCircularReferences(result);
         },
 
-        getLinesDecorations: function (uriStr, startLineNumber, endLineNumber, ownerId, filterOutValidation) {
+        getLinesDecorations: function (uriStr, startLineNumber, endLineNumber, ownerId, filterOutValidation, filterFontDecorations) {
             let model = this.getModel(uriStr);
-            let result = model.getLinesDecorations(startLineNumber, endLineNumber, ownerId, filterOutValidation);
+            let result = model.getLinesDecorations(startLineNumber, endLineNumber, ownerId, filterOutValidation, filterFontDecorations);
             return blazorMonaco.editor.removeCircularReferences(result);
         },
 
-        getDecorationsInRange: function (uriStr, range, ownerId, filterOutValidation, onlyMinimapDecorations, onlyMarginDecorations) {
+        getDecorationsInRange: function (uriStr, range, ownerId, filterOutValidation, filterFontDecorations, onlyMinimapDecorations, onlyMarginDecorations) {
             let model = this.getModel(uriStr);
-            let result = model.getDecorationsInRange(range, ownerId, filterOutValidation, onlyMinimapDecorations, onlyMarginDecorations);
+            let result = model.getDecorationsInRange(range, ownerId, filterOutValidation, filterFontDecorations, onlyMinimapDecorations, onlyMarginDecorations);
             return blazorMonaco.editor.removeCircularReferences(result);
         },
 
-        getAllDecorations: function (uriStr, ownerId, filterOutValidation) {
+        getAllDecorations: function (uriStr, ownerId, filterOutValidation, filterFontDecorations) {
             let model = this.getModel(uriStr);
-            let result = model.getAllDecorations(ownerId, filterOutValidation);
+            let result = model.getAllDecorations(ownerId, filterOutValidation, filterFontDecorations);
             return blazorMonaco.editor.removeCircularReferences(result);
         },
 
@@ -953,15 +978,21 @@ window.blazorMonaco.editor = {
             return blazorMonaco.editor.removeCircularReferences(result);
         },
 
-        getOverviewRulerDecorations: function (uriStr, ownerId, filterOutValidation) {
+        getOverviewRulerDecorations: function (uriStr, ownerId, filterOutValidation, filterFontDecorations) {
             let model = this.getModel(uriStr);
-            let result = model.getOverviewRulerDecorations(ownerId, filterOutValidation);
+            let result = model.getOverviewRulerDecorations(ownerId, filterOutValidation, filterFontDecorations);
             return blazorMonaco.editor.removeCircularReferences(result);
         },
 
         getInjectedTextDecorations: function (uriStr, ownerId) {
             let model = this.getModel(uriStr);
             let result = model.getInjectedTextDecorations(ownerId);
+            return blazorMonaco.editor.removeCircularReferences(result);
+        },
+
+        getCustomLineHeightsDecorations: function (uriStr, ownerId) {
+            let model = this.getModel(uriStr);
+            let result = model.getCustomLineHeightsDecorations(ownerId);
             return blazorMonaco.editor.removeCircularReferences(result);
         },
 
@@ -1003,6 +1034,26 @@ window.blazorMonaco.editor = {
         setEOL: function (uriStr, eol) {
             let model = this.getModel(uriStr);
             return model.setEOL(eol);
+        },
+
+        undo: function (uriStr) {
+            let model = this.getModel(uriStr);
+            return model.undo();
+        },
+
+        canUndo: function (uriStr) {
+            let model = this.getModel(uriStr);
+            return model.canUndo();
+        },
+
+        redo: function (uriStr) {
+            let model = this.getModel(uriStr);
+            return model.redo();
+        },
+
+        canRedo: function (uriStr) {
+            let model = this.getModel(uriStr);
+            return model.canRedo();
         },
 
         dispose: function (uriStr) {

@@ -331,6 +331,10 @@ namespace BlazorMonaco.Editor
          */
         [Parameter] public EventCallback OnDidBlurEditorWidget { get; set; }
         /**
+         * Boolean indicating whether input is in composition
+         */
+        //readonly inComposition: boolean;
+        /**
          * An event emitted after composition has started.
          */
         [Parameter] public EventCallback OnDidCompositionStart { get; set; }
@@ -592,6 +596,12 @@ namespace BlazorMonaco.Editor
          */
         //getDecorationsInRange(range: Range): IModelDecoration[] | null;
         /**
+         * Get the font size at a given position
+         * @param position the position for which to fetch the font size
+         */
+        public Task<string> GetFontSizeAtPosition(Position position)
+            => JsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getFontSizeAtPosition", Id, position);
+        /**
          * All decorations added through this call will get the ownerId of this editor.
          * @deprecated Use `createDecorationsCollection`
          * @see createDecorationsCollection
@@ -611,7 +621,8 @@ namespace BlazorMonaco.Editor
         /**
          * Remove previously added decorations.
          */
-        //removeDecorations(decorationIds: string[]) : void;
+        public Task RemoveDecorations(string[] decorationIds)
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.removeDecorations", Id, decorationIds);
         /**
          * Get the layout info for the editor.
          */
@@ -631,12 +642,18 @@ namespace BlazorMonaco.Editor
         /**
          * Get the vertical position (top offset) for the line's bottom w.r.t. to the first line.
          */
-        //getBottomForLineNumber(lineNumber: number) : number;
+        public Task<double> GetBottomForLineNumber(int lineNumber)
+            => JsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getBottomForLineNumber", Id, lineNumber);
         /**
          * Get the vertical position (top offset) for the position w.r.t. to the first line.
          */
         public Task<double> GetTopForPosition(int lineNumber, int column)
             => JsRuntime.SafeInvokeAsync<double>("blazorMonaco.editor.getTopForPosition", Id, lineNumber, column);
+        /**
+         * Get the line height for a model position.
+         */
+        public Task<int> GetLineHeightForPosition(Position position)
+            => JsRuntime.SafeInvokeAsync<int>("blazorMonaco.editor.getLineHeightForPosition", Id, position);
         /**
          * Write the screen reader content to be the current selection
          */
