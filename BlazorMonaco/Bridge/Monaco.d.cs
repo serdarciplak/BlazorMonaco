@@ -1453,7 +1453,8 @@ namespace BlazorMonaco.Editor
          * 'configuredByTheme': semanticHighlighting is controlled by the current color theme's semanticHighlighting setting.
          * Defaults to 'byTheme'.
          */
-        // 'semanticHighlighting.enabled'?: true | false | 'configuredByTheme';
+        [JsonPropertyName("semanticHighlighting.enabled")]
+        bool? SemanticHighlightingEnabled { get; set; } // true | false | 'configuredByTheme';
         /**
          * Keep peek editors open even when double-clicking their content or when hitting `Escape`.
          * Defaults to false.
@@ -1489,6 +1490,8 @@ namespace BlazorMonaco.Editor
         public bool? LargeFileOptimizations { get; set; }
         public bool? WordBasedSuggestions { get; set; }
         public bool? WordBasedSuggestionsOnlySameLanguage { get; set; }
+        [JsonPropertyName("semanticHighlighting.enabled")]
+        public bool? SemanticHighlightingEnabled { get; set; } // true | false | 'configuredByTheme';
         public bool? StablePeek { get; set; }
         public int? MaxTokenizationLineLength { get; set; }
         public string Theme { get; set; }
@@ -1549,6 +1552,8 @@ namespace BlazorMonaco.Editor
         public bool? LargeFileOptimizations { get; set; }
         public bool? WordBasedSuggestions { get; set; }
         public bool? WordBasedSuggestionsOnlySameLanguage { get; set; }
+        [JsonPropertyName("semanticHighlighting.enabled")]
+        public bool? SemanticHighlightingEnabled { get; set; } // true | false | 'configuredByTheme';
         public bool? StablePeek { get; set; }
         public int? MaxTokenizationLineLength { get; set; }
     }
