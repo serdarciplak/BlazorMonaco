@@ -3,7 +3,7 @@
     "defaultProvider": "cdnjs",
     "libraries": [
         {
-            "library": "monaco-editor@0.52.2",
+            "library": "monaco-editor@0.54.0",
             "destination": "wwwroot/lib/monaco-editor/"
         }
     ]
