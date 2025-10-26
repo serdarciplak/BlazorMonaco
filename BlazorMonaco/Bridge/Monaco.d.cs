@@ -21,7 +21,7 @@ using System.Diagnostics.CodeAnalysis;
 // ReSharper disable GrammarMistakeInComment
 
 /*---------------------------------------------------------------------------------------------
-*  C# translation of the monaco.d.ts file here : https://www.npmjs.com/package/monaco-editor/v/0.52.2?activeTab=code
+*  C# translation of the monaco.d.ts file here : https://www.npmjs.com/package/monaco-editor/v/0.54.0?activeTab=code
 *--------------------------------------------------------------------------------------------*/
 
 // eslint-disable-next-line no-var
@@ -1724,7 +1724,8 @@ namespace BlazorMonaco.Editor
         public string Id { get; set; }
     }
 
-    public class ThemeIcon {
+    public class ThemeIcon
+    {
         public string Id { get; set; }
         public ThemeColor Color { get; set; }
     }
@@ -2031,7 +2032,8 @@ namespace BlazorMonaco.Editor
     /**
      * Text Direction for a decoration.
      */
-    public enum TextDirection {
+    public enum TextDirection
+    {
         LTR = 0,
         RTL = 1
     }
@@ -3201,7 +3203,8 @@ namespace BlazorMonaco.Editor
     /**
      * An event describing a change in the text of a model.
      */
-    public class ModelContentChangedEvent {
+    public class ModelContentChangedEvent
+    {
         /**
          * The changes are ordered from the end of the document to the beginning, so they should be safe to apply in sequence.
          */
@@ -7371,12 +7374,6 @@ namespace BlazorMonaco.Languages
      */
     public class CodeActionProviderMetadata
     {
-        public CodeActionProviderMetadata(List<string> providedCodeActionKinds, List<CodeActionProviderMetadataDocumentation> documentation)
-        {
-            ProvidedCodeActionKinds = providedCodeActionKinds;
-            Documentation = documentation;
-        }
-
         /**
          * List of code action kinds that a {@link CodeActionProvider} may return.
          *
@@ -7385,20 +7382,14 @@ namespace BlazorMonaco.Languages
          * list of kinds may either be generic, such as `["quickfix", "refactor", "source"]`, or list out every kind provided,
          * such as `["quickfix.removeLine", "source.fixAll" ...]`.
          */
-        public List<string> ProvidedCodeActionKinds { get; }
-        public List<CodeActionProviderMetadataDocumentation> Documentation { get; }
+        public List<string> ProvidedCodeActionKinds { get; set; }
+        public List<CodeActionProviderMetadataDocumentation> Documentation { get; set; }
     }
 
     public class CodeActionProviderMetadataDocumentation
     {
-        public CodeActionProviderMetadataDocumentation(string kind, Command command)
-        {
-            Kind = kind;
-            Command = command;
-        }
-
-        public string Kind { get; }
-        public Command Command { get; }
+        public string Kind { get; set; }
+        public Command Command { get; set; }
     }
 
     /**
@@ -7727,14 +7718,16 @@ namespace BlazorMonaco.Languages
         }
     }
 
-    public class HoverContext {
+    public class HoverContext
+    {
         /**
          * Hover verbosity request
          */
         public HoverVerbosityRequest VerbosityRequest { get; set; }
     }
 
-    public class HoverVerbosityRequest {
+    public class HoverVerbosityRequest
+    {
         /**
          * The delta by which to increase/decrease the hover verbosity level
          */
@@ -7746,7 +7739,8 @@ namespace BlazorMonaco.Languages
         public Hover PreviousHover { get; set; }
     }
 
-    public enum HoverVerbosityAction {
+    public enum HoverVerbosityAction
+    {
         /**
          * Increase the verbosity of the hover
          */
@@ -8723,7 +8717,7 @@ namespace BlazorMonaco.Languages
      */
     public class DocumentFormattingEditProvider
     {
-        public string DisplayName { get; }
+        public string DisplayName { get; set; }
 
         /**
          * Provide formatting edits for a whole document.
@@ -9003,7 +8997,8 @@ namespace BlazorMonaco.Languages
         public List<IWorkspaceEdit> Edits { get; set; }
     }
 
-    public class CustomEdit : IWorkspaceEdit {
+    public class CustomEdit : IWorkspaceEdit
+    {
         [JsonPropertyName("resource")]
         public string ResourceUri { get; set; }
         public WorkspaceEditMetadata Metadata { get; set; }
@@ -9339,31 +9334,31 @@ namespace BlazorMonaco.Worker
 //dtsv=3
 
 //declare namespace monaco.editor {
-    //export function createWebWorker<T extends object>(opts: IWebWorkerOptions): editor.MonacoWebWorker<T>;
-    /*export interface IWebWorkerOptions {
-        /**
-         * The AMD moduleId to load.
-         * It should export a function `create` that should return the exported proxy.
-         * /
-        moduleId: string;
-        /**
-         * The data to send over when calling create on the module.
-         * /
-        createData?: any;
-        /**
-         * A label to be used to identify the web worker for debugging purposes.
-         * /
-        label?: string;
-        /**
-         * An object that can be used by the web worker to make calls back to the main thread.
-         * /
-        host?: any;
-        /**
-         * Keep idle models.
-         * Defaults to false, which means that idle models will stop syncing after a while.
-         * /
-        keepIdleModels?: boolean;
-    }*/
+//export function createWebWorker<T extends object>(opts: IWebWorkerOptions): editor.MonacoWebWorker<T>;
+/*export interface IWebWorkerOptions {
+    /**
+     * The AMD moduleId to load.
+     * It should export a function `create` that should return the exported proxy.
+     * /
+    moduleId: string;
+    /**
+     * The data to send over when calling create on the module.
+     * /
+    createData?: any;
+    /**
+     * A label to be used to identify the web worker for debugging purposes.
+     * /
+    label?: string;
+    /**
+     * An object that can be used by the web worker to make calls back to the main thread.
+     * /
+    host?: any;
+    /**
+     * Keep idle models.
+     * Defaults to false, which means that idle models will stop syncing after a while.
+     * /
+    keepIdleModels?: boolean;
+}*/
 //}
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
