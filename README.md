@@ -15,7 +15,7 @@ Most of the main Monaco Editor feature set is supported with some less-frequentl
 
 The current BlazorMonaco version :
 - Uses `Monaco Editor v0.54.0`
-- Supports `netstandard2.0`, `net5.0`, `net6.0`, `net7.0`, `net8.0` and `net9.0`
+- Supports `netstandard2.0`, `net5.0`, `net6.0`, `net7.0`, `net8.0`, `net9.0` and `net10.0`
 
 ## Demo
 
