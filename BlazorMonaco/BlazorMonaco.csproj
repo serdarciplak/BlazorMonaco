@@ -8,8 +8,8 @@
     <PackageTags>blazor;monaco;editor;vs;code;vscode;format;textarea;contenteditable</PackageTags>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Description>Blazor component for Microsoft's Monaco Editor which powers Visual Studio Code. Developed to work with Monaco Editor v0.52.2</Description>
-    <Version>3.3.0</Version>
+    <Description>Blazor component for Microsoft's Monaco Editor which powers Visual Studio Code. Developed to work with Monaco Editor v0.54.0</Description>
+    <Version>3.4.0</Version>
     <PackageProjectUrl>https://serdarciplak.github.io/BlazorMonaco/</PackageProjectUrl>
     <PackageReleaseNotes>See the change log for release notes:
 https://github.com/serdarciplak/BlazorMonaco/blob/master/CHANGELOG.md</PackageReleaseNotes>
@@ -54,14 +54,8 @@ https://github.com/serdarciplak/BlazorMonaco/blob/master/CHANGELOG.md</PackageRe
     </None>
     <None Include="..\README.md">
       <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
+      <PackagePath></PackagePath>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="wwwroot\lib\monaco-editor\min-maps\vs\base\common\" />
-    <Folder Include="wwwroot\lib\monaco-editor\min\vs\basic-languages\" />
-    <Folder Include="wwwroot\lib\monaco-editor\min\vs\language\" />
   </ItemGroup>
 
 </Project>

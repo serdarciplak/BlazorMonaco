@@ -1,5 +1,11 @@
 # BlazorMonaco Changelog
 
+## 3.4.0
+- Updated to Monaco Editor **v0.54.0**
+- Added support for `RegisterHoverProvider`.
+- Added some missing and new property and methods.
+- Small fixes and improvements.
+
 ## 3.3.0
 - Updated to Monaco Editor **v0.52.2**
 - Added support for **net9.0**

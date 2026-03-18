@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace BlazorMonaco.Helpers
 {
-    internal static partial class JsonSerializerExt
+    internal static class JsonSerializerExt
     {
         public static JsonSerializerOptions DefaultOptions => new JsonSerializerOptions
         {
@@ -66,7 +66,7 @@ namespace BlazorMonaco.Helpers
     internal class ListJsonConverter<T, TConverter> : JsonConverter<List<T>>
         where TConverter : JsonConverter<T>, new()
     {
-        private readonly JsonConverter<T> itemConverter = new TConverter();
+        private readonly JsonConverter<T> _itemConverter = new TConverter();
 
         public override List<T> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
@@ -80,7 +80,7 @@ namespace BlazorMonaco.Helpers
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
             {
-                var item = itemConverter.Read(ref reader, typeof(T), options);
+                var item = _itemConverter.Read(ref reader, typeof(T), options);
                 if (item != null)
                     list.Add(item);
             }
@@ -93,7 +93,7 @@ namespace BlazorMonaco.Helpers
             writer.WriteStartArray();
 
             foreach (T item in value)
-                itemConverter.Write(writer, item, options);
+                _itemConverter.Write(writer, item, options);
 
             writer.WriteEndArray();
         }
@@ -110,18 +110,20 @@ namespace BlazorMonaco.Helpers
                 return null;
             }
 
-            var isTextEdit = false;
+            var type = typeof(CustomEdit);
             while (readerClone.Read() && readerClone.TokenType != JsonTokenType.EndObject)
             {
-                if (readerClone.TokenType == JsonTokenType.PropertyName)
+                if (readerClone.TokenType != JsonTokenType.PropertyName)
+                    continue;
+
+                var propertyName = readerClone.GetString();
+                switch (propertyName)
                 {
-                    string propertyName = readerClone.GetString();
-                    if (propertyName == "textEdit")
-                        isTextEdit = true;
+                    case "textEdit": type = typeof(WorkspaceTextEdit); break;
+                    case "options": type = typeof(WorkspaceFileEdit); break;
                 }
             }
 
-            var type = isTextEdit ? typeof(WorkspaceTextEdit) : typeof(WorkspaceFileEdit);
             var deserialized = JsonSerializer.Deserialize(ref reader, type, options);
             return (IWorkspaceEdit)deserialized;
         }
@@ -131,7 +133,7 @@ namespace BlazorMonaco.Helpers
             if (value == null)
                 writer.WriteNullValue();
 
-            var type = value.GetType();
+            var type = value?.GetType();
             using (var jsonDocument = JsonDocument.Parse(JsonSerializer.Serialize(value, type, options)))
             {
                 writer.WriteStartObject();
