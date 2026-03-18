@@ -64,8 +64,19 @@ namespace BlazorMonaco.Editor
 
                 // Create the editor
                 await Global.Create(JsRuntime, Id, options, null, _dotnetObjectRef);
+                _isEditorInitialized = true;
             }
             await base.OnAfterRenderAsync(firstRender);
+        }
+
+        protected override async Task OnParametersSetAsync()
+        {
+            if (_isEditorInitialized && ValueChanged.HasDelegate && Value != _previousValue)
+            {
+                _previousValue = Value;
+                await SetValue(Value);
+            }
+            await base.OnParametersSetAsync();
         }
 
         #endregion
@@ -160,9 +171,9 @@ namespace BlazorMonaco.Editor
                 await SetEventListener("OnDidChangeCursorSelection");
             if (OnWillChangeModel.HasDelegate)
                 await SetEventListener("OnWillChangeModel");
-            if (OnDidChangeModel.HasDelegate)
+            if (OnDidChangeModel.HasDelegate || ValueChanged.HasDelegate)
                 await SetEventListener("OnDidChangeModel");
-            if (OnDidChangeModelContent.HasDelegate)
+            if (OnDidChangeModelContent.HasDelegate || ValueChanged.HasDelegate)
                 await SetEventListener("OnDidChangeModelContent");
             if (OnDidChangeModelDecorations.HasDelegate)
                 await SetEventListener("OnDidChangeModelDecorations");
@@ -215,14 +226,25 @@ namespace BlazorMonaco.Editor
                 case "OnDidChangeCursorPosition": await OnDidChangeCursorPosition.InvokeAsync(JsonSerializer.Deserialize<CursorPositionChangedEvent>(eventJson, jsonOptions)); break;
                 case "OnDidChangeCursorSelection": await OnDidChangeCursorSelection.InvokeAsync(JsonSerializer.Deserialize<CursorSelectionChangedEvent>(eventJson, jsonOptions)); break;
                 case "OnWillChangeModel": await OnWillChangeModel.InvokeAsync(JsonSerializer.Deserialize<ModelChangedEvent>(eventJson, jsonOptions)); break;
-                case "OnDidChangeModel": await OnDidChangeModel.InvokeAsync(JsonSerializer.Deserialize<ModelChangedEvent>(eventJson, jsonOptions)); break;
+                case "OnDidChangeModel":
+                    if (OnDidChangeModel.HasDelegate)
+                        await OnDidChangeModel.InvokeAsync(JsonSerializer.Deserialize<ModelChangedEvent>(eventJson, jsonOptions));
+
+                    if (ValueChanged.HasDelegate)
+                    {
+                        _previousValue = await GetValue();
+                        await ValueChanged.InvokeAsync(_previousValue);
+                    }
+                    break;
                 case "OnDidChangeModelContent":
-                    await OnDidChangeModelContent.InvokeAsync(JsonSerializer.Deserialize<ModelContentChangedEvent>(eventJson, jsonOptions));
+                    if (OnDidChangeModelContent.HasDelegate)
+                        await OnDidChangeModelContent.InvokeAsync(JsonSerializer.Deserialize<ModelContentChangedEvent>(eventJson, jsonOptions));
 
-                    Contents = await GetValue();
-
-                    if (ContentsChanged.HasDelegate)
-                        await ContentsChanged.InvokeAsync(Contents);
+                    if (ValueChanged.HasDelegate)
+                    {
+                        _previousValue = await GetValue();
+                        await ValueChanged.InvokeAsync(_previousValue);
+                    }
                     break;
                 case "OnDidChangeModelDecorations": await OnDidChangeModelDecorations.InvokeAsync(JsonSerializer.Deserialize<ModelDecorationsChangedEvent>(eventJson, jsonOptions)); break;
                 case "OnDidChangeModelLanguage": await OnDidChangeModelLanguage.InvokeAsync(JsonSerializer.Deserialize<ModelLanguageChangedEvent>(eventJson, jsonOptions)); break;
@@ -253,8 +275,11 @@ namespace BlazorMonaco.Editor
             return ExecuteEditsLambda?.Invoke(inverseEditOperations);
         }
 
-        [Parameter] public string Contents { get; set; }
-        [Parameter] public EventCallback<string> ContentsChanged { get; set; }
+        protected bool _isEditorInitialized;
+        protected string _previousValue;
+
+        [Parameter] public string Value { get; set; }
+        [Parameter] public EventCallback<string> ValueChanged { get; set; }
 
         #endregion
 
