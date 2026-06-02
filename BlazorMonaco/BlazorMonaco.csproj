@@ -1,20 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net5.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
     <RazorLangVersion>3.0</RazorLangVersion>
-    <Authors>Serdar Ciplak</Authors>
-    <RepositoryUrl>https://github.com/serdarciplak/BlazorMonaco</RepositoryUrl>
+    <Authors>InSpark</Authors>
+    <RepositoryUrl>https://github.com/WeAreInSpark/InSpark.BlazorMonaco</RepositoryUrl>
+    <PackageId>InSpark.BlazorMonaco</PackageId>
     <PackageTags>blazor;monaco;editor;vs;code;vscode;format;textarea;contenteditable</PackageTags>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Description>Blazor component for Microsoft's Monaco Editor which powers Visual Studio Code. Developed to work with Monaco Editor v0.54.0</Description>
-    <Version>3.4.0</Version>
-    <PackageProjectUrl>https://serdarciplak.github.io/BlazorMonaco/</PackageProjectUrl>
-    <PackageReleaseNotes>See the change log for release notes:
-https://github.com/serdarciplak/BlazorMonaco/blob/master/CHANGELOG.md</PackageReleaseNotes>
+    <Description>Blazor component for Microsoft's Monaco Editor which powers Visual Studio Code. Developed to work with Monaco Editor v0.54.0. InSpark fork with .NET 10 support.</Description>
+    <Version>1.0.0$(NuGetSuffix)</Version>
+    <PackageProjectUrl>https://github.com/WeAreInSpark/InSpark.BlazorMonaco</PackageProjectUrl>
+    <PackageReleaseNotes>InSpark fork of BlazorMonaco with .NET 10 support. Based on BlazorMonaco v3.4.0.</PackageReleaseNotes>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
 
   <ItemGroup Condition="$(TargetFramework.StartsWith('netstandard'))">
@@ -45,6 +46,11 @@ https://github.com/serdarciplak/BlazorMonaco/blob/master/CHANGELOG.md</PackageRe
   <ItemGroup Condition="$(TargetFramework.StartsWith('net9'))">
     <PackageReference Include="Microsoft.AspNetCore.Components" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net10'))">
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.0" />
   </ItemGroup>
 
   <ItemGroup>

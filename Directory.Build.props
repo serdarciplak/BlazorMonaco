@@ -1,0 +1,20 @@
+<Project>
+  
+  <PropertyGroup>      
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningsNotAsErrors>CS0618</WarningsNotAsErrors>
+
+    <AnalysisMode>All</AnalysisMode>
+    <AnalysisLevel>latest</AnalysisLevel>
+    
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- Required to enable IDE0005 (Remove unnecessary usings/imports) on build -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <Company>InSpark</Company>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <RepositoryUrl>https://github.com/WeAreInSpark/InSpark.BlazorMonaco</RepositoryUrl>
+  </PropertyGroup>
+</Project>

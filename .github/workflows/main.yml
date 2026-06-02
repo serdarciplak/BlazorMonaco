@@ -1,0 +1,88 @@
+name: InSpark.BlazorMonaco
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [synchronize, opened, reopened]
+  push:
+    branches:
+      - main
+
+env:
+  isMain: ${{ github.ref == 'refs/heads/main' }}
+
+jobs:
+  build:
+    name: Build and Publish InSpark.BlazorMonaco
+    runs-on: inspark-ubuntu-latest-8-core
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Use .NET 10.0.x
+        uses: actions/setup-dotnet@v5
+        with:
+          source-url: https://pkgs.dev.azure.com/weareinspark/_packaging/InSpark/nuget/v3/index.json
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.AZURE_DEVOPS_PAT }}
+
+      - name: Set NuGet version suffix
+        if: ${{ env.isMain == 'false' }}
+        run: |
+          echo "NuGetSuffix=-$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+
+      - name: Restore NuGet packages
+        working-directory: './BlazorMonaco'
+        run: dotnet restore --locked-mode
+
+      - name: Build
+        working-directory: './BlazorMonaco'
+        run: dotnet build --configuration Release --no-restore -p:TreatWarningsAsErrors=true -p:DebugSymbols=true
+
+      - name: Pack
+        working-directory: './BlazorMonaco'
+        run: dotnet pack --no-build --configuration Release --output ${{ runner.temp }}/InSpark.BlazorMonaco
+
+      - name: Publish NuGet package
+        run: dotnet nuget push ${{ runner.temp }}/InSpark.BlazorMonaco/*.nupkg --api-key AzureArtifacts --skip-duplicate
+
+      - name: Publish Symbols
+        uses: microsoft/action-publish-symbols@v2.1.6
+        with:
+          accountName: weareinspark
+          symbolServiceUrl: 'https://artifacts.dev.azure.com'
+          personalAccessToken: ${{ secrets.AZURE_DEVOPS_PAT_SYMBOLS }}
+
+  success:
+    name: Set run as success
+    runs-on: inspark-ubuntu-latest-8-core
+    needs: [build]
+    if: >
+      !failure() &&
+      !cancelled()
+    outputs:
+      success: ${{ steps.setoutput.outputs.success }}
+    steps:
+      - id: setoutput
+        run: echo "success=true" >> $GITHUB_OUTPUT
+
+  done:
+    name: Done
+    runs-on: inspark-ubuntu-latest-8-core
+    needs: [success]
+    if: always()
+    steps:
+      # pass step only when output of previous result job is set
+      # in case at least one of the jobs fails, result is skipped
+      # and the output will not be set, which will then cause the ci job to fail
+      - run: |
+          passed="${{ needs.success.outputs.success }}"
+          if [[ $passed == "true" ]]; then
+            echo "Success"
+            exit 0
+          else
+            echo "Failed"
+            exit 1
+          fi

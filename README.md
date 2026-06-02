@@ -1,42 +1,69 @@
-# BlazorMonaco
+# InSpark.BlazorMonaco
 
-[![Nuget](https://img.shields.io/nuget/dt/BlazorMonaco)](https://www.nuget.org/packages/BlazorMonaco)
-[![Nuget](https://img.shields.io/nuget/v/BlazorMonaco)](https://www.nuget.org/packages/BlazorMonaco)
+[![Build Status](https://github.com/WeAreInSpark/InSpark.BlazorMonaco/actions/workflows/main.yml/badge.svg)](https://github.com/WeAreInSpark/InSpark.BlazorMonaco/actions/workflows/main.yml)
 [![MonacoEditor](https://img.shields.io/badge/monaco--editor-0.54.0-blue)](https://github.com/microsoft/monaco-editor)
-[![License-MIT](https://img.shields.io/badge/license-MIT-informational)](https://github.com/serdarciplak/BlazorMonaco/blob/master/LICENSE)
+[![License-MIT](https://img.shields.io/badge/license-MIT-informational)](https://github.com/WeAreInSpark/InSpark.BlazorMonaco/blob/main/LICENSE)
 
 <a href="#">
     <img src="https://raw.githubusercontent.com/serdarciplak/BlazorMonaco/master/BlazorMonaco/icon.png" align="right" height="120" style="padding-left:20px;" />
 </a>
 
+> **InSpark Fork**: This is an InSpark-maintained fork of [BlazorMonaco](https://github.com/serdarciplak/BlazorMonaco) with **.NET 10 support** and published to our private Azure DevOps feed. Based on BlazorMonaco v3.4.0.
+
 Blazor component for Microsoft [Monaco Editor](https://github.com/Microsoft/monaco-editor) which powers Visual Studio Code.
 
-Most of the main Monaco Editor feature set is supported with some less-frequently used features currently missing. Any contributions, comments or suggestions are greatly welcome. Please feel free to contact me via GitHub.
+Most of the main Monaco Editor feature set is supported with some less-frequently used features currently missing. Any contributions, comments or suggestions are greatly welcome. Please feel free to contact us via GitHub.
 
-The current BlazorMonaco version :
+The current InSpark.BlazorMonaco version:
 - Uses `Monaco Editor v0.54.0`
-- Supports `netstandard2.0`, `net5.0`, `net6.0`, `net7.0`, `net8.0` and `net9.0`
+- Supports `netstandard2.0`, `net5.0`, `net6.0`, `net7.0`, `net8.0`, `net9.0` and `net10.0`
+- Version `1.0.0` (InSpark fork versioning)
 
 ## Demo
 
-You can see a working sample WebAssembly app [here](https://serdarciplak.github.io/BlazorMonaco/).
+You can see a working sample WebAssembly app from the original project [here](https://serdarciplak.github.io/BlazorMonaco/).
 
 ## Installation
 
-- Add the [NuGet](https://www.nuget.org/packages/BlazorMonaco/) package to your Blazor project.
+### Configure Azure DevOps Feed
 
-    ```
-    dotnet add package BlazorMonaco
-    // or
-    Install-Package BlazorMonaco
+First, ensure your project is configured to use the InSpark Azure DevOps NuGet feed. Add or update your `NuGet.config`:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+    <packageSources>
+        <clear />
+        <add key="InSpark" value="https://pkgs.dev.azure.com/weareinspark/_packaging/InSpark/nuget/v3/index.json" />
+        <add key="NuGet official package source" value="https://api.nuget.org/v3/index.json" />
+    </packageSources>
+    <packageSourceMapping>
+        <packageSource key="NuGet official package source">
+            <package pattern="*" />
+        </packageSource>
+        <packageSource key="InSpark">
+            <package pattern="InSpark.*" />
+        </packageSource>
+    </packageSourceMapping>
+</configuration>
+```
+
+### Add the Package
+
+- Add the InSpark.BlazorMonaco package to your Blazor project:
+
+    ```bash
+    dotnet add package InSpark.BlazorMonaco
+    # or
+    Install-Package InSpark.BlazorMonaco
     ```
 
 - Add the script tags below to the end of your html body tag. Note that they must be placed before the Blazor script tag (`blazor.webassembly.js`, `blazor.server.js` or `blazor.web.js`).
 
     ```html
-    <script src="_content/BlazorMonaco/jsInterop.js"></script>
-    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
-    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
+    <script src="_content/InSpark.BlazorMonaco/jsInterop.js"></script>
+    <script src="_content/InSpark.BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
+    <script src="_content/InSpark.BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
     ```
 
 - Everything resides in three namespaces. You can add the following using directives to your root `_Imports.razor` file, or any other place you may need them.
