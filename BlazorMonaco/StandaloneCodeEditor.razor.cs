@@ -56,9 +56,15 @@ namespace BlazorMonaco.Editor
                 // Get options
                 var options = ConstructionOptions?.Invoke(this);
 
-                // Prepare the line numbers callback
                 if (options != null)
                 {
+                    // If the Value parameter is set, override the value in the options
+                    if (!string.IsNullOrEmpty(Value))
+                    {
+                        options.Value = Value;
+                    }
+
+                    // Prepare the line numbers callback
                     LineNumbersLambda = options.LineNumbersLambda;
                     if (LineNumbersLambda != null)
                     {
@@ -71,7 +77,7 @@ namespace BlazorMonaco.Editor
                 {
                     // Create the editor
                     await Global.Create(JsRuntime, Id, options, null, _dotnetObjectRef);
-                    _isEditorInitialized = true;
+                    _isJsInstanceReady = true;
                 }
                 catch (ObjectDisposedException)
                 {
@@ -83,7 +89,7 @@ namespace BlazorMonaco.Editor
 
         protected override async Task OnParametersSetAsync()
         {
-            if (_isEditorInitialized && ValueChanged.HasDelegate && Value != _previousValue)
+            if (_isJsInstanceReady && ValueChanged.HasDelegate && Value != _previousValue)
             {
                 _previousValue = Value;
                 await SetValue(Value);
@@ -240,7 +246,9 @@ namespace BlazorMonaco.Editor
                 case "OnWillChangeModel": await OnWillChangeModel.InvokeAsync(JsonSerializer.Deserialize<ModelChangedEvent>(eventJson, jsonOptions)); break;
                 case "OnDidChangeModel":
                     if (OnDidChangeModel.HasDelegate)
+                    {
                         await OnDidChangeModel.InvokeAsync(JsonSerializer.Deserialize<ModelChangedEvent>(eventJson, jsonOptions));
+                    }
 
                     if (ValueChanged.HasDelegate)
                     {
@@ -250,7 +258,9 @@ namespace BlazorMonaco.Editor
                     break;
                 case "OnDidChangeModelContent":
                     if (OnDidChangeModelContent.HasDelegate)
+                    {
                         await OnDidChangeModelContent.InvokeAsync(JsonSerializer.Deserialize<ModelContentChangedEvent>(eventJson, jsonOptions));
+                    }
 
                     if (ValueChanged.HasDelegate)
                     {
@@ -287,7 +297,7 @@ namespace BlazorMonaco.Editor
             return ExecuteEditsLambda?.Invoke(inverseEditOperations);
         }
 
-        protected bool _isEditorInitialized;
+        protected bool _isJsInstanceReady;
         protected string _previousValue;
 
         [Parameter] public string Value { get; set; }

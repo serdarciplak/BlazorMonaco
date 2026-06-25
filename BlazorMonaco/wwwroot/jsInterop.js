@@ -736,7 +736,9 @@ window.blazorMonaco.editor = {
 
     setValue: function (id, value) {
         let editor = this.getEditor(id);
-        editor.setValue(value);
+        if (editor.getValue() !== value) {
+            editor.setValue(value);
+        }
     },
 
     trigger: function (id, source, handlerId, payload) {
