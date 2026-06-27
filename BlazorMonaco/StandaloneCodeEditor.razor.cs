@@ -346,7 +346,7 @@ namespace BlazorMonaco.Editor
          * An event emitted when editing failed because the editor is read-only.
          * @event
          */
-        //readonly onDidAttemptReadOnlyEdit: IEvent<void>;
+        //readonly onDidAttemptReadOnlyEdit: IEvent$1<void>;
         /**
          * An event emitted when users paste text in the editor.
          * @event
@@ -406,7 +406,7 @@ namespace BlazorMonaco.Editor
          * An event emitted when hidden areas change in the editor (e.g. due to folding).
          * @event
          */
-        //readonly onDidChangeHiddenAreas: IEvent<void>;
+        //readonly onDidChangeHiddenAreas: IEvent$1<void>;
         /**
          * Some editor operations fire multiple events at once.
          * To allow users to react to multiple events fired by a single operation,
@@ -414,11 +414,11 @@ namespace BlazorMonaco.Editor
          * Whenever the editor fires `onBeginUpdate`, it will also fire `onEndUpdate` once the operation finishes.
          * Note that not all operations are bracketed by `onBeginUpdate` and `onEndUpdate`.
         */
-        //readonly onBeginUpdate: IEvent<void>;
+        //readonly onBeginUpdate: IEvent$1<void>;
         /**
          * Fires after the editor completes the operation it fired `onBeginUpdate` for.
         */
-        //readonly onEndUpdate: IEvent<void>;
+        //readonly onEndUpdate: IEvent$1<void>;
         /**
          * Saves current view state of the editor in a serializable object.
          */

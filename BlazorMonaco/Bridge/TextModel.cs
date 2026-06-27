@@ -445,37 +445,37 @@ namespace BlazorMonaco.Editor
          * An event emitted when the contents of the model have changed.
          * @event
          */
-        //onDidChangeContent(listener: (e: IModelContentChangedEvent) => void): IDisposable;
+        //onDidChangeContent(listener: (e: IModelContentChangedEvent) => void): IDisposable$2;
         /**
          * An event emitted when decorations of the model have changed.
          * @event
          */
-        //readonly onDidChangeDecorations: IEvent<IModelDecorationsChangedEvent>;
+        //readonly onDidChangeDecorations: IEvent$1<IModelDecorationsChangedEvent>;
         /**
          * An event emitted when the model options have changed.
          * @event
          */
-        //readonly onDidChangeOptions: IEvent<IModelOptionsChangedEvent>;
+        //readonly onDidChangeOptions: IEvent$1<IModelOptionsChangedEvent>;
         /**
          * An event emitted when the language associated with the model has changed.
          * @event
          */
-        //readonly onDidChangeLanguage: IEvent<IModelLanguageChangedEvent>;
+        //readonly onDidChangeLanguage: IEvent$1<IModelLanguageChangedEvent>;
         /**
          * An event emitted when the language configuration associated with the model has changed.
          * @event
          */
-        //readonly onDidChangeLanguageConfiguration: IEvent<IModelLanguageConfigurationChangedEvent>;
+        //readonly onDidChangeLanguageConfiguration: IEvent$1<IModelLanguageConfigurationChangedEvent>;
         /**
          * An event emitted when the model has been attached to the first editor or detached from the last editor.
          * @event
          */
-        //readonly onDidChangeAttached: IEvent<void>;
+        //readonly onDidChangeAttached: IEvent$1<void>;
         /**
          * An event emitted right before disposing the model.
          * @event
          */
-        //readonly onWillDispose: IEvent<void>;
+        //readonly onWillDispose: IEvent$1<void>;
         /**
          * Destroy this model.
          */

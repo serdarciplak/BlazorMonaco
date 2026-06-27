@@ -97,7 +97,7 @@ namespace BlazorMonaco.Editor
          * An event emitted when the editor has been disposed.
          * @event
          */
-        //onDidDispose(listener: () => void): IDisposable;
+        //onDidDispose(listener: () => void): IDisposable$2;
         /**
          * Dispose the editor.
          */
