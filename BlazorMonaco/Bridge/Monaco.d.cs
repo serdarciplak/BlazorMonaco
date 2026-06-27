@@ -21,7 +21,7 @@ using System.Diagnostics.CodeAnalysis;
 // ReSharper disable GrammarMistakeInComment
 
 /*---------------------------------------------------------------------------------------------
-*  C# translation of the monaco.d.ts file here : https://www.npmjs.com/package/monaco-editor/v/0.54.0?activeTab=code
+*  C# translation of the monaco.d.ts file here : https://www.npmjs.com/package/monaco-editor/v/0.55.1?activeTab=code
 *--------------------------------------------------------------------------------------------*/
 
 // eslint-disable-next-line no-var
