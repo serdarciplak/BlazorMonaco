@@ -1,6 +1,7 @@
 # BlazorMonaco Changelog
 
 ## 3.5.0
+- Updated to Monaco Editor **v0.55.1**
 - Added support for **net10.0**
 
 ## 3.4.0
