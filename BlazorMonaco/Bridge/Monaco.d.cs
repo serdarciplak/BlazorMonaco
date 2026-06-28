@@ -958,9 +958,8 @@ namespace BlazorMonaco.Editor
         {
             options = options ?? new StandaloneEditorConstructionOptions();
 
-            // Convert the options object into a JsonElement to get rid of the properties with null values
-            var optionsJson = JsonSerializer.Serialize(options, JsonSerializerExt.DefaultOptions);
-            var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
+            // Convert to JsonElement to remove the properties with null values
+            var optionsJson = JsonElementExt.FromObject(options);
 
             // Create the editor
 #if NET5_0_OR_GREATER
@@ -969,7 +968,7 @@ namespace BlazorMonaco.Editor
             var isBrowser = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Create("BROWSER"));
             await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setWasm", isBrowser);
 #endif
-            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.create", domElementId, optionsDict, overrideServices, dotnetObjectRef);
+            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.create", domElementId, optionsJson, overrideServices, dotnetObjectRef);
         }
 
         /**
@@ -1011,9 +1010,8 @@ namespace BlazorMonaco.Editor
         {
             options = options ?? new StandaloneDiffEditorConstructionOptions();
 
-            // Convert the options object into a JsonElement to get rid of the properties with null values
-            var optionsJson = JsonSerializer.Serialize(options, JsonSerializerExt.DefaultOptions);
-            var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
+            // Convert to JsonElement to remove the properties with null values
+            var optionsJson = JsonElementExt.FromObject(options);
 
             // Create the editor
 #if NET5_0_OR_GREATER
@@ -1022,7 +1020,7 @@ namespace BlazorMonaco.Editor
             var isBrowser = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Create("BROWSER"));
             await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setWasm", isBrowser);
 #endif
-            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.createDiffEditor", domElementId, optionsDict, overrideServices, dotnetObjectRef, dotnetObjectRefOriginal, dotnetObjectRefModified);
+            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.createDiffEditor", domElementId, optionsJson, overrideServices, dotnetObjectRef, dotnetObjectRefOriginal, dotnetObjectRefModified);
         }
 
         //export function createMultiFileDiffEditor(domElement: HTMLElement, override?: IEditorOverrideServices): any;
@@ -7330,11 +7328,14 @@ namespace BlazorMonaco.Languages
         [DynamicDependency(nameof(ProvideCodeActions))]
 #endif
         [JSInvokable]
-        public Task<CodeActionList> ProvideCodeActions(string modelUri, Range range, CodeActionContext context)
+        public async Task<JsonElement?> ProvideCodeActions(string modelUri, Range range, CodeActionContext context)
+        {
 #pragma warning disable CS0618 // Type or member is obsolete
-            => ProvideMethod?.Invoke(modelUri, range, context)
-                ?? Task.FromResult(ProvideCodeActionsFunc?.Invoke(modelUri, range, context));
+            var codeActions = (await ProvideMethod?.Invoke(modelUri, range, context))
+                ?? ProvideCodeActionsFunc?.Invoke(modelUri, range, context);
 #pragma warning restore CS0618 // Type or member is obsolete
+            return JsonElementExt.FromObject(codeActions);
+        }
 
         /**
          * Given a code action fill in the edit. Will only invoked when missing.
@@ -7350,11 +7351,14 @@ namespace BlazorMonaco.Languages
         [DynamicDependency(nameof(ResolveCodeAction))]
 #endif
         [JSInvokable]
-        public Task<CodeAction> ResolveCodeAction(CodeAction codeAction)
+        public async Task<JsonElement?> ResolveCodeAction(CodeAction codeAction)
+        {
 #pragma warning disable CS0618 // Type or member is obsolete
-            => ResolveMethod?.Invoke(codeAction)
-                ?? Task.FromResult(ResolveCodeActionFunc?.Invoke(codeAction));
+            var resolvedCodeAction = (await ResolveMethod?.Invoke(codeAction))
+                ?? ResolveCodeActionFunc?.Invoke(codeAction);
 #pragma warning restore CS0618 // Type or member is obsolete
+            return JsonElementExt.FromObject(resolvedCodeAction);
+        }
 
         [Obsolete("Please use the new constructor with async parameters instead.")]
         public CodeActionProvider(ProvideCodeActionsDelegate provideCodeActions, ResolveCodeActionDelegate resolveCodeAction = null)
@@ -7684,11 +7688,11 @@ namespace BlazorMonaco.Languages
         /**
          * Can increase the verbosity of the hover
          */
-        public bool CanIncreaseVerbosity { get; set; }
+        public bool? CanIncreaseVerbosity { get; set; }
         /**
          * Can decrease the verbosity of the hover
          */
-        public bool CanDecreaseVerbosity { get; set; }
+        public bool? CanDecreaseVerbosity { get; set; }
     }
 
     /**
@@ -7709,9 +7713,11 @@ namespace BlazorMonaco.Languages
         [DynamicDependency(nameof(ProvideHover))]
 #endif
         [JSInvokable]
-        public Task<Hover> ProvideHover(string modelUri, Position position, HoverContext context)
-            => ProvideMethod?.Invoke(modelUri, position, context)
-               ?? Task.FromResult<Hover>(null);
+        public async Task<JsonElement?> ProvideHover(string modelUri, Position position, HoverContext context)
+        {
+            var hover = await ProvideMethod?.Invoke(modelUri, position, context);
+            return JsonElementExt.FromObject(hover);
+        }
 
         public HoverProvider(ProvideDelegate provideHover)
         {
@@ -8025,11 +8031,14 @@ namespace BlazorMonaco.Languages
         [DynamicDependency(nameof(ProvideCompletionItems))]
 #endif
         [JSInvokable]
-        public Task<CompletionList> ProvideCompletionItems(string modelUri, Position position, CompletionContext context)
+        public async Task<JsonElement?> ProvideCompletionItems(string modelUri, Position position, CompletionContext context)
+        {
 #pragma warning disable CS0618 // Type or member is obsolete
-            => ProvideMethod?.Invoke(modelUri, position, context)
-                ?? Task.FromResult(ProvideCompletionItemsFunc?.Invoke(modelUri, position, context));
+            var completions = (await ProvideMethod?.Invoke(modelUri, position, context))
+                ?? ProvideCompletionItemsFunc?.Invoke(modelUri, position, context);
 #pragma warning restore CS0618 // Type or member is obsolete
+            return JsonElementExt.FromObject(completions);
+        }
 
         /**
          * Given a completion item fill in more data, like {@link CompletionItem.documentation doc-comment}
@@ -8048,11 +8057,14 @@ namespace BlazorMonaco.Languages
         [DynamicDependency(nameof(ResolveCompletionItem))]
 #endif
         [JSInvokable]
-        public Task<CompletionItem> ResolveCompletionItem(CompletionItem completionItem)
+        public async Task<JsonElement?> ResolveCompletionItem(CompletionItem completionItem)
+        {
 #pragma warning disable CS0618 // Type or member is obsolete
-            => ResolveMethod?.Invoke(completionItem)
-                ?? Task.FromResult(ResolveCompletionItemFunc?.Invoke(completionItem));
+            var completion = (await ResolveMethod?.Invoke(completionItem))
+                ?? ResolveCompletionItemFunc?.Invoke(completionItem);
 #pragma warning restore CS0618 // Type or member is obsolete
+            return JsonElementExt.FromObject(completion);
+        }
 
         [Obsolete("Please use the new constructor with async parameters instead.")]
         public CompletionItemProvider(ProvideCompletionItemsDelegate provideCompletionItems, ResolveCompletionItemDelegate resolveCompletionItem = null)
@@ -8733,9 +8745,11 @@ namespace BlazorMonaco.Languages
         [DynamicDependency(nameof(ProvideDocumentFormattingEdits))]
 #endif
         [JSInvokable]
-        public Task<TextEdit[]> ProvideDocumentFormattingEdits(string modelUri, FormattingOptions options)
-            => ProvideMethod?.Invoke(modelUri, options)
-                ?? Task.FromResult<TextEdit[]>(null);
+        public async Task<JsonElement?> ProvideDocumentFormattingEdits(string modelUri, FormattingOptions options)
+        {
+            var textEdits = await ProvideMethod?.Invoke(modelUri, options);
+            return JsonElementExt.FromObject(textEdits);
+        }
 
         public DocumentFormattingEditProvider(string displayName, ProvideDelegate provideDocumentFormattingEditsDelegate)
         {
