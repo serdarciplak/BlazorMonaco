@@ -21,16 +21,18 @@ using System.Diagnostics.CodeAnalysis;
 // ReSharper disable GrammarMistakeInComment
 
 /*---------------------------------------------------------------------------------------------
-*  C# translation of the monaco.d.ts file here : https://www.npmjs.com/package/monaco-editor/v/0.54.0?activeTab=code
+*  C# translation of the monaco.d.ts file here : https://www.npmjs.com/package/monaco-editor/v/0.55.1?activeTab=code
 *--------------------------------------------------------------------------------------------*/
 
 // eslint-disable-next-line no-var
-//declare var MonacoEnvironment: monaco.Environment | undefined;
+/*declare global {
+    var MonacoEnvironment: Environment | undefined;
+}
+
+type Thenable<T> = PromiseLike<T>;*/
 
 namespace BlazorMonaco
 {
-    //export type Thenable<T> = PromiseLike<T>;
-
     public class Environment
     {
         /**
@@ -61,14 +63,14 @@ namespace BlazorMonaco
         ): undefined | ITrustedTypePolicy;*/
     }
 
-    /*export interface ITrustedTypePolicyOptions
+    /*interface ITrustedTypePolicyOptions {
     {
         createHTML?: (input: string, ...arguments: any[]) => string;
         createScript?: (input: string, ...arguments: any[]) => string;
         createScriptURL?: (input: string, ...arguments: any[]) => string;
     }*/
 
-    /*export interface ITrustedTypePolicy
+    /*interface ITrustedTypePolicy {
     {
         readonly name: string;
         createHTML? (input: string): any;
@@ -76,20 +78,20 @@ namespace BlazorMonaco
         createScriptURL? (input: string): any;
     }*/
 
-    /*export interface IDisposable {
+    /*interface IDisposable$2 {
         dispose(): void;
     }*/
 
-    /*export interface IEvent<T> {
+    /*interface IEvent$1<T> {
         (listener: (e: T) => any, thisArg?: any): IDisposable;
     }*/
 
     /**
      * A helper that allows to emit and listen to typed events
      */
-    /*export class Emitter<T> {
+    /*declare class Emitter<T> {
         constructor();
-        readonly event: IEvent<T>;
+        readonly event: IEvent$1<T>;
         fire(event: T): void;
         dispose(): void;
     }*/
@@ -108,14 +110,14 @@ namespace BlazorMonaco
         Error = 8
     }
 
-    /*export class CancellationTokenSource {
+    /*declare class CancellationTokenSource {
         constructor(parent?: CancellationToken);
         get token(): CancellationToken;
         cancel(): void;
         dispose(cancel?: boolean): void;
     }*/
 
-    /*export interface CancellationToken {
+    /*interface CancellationToken {
         / **
          * A flag signalling is cancellation has been requested.
          * /
@@ -128,7 +130,7 @@ namespace BlazorMonaco
          *
          * @event
          * /
-        readonly onCancellationRequested: (listener: (e: any) => any, thisArgs?: any, disposables?: IDisposable[]) => IDisposable;
+        readonly onCancellationRequested: (listener: (e: any) => any, thisArgs?: any, disposables?: IDisposable$2[]) => IDisposable$2;
     }*/
     /**
      * Uniform Resource Identifier (Uri) http://tools.ietf.org/html/rfc3986.
@@ -146,7 +148,7 @@ namespace BlazorMonaco
      *       urn:example:animal:ferret:nose
      * ```
      */
-    /*export class Uri implements UriComponents {
+    /*declare class Uri implements UriComponents {
         static isUri(thing: unknown): thing is Uri;
         / **
          * scheme is the 'http' part of 'http://www.example.com/some/path?query#fragment'.
@@ -510,7 +512,7 @@ namespace BlazorMonaco
         public Dictionary<string, UriComponents> Uris { get; set; }
     }
 
-    /*export interface MarkdownStringTrustedOptions
+    /*interface MarkdownStringTrustedOptions {
     {
         readonly enabledCommands: readonly string[];
     }*/
@@ -648,7 +650,7 @@ namespace BlazorMonaco
         /**
          * Test if `obj` is an `IPosition`.
          */
-        //static isIPosition(obj: any) : obj is IPosition;
+        //static isIPosition(obj: unknown): obj is IPosition;
         //toJSON() : IPosition;
     }
 
@@ -801,7 +803,7 @@ namespace BlazorMonaco
         /**
          * Test if `obj` is an `IRange`.
          */
-        //static isIRange(obj: any) : obj is IRange;
+        //static isIRange(obj: unknown): obj is IRange;
         /**
          * Test if the two ranges are touching in any way.
          */
@@ -905,7 +907,7 @@ namespace BlazorMonaco
         /**
          * Test if `obj` is an `ISelection`.
          */
-        //static isISelection(obj: any) : obj is ISelection;
+        //static isISelection(obj: unknown): obj is ISelection;
         /**
          * Create with a direction.
          */
@@ -956,9 +958,8 @@ namespace BlazorMonaco.Editor
         {
             options = options ?? new StandaloneEditorConstructionOptions();
 
-            // Convert the options object into a JsonElement to get rid of the properties with null values
-            var optionsJson = JsonSerializer.Serialize(options, JsonSerializerExt.DefaultOptions);
-            var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
+            // Convert to JsonElement to remove the properties with null values
+            var optionsJson = JsonElementExt.FromObject(options);
 
             // Create the editor
 #if NET5_0_OR_GREATER
@@ -967,7 +968,7 @@ namespace BlazorMonaco.Editor
             var isBrowser = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Create("BROWSER"));
             await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setWasm", isBrowser);
 #endif
-            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.create", domElementId, optionsDict, overrideServices, dotnetObjectRef);
+            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.create", domElementId, optionsJson, overrideServices, dotnetObjectRef);
         }
 
         /**
@@ -975,13 +976,13 @@ namespace BlazorMonaco.Editor
          * Creating a diff editor might cause this listener to be invoked with the two editors.
          * @event
          */
-        //export function onDidCreateEditor(listener: (codeEditor: ICodeEditor) => void): IDisposable;
+        //export function onDidCreateEditor(listener: (codeEditor: ICodeEditor) => void): IDisposable$2;
 
         /**
          * Emitted when an diff editor is created.
          * @event
          */
-        //export function onDidCreateDiffEditor(listener: (diffEditor: IDiffEditor) => void): IDisposable;
+        //export function onDidCreateDiffEditor(listener: (diffEditor: IDiffEditor) => void): IDisposable$2;
 
         /**
          * Get all the created editors.
@@ -1009,9 +1010,8 @@ namespace BlazorMonaco.Editor
         {
             options = options ?? new StandaloneDiffEditorConstructionOptions();
 
-            // Convert the options object into a JsonElement to get rid of the properties with null values
-            var optionsJson = JsonSerializer.Serialize(options, JsonSerializerExt.DefaultOptions);
-            var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
+            // Convert to JsonElement to remove the properties with null values
+            var optionsJson = JsonElementExt.FromObject(options);
 
             // Create the editor
 #if NET5_0_OR_GREATER
@@ -1020,7 +1020,7 @@ namespace BlazorMonaco.Editor
             var isBrowser = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Create("BROWSER"));
             await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.setWasm", isBrowser);
 #endif
-            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.createDiffEditor", domElementId, optionsDict, overrideServices, dotnetObjectRef, dotnetObjectRefOriginal, dotnetObjectRefModified);
+            await JsRuntimeExt.UpdateRuntime(jsRuntime).SafeInvokeAsync("blazorMonaco.editor.createDiffEditor", domElementId, optionsJson, overrideServices, dotnetObjectRef, dotnetObjectRefOriginal, dotnetObjectRefModified);
         }
 
         //export function createMultiFileDiffEditor(domElement: HTMLElement, override?: IEditorOverrideServices): any;
@@ -1043,12 +1043,12 @@ namespace BlazorMonaco.Editor
         /**
          * Add a command.
          */
-        //export function addCommand(descriptor: ICommandDescriptor) : IDisposable;
+        //export function addCommand(descriptor: ICommandDescriptor): IDisposable$2;
 
         /**
          * Add an action to all editors.
          */
-        //export function addEditorAction(descriptor: IActionDescriptor) : IDisposable;
+        //export function addEditorAction(descriptor: IActionDescriptor): IDisposable$2;
 
         /**
          * A keybinding rule.
@@ -1064,12 +1064,12 @@ namespace BlazorMonaco.Editor
         /**
          * Add a keybinding rule.
          */
-        //export function addKeybindingRule(rule: IKeybindingRule) : IDisposable;
+        //export function addKeybindingRule(rule: IKeybindingRule): IDisposable$2;
 
         /**
          * Add keybinding rules.
          */
-        //export function addKeybindingRules(rules: IKeybindingRule[]) : IDisposable;
+        //export function addKeybindingRules(rules: IKeybindingRule[]): IDisposable$2;
 
         /**
          * Create a new editor model.
@@ -1128,7 +1128,7 @@ namespace BlazorMonaco.Editor
          * Emitted when markers change for a model.
          * @event
          */
-        //export function onDidChangeMarkers(listener: (e: readonly Uri[]) => void): IDisposable;
+        //export function onDidChangeMarkers(listener: (e: readonly Uri[]) => void): IDisposable$2;
 
         /**
          * Get the model that has `uri` if it exists.
@@ -1167,13 +1167,13 @@ namespace BlazorMonaco.Editor
          * Emitted when a model is created.
          * @event
          */
-        //export function onDidCreateModel(listener: (model: ITextModel) => void): IDisposable;
+        //export function onDidCreateModel(listener: (model: ITextModel) => void): IDisposable$2;
 
         /**
          * Emitted right before a model is disposed.
          * @event
          */
-        //export function onWillDisposeModel(listener: (model: ITextModel) => void): IDisposable;
+        //export function onWillDisposeModel(listener: (model: ITextModel) => void): IDisposable$2;
 
         /**
          * Emitted when a different language is set to a model.
@@ -1182,7 +1182,7 @@ namespace BlazorMonaco.Editor
         /*export function onDidChangeModelLanguage(listener: (e: {
             readonly model: ITextModel;
             readonly oldLanguage: string;
-        }) => void): IDisposable;*/
+        }) => void): IDisposable$2;*/
 
         /**
          * Create a new web worker that has model syncing capabilities built in.
@@ -1257,7 +1257,7 @@ namespace BlazorMonaco.Editor
         /**
          * Register a command.
          */
-        //export function registerCommand(id: string, handler: (accessor: any, ...args: any[]) => void): IDisposable;
+        //export function registerCommand(id: string, handler: (accessor: any, ...args: any[]) => void): IDisposable$2;
 
         /*export interface ILinkOpener
         {
@@ -1270,7 +1270,7 @@ namespace BlazorMonaco.Editor
          *
          * Returns a disposable that can unregister the opener again.
          */
-        //export function registerLinkOpener(opener: ILinkOpener) : IDisposable;
+        //export function registerLinkOpener(opener: ILinkOpener): IDisposable$2;
 
         /**
          * Represents an object that can handle editor open operations (e.g. when "go to definition" is called
@@ -1296,7 +1296,7 @@ namespace BlazorMonaco.Editor
          *
          * If no handler is registered the default behavior is to do nothing for models other than the currently attached one.
          */
-        //export function registerEditorOpener(opener: ICodeEditorOpener) : IDisposable;
+        //export function registerEditorOpener(opener: ICodeEditorOpener): IDisposable$2;
     }
     public class BuiltinTheme
     {
@@ -1350,7 +1350,7 @@ namespace BlazorMonaco.Editor
         /**
          * An object that can be used by the web worker to make calls back to the main thread.
          * /
-        host?: any;
+        host?: Record<string, Function>;
         /**
          * Keep idle models.
          * Defaults to false, which means that idle models will stop syncing after a while.
@@ -1583,14 +1583,14 @@ namespace BlazorMonaco.Editor
         updateOptions(newOptions: IEditorOptions & IGlobalEditorOptions): void;
         addCommand(keybinding: number, handler: ICommandHandler, context?: string): string | null;
         createContextKey<T extends ContextKeyValue = ContextKeyValue>(key: string, defaultValue: T): IContextKey<T>;
-        addAction(descriptor: IActionDescriptor): IDisposable;
+        addAction(descriptor: IActionDescriptor): IDisposable$2;
     }*/
 
     // Translated in the StandaloneDiffEditor.razor.cs file
     /*export interface IStandaloneDiffEditor extends IDiffEditor {
         addCommand(keybinding: number, handler: ICommandHandler, context?: string): string | null;
         createContextKey<T extends ContextKeyValue = ContextKeyValue>(key: string, defaultValue: T): IContextKey<T>;
-        addAction(descriptor: IActionDescriptor): IDisposable;
+        addAction(descriptor: IActionDescriptor): IDisposable$2;
         getOriginalEditor(): IStandaloneCodeEditor;
         getModifiedEditor(): IStandaloneCodeEditor;
     }*/
@@ -2617,37 +2617,37 @@ namespace BlazorMonaco.Editor
          * An event emitted when the contents of the model have changed.
          * @event
          * /
-        onDidChangeContent(listener: (e: IModelContentChangedEvent) => void): IDisposable;
+        onDidChangeContent(listener: (e: IModelContentChangedEvent) => void): IDisposable$2;
         /**
          * An event emitted when decorations of the model have changed.
          * @event
          * /
-        readonly onDidChangeDecorations: IEvent<IModelDecorationsChangedEvent>;
+        readonly onDidChangeDecorations: IEvent$1<IModelDecorationsChangedEvent>;
         /**
          * An event emitted when the model options have changed.
          * @event
          * /
-        readonly onDidChangeOptions: IEvent<IModelOptionsChangedEvent>;
+        readonly onDidChangeOptions: IEvent$1<IModelOptionsChangedEvent>;
         /**
          * An event emitted when the language associated with the model has changed.
          * @event
          * /
-        readonly onDidChangeLanguage: IEvent<IModelLanguageChangedEvent>;
+        readonly onDidChangeLanguage: IEvent$1<IModelLanguageChangedEvent>;
         /**
          * An event emitted when the language configuration associated with the model has changed.
          * @event
          * /
-        readonly onDidChangeLanguageConfiguration: IEvent<IModelLanguageConfigurationChangedEvent>;
+        readonly onDidChangeLanguageConfiguration: IEvent$1<IModelLanguageConfigurationChangedEvent>;
         /**
          * An event emitted when the model has been attached to the first editor or detached from the last editor.
          * @event
          * /
-        readonly onDidChangeAttached: IEvent<void>;
+        readonly onDidChangeAttached: IEvent$1<void>;
         /**
          * An event emitted right before disposing the model.
          * @event
          * /
-        readonly onWillDispose: IEvent<void>;
+        readonly onWillDispose: IEvent$1<void>;
         /**
          * Destroy this model.
          * /
@@ -2794,8 +2794,7 @@ namespace BlazorMonaco.Editor
         public TextModel Modified { get; set; }
     }
 
-    /*export interface IDiffEditorViewModel extends IDisposable
-    {
+    /*export interface IDiffEditorViewModel extends IDisposable$2 {
         readonly model: IDiffEditorModel;
         waitForDiff(): Promise<void>;
     }*/
@@ -2869,7 +2868,7 @@ namespace BlazorMonaco.Editor
         cursorState: ICursorState[];
         viewState: IViewState;
         contributionsState: {
-            [id: string]: any;
+            [id: string]: unknown;
         };
     }*/
 
@@ -2902,7 +2901,7 @@ namespace BlazorMonaco.Editor
          * An event emitted when the editor has been disposed.
          * @event
          * /
-        onDidDispose(listener: () => void): IDisposable;
+        onDidDispose(listener: () => void): IDisposable$2;
         /**
          * Dispose the editor.
          * /
@@ -3086,7 +3085,7 @@ namespace BlazorMonaco.Editor
          * @param handlerId The id of the handler or the id of a contribution.
          * @param payload Extra data to be sent to the handler.
          * /
-        trigger(source: string | null | undefined, handlerId: string, payload: any): void;
+        trigger(source: string | null | undefined, handlerId: string, payload: unknown): void;
         /**
          * Gets the current model attached to this editor.
          * /
@@ -3117,7 +3116,7 @@ namespace BlazorMonaco.Editor
          * An event emitted when decorations change in the editor,
          * but the change is not caused by us setting or clearing the collection.
          * /
-        onDidChange: IEvent<IModelDecorationsChangedEvent>;
+        readonly onDidChange: IEvent$1<IModelDecorationsChangedEvent>;
         /**
          * Get the decorations count.
          * /
@@ -3159,11 +3158,11 @@ namespace BlazorMonaco.Editor
         /**
          * Store view state.
          * /
-        saveViewState?(): any;
+        saveViewState?(): unknown;
         /**
          * Restore view state.
          * /
-        restoreViewState?(state: any): void;
+        restoreViewState?(state: unknown): void;
     }*/
 
     /**
@@ -5689,7 +5688,7 @@ namespace BlazorMonaco.Editor
         renderWhitespace: IEditorOption<EditorOption.renderWhitespace, 'all' | 'none' | 'boundary' | 'selection' | 'trailing'>;
         revealHorizontalRightPadding: IEditorOption<EditorOption.revealHorizontalRightPadding, number>;
         roundedSelection: IEditorOption<EditorOption.roundedSelection, boolean>;
-        rulers: IEditorOption<EditorOption.rulers, {}>;
+        rulers: IEditorOption<EditorOption.rulers, IRulerOption[]>;
         scrollbar: IEditorOption<EditorOption.scrollbar, InternalEditorScrollbarOptions>;
         scrollBeyondLastColumn: IEditorOption<EditorOption.scrollBeyondLastColumn, number>;
         scrollBeyondLastLine: IEditorOption<EditorOption.scrollBeyondLastLine, boolean>;
@@ -5718,12 +5717,12 @@ namespace BlazorMonaco.Editor
         tabCompletion: IEditorOption<EditorOption.tabCompletion, 'on' | 'off' | 'onlySnippets'>;
         tabIndex: IEditorOption<EditorOption.tabIndex, number>;
         trimWhitespaceOnDelete: IEditorOption<EditorOption.trimWhitespaceOnDelete, boolean>;
-        unicodeHighlight: IEditorOption<EditorOption.unicodeHighlighting, any>;
+        unicodeHighlight: IEditorOption<EditorOption.unicodeHighlighting, Required<Readonly<IUnicodeHighlightOptions>>>;
         unusualLineTerminators: IEditorOption<EditorOption.unusualLineTerminators, 'off' | 'auto' | 'prompt'>;
         useShadowDOM: IEditorOption<EditorOption.useShadowDOM, boolean>;
         useTabStops: IEditorOption<EditorOption.useTabStops, boolean>;
         wordBreak: IEditorOption<EditorOption.wordBreak, 'normal' | 'keepAll'>;
-        wordSegmenterLocales: IEditorOption<EditorOption.wordSegmenterLocales, {}>;
+        wordSegmenterLocales: IEditorOption<EditorOption.wordSegmenterLocales, string[]>;
         wordSeparators: IEditorOption<EditorOption.wordSeparators, string>;
         wordWrap: IEditorOption<EditorOption.wordWrap, 'wordWrapColumn' | 'on' | 'off' | 'bounded'>;
         wordWrapBreakAfterCharacters: IEditorOption<EditorOption.wordWrapBreakAfterCharacters, string>;
@@ -6025,7 +6024,7 @@ namespace BlazorMonaco.Editor
         /**
          * Event fired when the widget layout changes.
          * /
-        onDidLayout?: IEvent<void>;
+        readonly onDidLayout?: IEvent$1<void>;
         /**
          * Render this overlay widget in a location where it could overflow the editor's view dom node.
          * /
@@ -6343,72 +6342,72 @@ namespace BlazorMonaco.Editor
          * An event emitted when the content of the current model has changed.
          * @event
          * /
-        readonly onDidChangeModelContent: IEvent<IModelContentChangedEvent>;
+        readonly onDidChangeModelContent: IEvent$1<IModelContentChangedEvent>;
         /**
          * An event emitted when the language of the current model has changed.
          * @event
          * /
-        readonly onDidChangeModelLanguage: IEvent<IModelLanguageChangedEvent>;
+        readonly onDidChangeModelLanguage: IEvent$1<IModelLanguageChangedEvent>;
         /**
          * An event emitted when the language configuration of the current model has changed.
          * @event
          * /
-        readonly onDidChangeModelLanguageConfiguration: IEvent<IModelLanguageConfigurationChangedEvent>;
+        readonly onDidChangeModelLanguageConfiguration: IEvent$1<IModelLanguageConfigurationChangedEvent>;
         /**
          * An event emitted when the options of the current model has changed.
          * @event
          * /
-        readonly onDidChangeModelOptions: IEvent<IModelOptionsChangedEvent>;
+        readonly onDidChangeModelOptions: IEvent$1<IModelOptionsChangedEvent>;
         /**
          * An event emitted when the configuration of the editor has changed. (e.g. `editor.updateOptions()`)
          * @event
          * /
-        readonly onDidChangeConfiguration: IEvent<ConfigurationChangedEvent>;
+        readonly onDidChangeConfiguration: IEvent$1<ConfigurationChangedEvent>;
         /**
          * An event emitted when the cursor position has changed.
          * @event
          * /
-        readonly onDidChangeCursorPosition: IEvent<ICursorPositionChangedEvent>;
+        readonly onDidChangeCursorPosition: IEvent$1<ICursorPositionChangedEvent>;
         /**
          * An event emitted when the cursor selection has changed.
          * @event
          * /
-        readonly onDidChangeCursorSelection: IEvent<ICursorSelectionChangedEvent>;
+        readonly onDidChangeCursorSelection: IEvent$1<ICursorSelectionChangedEvent>;
         /**
          * An event emitted when the model of this editor is about to change (e.g. from `editor.setModel()`).
          * @event
          * /
-        readonly onWillChangeModel: IEvent<IModelChangedEvent>;
+        readonly onWillChangeModel: IEvent$1<IModelChangedEvent>;
         /**
          * An event emitted when the model of this editor has changed (e.g. `editor.setModel()`).
          * @event
          * /
-        readonly onDidChangeModel: IEvent<IModelChangedEvent>;
+        readonly onDidChangeModel: IEvent$1<IModelChangedEvent>;
         /**
          * An event emitted when the decorations of the current model have changed.
          * @event
          * /
-        readonly onDidChangeModelDecorations: IEvent<IModelDecorationsChangedEvent>;
+        readonly onDidChangeModelDecorations: IEvent$1<IModelDecorationsChangedEvent>;
         /**
          * An event emitted when the text inside this editor gained focus (i.e. cursor starts blinking).
          * @event
          * /
-        readonly onDidFocusEditorText: IEvent<void>;
+        readonly onDidFocusEditorText: IEvent$1<void>;
         /**
          * An event emitted when the text inside this editor lost focus (i.e. cursor stops blinking).
          * @event
          * /
-        readonly onDidBlurEditorText: IEvent<void>;
+        readonly onDidBlurEditorText: IEvent$1<void>;
         /**
          * An event emitted when the text inside this editor or an editor widget gained focus.
          * @event
          * /
-        readonly onDidFocusEditorWidget: IEvent<void>;
+        readonly onDidFocusEditorWidget: IEvent$1<void>;
         /**
          * An event emitted when the text inside this editor or an editor widget lost focus.
          * @event
          * /
-        readonly onDidBlurEditorWidget: IEvent<void>;
+        readonly onDidBlurEditorWidget: IEvent$1<void>;
         /**
          * Boolean indicating whether input is in composition
          * /
@@ -6416,76 +6415,76 @@ namespace BlazorMonaco.Editor
         /**
          * An event emitted after composition has started.
          * /
-        readonly onDidCompositionStart: IEvent<void>;
+        readonly onDidCompositionStart: IEvent$1<void>;
         /**
          * An event emitted after composition has ended.
          * /
-        readonly onDidCompositionEnd: IEvent<void>;
+        readonly onDidCompositionEnd: IEvent$1<void>;
         /**
          * An event emitted when editing failed because the editor is read-only.
          * @event
          * /
-        readonly onDidAttemptReadOnlyEdit: IEvent<void>;
+        readonly onDidAttemptReadOnlyEdit: IEvent$1<void>;
         /**
          * An event emitted when users paste text in the editor.
          * @event
          * /
-        readonly onDidPaste: IEvent<IPasteEvent>;
+        readonly onDidPaste: IEvent$1<IPasteEvent>;
         /**
          * An event emitted on a "mouseup".
          * @event
          * /
-        readonly onMouseUp: IEvent<IEditorMouseEvent>;
+        readonly onMouseUp: IEvent$1<IEditorMouseEvent>;
         /**
          * An event emitted on a "mousedown".
          * @event
          * /
-        readonly onMouseDown: IEvent<IEditorMouseEvent>;
+        readonly onMouseDown: IEvent$1<IEditorMouseEvent>;
         /**
          * An event emitted on a "contextmenu".
          * @event
          * /
-        readonly onContextMenu: IEvent<IEditorMouseEvent>;
+        readonly onContextMenu: IEvent$1<IEditorMouseEvent>;
         /**
          * An event emitted on a "mousemove".
          * @event
          * /
-        readonly onMouseMove: IEvent<IEditorMouseEvent>;
+        readonly onMouseMove: IEvent$1<IEditorMouseEvent>;
         /**
          * An event emitted on a "mouseleave".
          * @event
          * /
-        readonly onMouseLeave: IEvent<IPartialEditorMouseEvent>;
+        readonly onMouseLeave: IEvent$1<IPartialEditorMouseEvent>;
         /**
          * An event emitted on a "keyup".
          * @event
          * /
-        readonly onKeyUp: IEvent<IKeyboardEvent>;
+        readonly onKeyUp: IEvent$1<IKeyboardEvent>;
         /**
          * An event emitted on a "keydown".
          * @event
          * /
-        readonly onKeyDown: IEvent<IKeyboardEvent>;
+        readonly onKeyDown: IEvent$1<IKeyboardEvent>;
         /**
          * An event emitted when the layout of the editor has changed.
          * @event
          * /
-        readonly onDidLayoutChange: IEvent<EditorLayoutInfo>;
+        readonly onDidLayoutChange: IEvent$1<EditorLayoutInfo>;
         /**
          * An event emitted when the content width or content height in the editor has changed.
          * @event
          * /
-        readonly onDidContentSizeChange: IEvent<IContentSizeChangedEvent>;
+        readonly onDidContentSizeChange: IEvent$1<IContentSizeChangedEvent>;
         /**
          * An event emitted when the scroll in the editor has changed.
          * @event
          * /
-        readonly onDidScrollChange: IEvent<IScrollEvent>;
+        readonly onDidScrollChange: IEvent$1<IScrollEvent>;
         /**
          * An event emitted when hidden areas change in the editor (e.g. due to folding).
          * @event
          * /
-        readonly onDidChangeHiddenAreas: IEvent<void>;
+        readonly onDidChangeHiddenAreas: IEvent$1<void>;
         /**
          * Some editor operations fire multiple events at once.
          * To allow users to react to multiple events fired by a single operation,
@@ -6493,11 +6492,11 @@ namespace BlazorMonaco.Editor
          * Whenever the editor fires `onBeginUpdate`, it will also fire `onEndUpdate` once the operation finishes.
          * Note that not all operations are bracketed by `onBeginUpdate` and `onEndUpdate`.
         * /
-        readonly onBeginUpdate: IEvent<void>;
+        readonly onBeginUpdate: IEvent$1<void>;
         /**
          * Fires after the editor completes the operation it fired `onBeginUpdate` for.
         * /
-        readonly onEndUpdate: IEvent<void>;
+        readonly onEndUpdate: IEvent$1<void>;
         /**
          * Saves current view state of the editor in a serializable object.
          * /
@@ -6788,12 +6787,12 @@ namespace BlazorMonaco.Editor
          * An event emitted when the diff information computed by this diff editor has been updated.
          * @event
          * /
-        readonly onDidUpdateDiff: IEvent<void>;
+        readonly onDidUpdateDiff: IEvent$1<void>;
         /**
          * An event emitted when the diff model is changed (i.e. the diff editor shows new content).
          * @event
          * /
-        readonly onDidChangeModel: IEvent<void>;
+        readonly onDidChangeModel: IEvent$1<void>;
         /**
          * Saves current view state of the editor in a serializable object.
          * /
@@ -6876,7 +6875,7 @@ namespace BlazorMonaco.Editor
 
     /*export interface IEditorZoom
     {
-        onDidChangeZoomLevel: IEvent<number>;
+        readonly onDidChangeZoomLevel: IEvent$1<number>;
         getZoomLevel() : number;
         setZoomLevel(zoomLevel: number) : void;
     }*/
@@ -6987,19 +6986,19 @@ namespace BlazorMonaco.Languages
          * An event emitted when a language is associated for the first time with a text model.
          * @event
          */
-        //export function onLanguage(languageId: string, callback: () => void): IDisposable;
+        //export function onLanguage(languageId: string, callback: () => void): IDisposable$2;
 
         /**
          * An event emitted when a language is associated for the first time with a text model or
          * when a language is encountered during the tokenization of another language.
          * @event
          */
-        //export function onLanguageEncountered(languageId: string, callback: () => void) : IDisposable;
+        //export function onLanguageEncountered(languageId: string, callback: () => void): IDisposable$2;
 
         /**
          * Set the editing configuration for a language.
          */
-        //export function setLanguageConfiguration(languageId: string, configuration: LanguageConfiguration): IDisposable;
+        //export function setLanguageConfiguration(languageId: string, configuration: LanguageConfiguration): IDisposable$2;
     }
 
     /**
@@ -7109,7 +7108,7 @@ namespace BlazorMonaco.Languages
          * set using `setTokensProvider` or one created using `setMonarchTokensProvider`, but will work together
          * with a tokens provider set using `registerDocumentSemanticTokensProvider` or `registerDocumentRangeSemanticTokensProvider`.
          */
-        //export function registerTokensProviderFactory(languageId: string, factory: TokensProviderFactory): IDisposable;
+        //export function registerTokensProviderFactory(languageId: string, factory: TokensProviderFactory): IDisposable$2;
 
         /**
          * Set the tokens provider for a language (manual implementation). This tokenizer will be exclusive
@@ -7117,7 +7116,7 @@ namespace BlazorMonaco.Languages
          * but will work together with a tokens provider set using `registerDocumentSemanticTokensProvider`
          * or `registerDocumentRangeSemanticTokensProvider`.
          */
-        //export function setTokensProvider(languageId: string, provider: TokensProvider | EncodedTokensProvider | Thenable<TokensProvider | EncodedTokensProvider>): IDisposable;
+        //export function setTokensProvider(languageId: string, provider: TokensProvider | EncodedTokensProvider | Thenable<TokensProvider | EncodedTokensProvider>): IDisposable$2;
 
         /**
          * Set the tokens provider for a language (monarch implementation). This tokenizer will be exclusive
@@ -7125,27 +7124,27 @@ namespace BlazorMonaco.Languages
          * work together with a tokens provider set using `registerDocumentSemanticTokensProvider` or
          * `registerDocumentRangeSemanticTokensProvider`.
          */
-        //export function setMonarchTokensProvider(languageId: string, languageDef: IMonarchLanguage | Thenable<IMonarchLanguage>): IDisposable;
+        //export function setMonarchTokensProvider(languageId: string, languageDef: IMonarchLanguage | Thenable<IMonarchLanguage>): IDisposable$2;
 
         /**
          * Register a reference provider (used by e.g. reference search).
          */
-        //export function registerReferenceProvider(languageSelector: LanguageSelector, provider: ReferenceProvider) : IDisposable;
+        //export function registerReferenceProvider(languageSelector: LanguageSelector, provider: ReferenceProvider): IDisposable$2;
 
         /**
          * Register a rename provider (used by e.g. rename symbol).
          */
-        //export function registerRenameProvider(languageSelector: LanguageSelector, provider: RenameProvider) : IDisposable;
+        //export function registerRenameProvider(languageSelector: LanguageSelector, provider: RenameProvider) : IDisposable$2;
 
         /**
         * Register a new symbol-name provider (e.g., when a symbol is being renamed, show new possible symbol-names)
         */
-        //export function registerNewSymbolNameProvider(languageSelector: LanguageSelector, provider: NewSymbolNamesProvider): IDisposable;
+        //export function registerNewSymbolNameProvider(languageSelector: LanguageSelector, provider: NewSymbolNamesProvider): IDisposable$2;
 
         /**
          * Register a signature help provider (used by e.g. parameter hints).
          */
-        //export function registerSignatureHelpProvider(languageSelector: LanguageSelector, provider: SignatureHelpProvider) : IDisposable;
+        //export function registerSignatureHelpProvider(languageSelector: LanguageSelector, provider: SignatureHelpProvider) : IDisposable$2;
 
         /**
          * Register a hover provider (used by e.g. editor hover).
@@ -7158,37 +7157,37 @@ namespace BlazorMonaco.Languages
         /**
          * Register a document symbol provider (used by e.g. outline).
          */
-        //export function registerDocumentSymbolProvider(languageSelector: LanguageSelector, provider: DocumentSymbolProvider) : IDisposable;
+        //export function registerDocumentSymbolProvider(languageSelector: LanguageSelector, provider: DocumentSymbolProvider) : IDisposable$2;
 
         /**
          * Register a document highlight provider (used by e.g. highlight occurrences).
          */
-        //export function registerDocumentHighlightProvider(languageSelector: LanguageSelector, provider: DocumentHighlightProvider) : IDisposable;
+        //export function registerDocumentHighlightProvider(languageSelector: LanguageSelector, provider: DocumentHighlightProvider) : IDisposable$2;
 
         /**
          * Register an linked editing range provider.
          */
-        //export function registerLinkedEditingRangeProvider(languageSelector: LanguageSelector, provider: LinkedEditingRangeProvider) : IDisposable;
+        //export function registerLinkedEditingRangeProvider(languageSelector: LanguageSelector, provider: LinkedEditingRangeProvider) : IDisposable$2;
 
         /**
          * Register a definition provider (used by e.g. go to definition).
          */
-        //export function registerDefinitionProvider(languageSelector: LanguageSelector, provider: DefinitionProvider) : IDisposable;
+        //export function registerDefinitionProvider(languageSelector: LanguageSelector, provider: DefinitionProvider) : IDisposable$2;
 
         /**
          * Register a implementation provider (used by e.g. go to implementation).
          */
-        //export function registerImplementationProvider(languageSelector: LanguageSelector, provider: ImplementationProvider) : IDisposable;
+        //export function registerImplementationProvider(languageSelector: LanguageSelector, provider: ImplementationProvider) : IDisposable$2;
 
         /**
          * Register a type definition provider (used by e.g. go to type definition).
          */
-        //export function registerTypeDefinitionProvider(languageSelector: LanguageSelector, provider: TypeDefinitionProvider) : IDisposable;
+        //export function registerTypeDefinitionProvider(languageSelector: LanguageSelector, provider: TypeDefinitionProvider) : IDisposable$2;
 
         /**
          * Register a code lens provider (used by e.g. inline code lenses).
          */
-        //export function registerCodeLensProvider(languageSelector: LanguageSelector, provider: CodeLensProvider) : IDisposable;
+        //export function registerCodeLensProvider(languageSelector: LanguageSelector, provider: CodeLensProvider) : IDisposable$2;
 
         /**
          * Register a code action provider (used by e.g. quick fix).
@@ -7215,17 +7214,17 @@ namespace BlazorMonaco.Languages
         /**
          * Register a formatter that can handle a range inside a model.
          */
-        //export function registerDocumentRangeFormattingEditProvider(languageSelector: LanguageSelector, provider: DocumentRangeFormattingEditProvider) : IDisposable;
+        //export function registerDocumentRangeFormattingEditProvider(languageSelector: LanguageSelector, provider: DocumentRangeFormattingEditProvider) : IDisposable$2;
 
         /**
          * Register a formatter than can do formatting as the user types.
          */
-        //export function registerOnTypeFormattingEditProvider(languageSelector: LanguageSelector, provider: OnTypeFormattingEditProvider) : IDisposable;
+        //export function registerOnTypeFormattingEditProvider(languageSelector: LanguageSelector, provider: OnTypeFormattingEditProvider) : IDisposable$2;
 
         /**
          * Register a link provider that can find links in text.
          */
-        //export function registerLinkProvider(languageSelector: LanguageSelector, provider: LinkProvider) : IDisposable;
+        //export function registerLinkProvider(languageSelector: LanguageSelector, provider: LinkProvider) : IDisposable$2;
 
         /**
          * Register a completion item provider (use by e.g. suggestions).
@@ -7243,22 +7242,22 @@ namespace BlazorMonaco.Languages
         /**
          * Register a document color provider (used by Color Picker, Color Decorator).
          */
-        //export function registerColorProvider(languageSelector: LanguageSelector, provider: DocumentColorProvider) : IDisposable;
+        //export function registerColorProvider(languageSelector: LanguageSelector, provider: DocumentColorProvider) : IDisposable$2;
 
         /**
          * Register a folding range provider
          */
-        //export function registerFoldingRangeProvider(languageSelector: LanguageSelector, provider: FoldingRangeProvider) : IDisposable;
+        //export function registerFoldingRangeProvider(languageSelector: LanguageSelector, provider: FoldingRangeProvider) : IDisposable$2;
 
         /**
          * Register a declaration provider
          */
-        //export function registerDeclarationProvider(languageSelector: LanguageSelector, provider: DeclarationProvider) : IDisposable;
+        //export function registerDeclarationProvider(languageSelector: LanguageSelector, provider: DeclarationProvider) : IDisposable$2;
 
         /**
          * Register a selection range provider
          */
-        //export function registerSelectionRangeProvider(languageSelector: LanguageSelector, provider: SelectionRangeProvider) : IDisposable;
+        //export function registerSelectionRangeProvider(languageSelector: LanguageSelector, provider: SelectionRangeProvider) : IDisposable$2;
 
         /**
          * Register a document semantic tokens provider. A semantic tokens provider will complement and enhance a
@@ -7267,7 +7266,7 @@ namespace BlazorMonaco.Languages
          *
          * For the best user experience, register both a semantic tokens provider and a top-down tokenizer.
          */
-        //export function registerDocumentSemanticTokensProvider(languageSelector: LanguageSelector, provider: DocumentSemanticTokensProvider) : IDisposable;
+        //export function registerDocumentSemanticTokensProvider(languageSelector: LanguageSelector, provider: DocumentSemanticTokensProvider) : IDisposable$2;
 
         /**
          * Register a document range semantic tokens provider. A semantic tokens provider will complement and enhance a
@@ -7276,17 +7275,17 @@ namespace BlazorMonaco.Languages
          *
          * For the best user experience, register both a semantic tokens provider and a top-down tokenizer.
          */
-        //export function registerDocumentRangeSemanticTokensProvider(languageSelector: LanguageSelector, provider: DocumentRangeSemanticTokensProvider) : IDisposable;
+        //export function registerDocumentRangeSemanticTokensProvider(languageSelector: LanguageSelector, provider: DocumentRangeSemanticTokensProvider) : IDisposable$2;
 
         /**
          * Register an inline completions provider.
          */
-        //export function registerInlineCompletionsProvider(languageSelector: LanguageSelector, provider: InlineCompletionsProvider) : IDisposable;
+        //export function registerInlineCompletionsProvider(languageSelector: LanguageSelector, provider: InlineCompletionsProvider) : IDisposable$2;
 
         /**
          * Register an inlay hints provider.
          */
-        //export function registerInlayHintsProvider(languageSelector: LanguageSelector, provider: InlayHintsProvider) : IDisposable;
+        //export function registerInlayHintsProvider(languageSelector: LanguageSelector, provider: InlayHintsProvider) : IDisposable$2;
     }
 
     /**
@@ -7329,11 +7328,14 @@ namespace BlazorMonaco.Languages
         [DynamicDependency(nameof(ProvideCodeActions))]
 #endif
         [JSInvokable]
-        public Task<CodeActionList> ProvideCodeActions(string modelUri, Range range, CodeActionContext context)
+        public async Task<JsonElement?> ProvideCodeActions(string modelUri, Range range, CodeActionContext context)
+        {
 #pragma warning disable CS0618 // Type or member is obsolete
-            => ProvideMethod?.Invoke(modelUri, range, context)
-                ?? Task.FromResult(ProvideCodeActionsFunc?.Invoke(modelUri, range, context));
+            var codeActions = (await ProvideMethod?.Invoke(modelUri, range, context))
+                ?? ProvideCodeActionsFunc?.Invoke(modelUri, range, context);
 #pragma warning restore CS0618 // Type or member is obsolete
+            return JsonElementExt.FromObject(codeActions);
+        }
 
         /**
          * Given a code action fill in the edit. Will only invoked when missing.
@@ -7349,11 +7351,14 @@ namespace BlazorMonaco.Languages
         [DynamicDependency(nameof(ResolveCodeAction))]
 #endif
         [JSInvokable]
-        public Task<CodeAction> ResolveCodeAction(CodeAction codeAction)
+        public async Task<JsonElement?> ResolveCodeAction(CodeAction codeAction)
+        {
 #pragma warning disable CS0618 // Type or member is obsolete
-            => ResolveMethod?.Invoke(codeAction)
-                ?? Task.FromResult(ResolveCodeActionFunc?.Invoke(codeAction));
+            var resolvedCodeAction = (await ResolveMethod?.Invoke(codeAction))
+                ?? ResolveCodeActionFunc?.Invoke(codeAction);
 #pragma warning restore CS0618 // Type or member is obsolete
+            return JsonElementExt.FromObject(resolvedCodeAction);
+        }
 
         [Obsolete("Please use the new constructor with async parameters instead.")]
         public CodeActionProvider(ProvideCodeActionsDelegate provideCodeActions, ResolveCodeActionDelegate resolveCodeAction = null)
@@ -7683,11 +7688,11 @@ namespace BlazorMonaco.Languages
         /**
          * Can increase the verbosity of the hover
          */
-        public bool CanIncreaseVerbosity { get; set; }
+        public bool? CanIncreaseVerbosity { get; set; }
         /**
          * Can decrease the verbosity of the hover
          */
-        public bool CanDecreaseVerbosity { get; set; }
+        public bool? CanDecreaseVerbosity { get; set; }
     }
 
     /**
@@ -7708,9 +7713,11 @@ namespace BlazorMonaco.Languages
         [DynamicDependency(nameof(ProvideHover))]
 #endif
         [JSInvokable]
-        public Task<Hover> ProvideHover(string modelUri, Position position, HoverContext context)
-            => ProvideMethod?.Invoke(modelUri, position, context)
-               ?? Task.FromResult<Hover>(null);
+        public async Task<JsonElement?> ProvideHover(string modelUri, Position position, HoverContext context)
+        {
+            var hover = await ProvideMethod?.Invoke(modelUri, position, context);
+            return JsonElementExt.FromObject(hover);
+        }
 
         public HoverProvider(ProvideDelegate provideHover)
         {
@@ -8024,11 +8031,14 @@ namespace BlazorMonaco.Languages
         [DynamicDependency(nameof(ProvideCompletionItems))]
 #endif
         [JSInvokable]
-        public Task<CompletionList> ProvideCompletionItems(string modelUri, Position position, CompletionContext context)
+        public async Task<JsonElement?> ProvideCompletionItems(string modelUri, Position position, CompletionContext context)
+        {
 #pragma warning disable CS0618 // Type or member is obsolete
-            => ProvideMethod?.Invoke(modelUri, position, context)
-                ?? Task.FromResult(ProvideCompletionItemsFunc?.Invoke(modelUri, position, context));
+            var completions = (await ProvideMethod?.Invoke(modelUri, position, context))
+                ?? ProvideCompletionItemsFunc?.Invoke(modelUri, position, context);
 #pragma warning restore CS0618 // Type or member is obsolete
+            return JsonElementExt.FromObject(completions);
+        }
 
         /**
          * Given a completion item fill in more data, like {@link CompletionItem.documentation doc-comment}
@@ -8047,11 +8057,14 @@ namespace BlazorMonaco.Languages
         [DynamicDependency(nameof(ResolveCompletionItem))]
 #endif
         [JSInvokable]
-        public Task<CompletionItem> ResolveCompletionItem(CompletionItem completionItem)
+        public async Task<JsonElement?> ResolveCompletionItem(CompletionItem completionItem)
+        {
 #pragma warning disable CS0618 // Type or member is obsolete
-            => ResolveMethod?.Invoke(completionItem)
-                ?? Task.FromResult(ResolveCompletionItemFunc?.Invoke(completionItem));
+            var completion = (await ResolveMethod?.Invoke(completionItem))
+                ?? ResolveCompletionItemFunc?.Invoke(completionItem);
 #pragma warning restore CS0618 // Type or member is obsolete
+            return JsonElementExt.FromObject(completion);
+        }
 
         [Obsolete("Please use the new constructor with async parameters instead.")]
         public CompletionItemProvider(ProvideCompletionItemsDelegate provideCompletionItems, ResolveCompletionItemDelegate resolveCompletionItem = null)
@@ -8111,53 +8124,58 @@ namespace BlazorMonaco.Languages
     /*export interface InlineCompletion
     {
         /**
-         * The text to insert.
-         * If the text contains a line break, the range must end at the end of a line.
-         * If existing text should be replaced, the existing text must be a prefix of the text to insert.
-         *
-         * The text can also be a snippet. In that case, a preview with default parameters is shown.
-         * When accepting the suggestion, the full snippet is inserted.
-        * /
-        readonly insertText: string | {
-            snippet: string;
-        };
-        /**
-         * A text that is used to decide if this inline completion should be shown.
-         * An inline completion is shown if the text to replace is a subword of the filter text.
-         * /
-        readonly filterText?: string;
-        /**
-         * An optional array of additional text edits that are applied when
-         * selecting this completion. Edits must not overlap with the main edit
-         * nor with themselves.
-         * /
-        readonly additionalTextEdits?: editor.ISingleEditOperation[];
-        /**
-         * The range to replace.
-         * Must begin and end on the same line.
-        * /
-        readonly range?: IRange;
-        readonly command?: Command;
-        readonly action?: Command;
-        /**
-         * Is called the first time an inline completion is shown.
-         * @deprecated. Use `onDidShow` of the provider instead.
-        * /
-        readonly shownCommand?: Command;
-        /**
-         * If set to `true`, unopened closing brackets are removed and unclosed opening brackets are closed.
-         * Defaults to `false`.
-        * /
-        readonly completeBracketPairs?: boolean;
-        readonly isInlineEdit?: boolean;
-        readonly showInlineEditMenu?: boolean;
-        readonly showRange?: IRange;
-        readonly warning?: InlineCompletionWarning;
-        readonly displayLocation?: InlineCompletionDisplayLocation;
-        /**
-         * Used for telemetry.
-         * /
-        readonly correlationId?: string | undefined;
+		 * The text to insert.
+		 * If the text contains a line break, the range must end at the end of a line.
+		 * If existing text should be replaced, the existing text must be a prefix of the text to insert.
+		 *
+		 * The text can also be a snippet. In that case, a preview with default parameters is shown.
+		 * When accepting the suggestion, the full snippet is inserted.
+		* /
+		readonly insertText: string | {
+			snippet: string;
+		} | undefined;
+		/**
+		 * The range to replace.
+		 * Must begin and end on the same line.
+		 * Refers to the current document or `uri` if provided.
+		* /
+		readonly range?: IRange;
+		/**
+		 * An optional array of additional text edits that are applied when
+		 * selecting this completion. Edits must not overlap with the main edit
+		 * nor with themselves.
+		 * Refers to the current document or `uri` if provided.
+		 * /
+		readonly additionalTextEdits?: editor.ISingleEditOperation[];
+		/**
+		 * The file for which the edit applies to.
+		* /
+		readonly uri?: UriComponents;
+		/**
+		 * A command that is run upon acceptance of this item.
+		* /
+		readonly command?: Command;
+		readonly gutterMenuLinkAction?: Command;
+		/**
+		 * Is called the first time an inline completion is shown.
+		 * @deprecated. Use `onDidShow` of the provider instead.
+		* /
+		readonly shownCommand?: Command;
+		/**
+		 * If set to `true`, unopened closing brackets are removed and unclosed opening brackets are closed.
+		 * Defaults to `false`.
+		* /
+		readonly completeBracketPairs?: boolean;
+		readonly isInlineEdit?: boolean;
+		readonly showInlineEditMenu?: boolean;
+		/** Only show the inline suggestion when the cursor is in the showRange. * /
+		readonly showRange?: IRange;
+		readonly warning?: InlineCompletionWarning;
+		readonly hint?: InlineCompletionHint;
+		/**
+		 * Used for telemetry.
+		 * /
+		readonly correlationId?: string | undefined;
     }*/
 
     /*export interface InlineCompletionWarning {
@@ -8165,20 +8183,19 @@ namespace BlazorMonaco.Languages
         icon?: IconPath;
     }*/
 
-    /*export enum InlineCompletionDisplayLocationKind {
+    /*export enum InlineCompletionHintStyle {
         Code = 1,
         Label = 2
     }*/
 
-    /*export interface InlineCompletionDisplayLocation {
-        range: IRange;
-        kind: InlineCompletionDisplayLocationKind;
-        label: string;
-    }*/
+    /*export interface InlineCompletionHint {
+		/** Refers to the current document. * /
+		range: IRange;
+		style: InlineCompletionHintStyle;
+		content: string;
+		jumpToEdit: boolean;
+	}*/
 
-    /**
-     * TODO: add `| Uri | { light: Uri; dark: Uri }`.
-    */
     //export type IconPath = editor.ThemeIcon;
 
     /*export interface InlineCompletions<TItem extends InlineCompletion = InlineCompletion>
@@ -8227,7 +8244,7 @@ namespace BlazorMonaco.Languages
          * Will be called when a completions list is no longer in use and can be garbage-collected.
         * /
         disposeInlineCompletions(completions: T, reason: InlineCompletionsDisposeReason): void;
-        onDidChangeInlineCompletions?: IEvent<void>;
+        onDidChangeInlineCompletions?: IEvent$1<void>;
         /**
          * Only used for {@link yieldsToGroupIds}.
          * Multiple providers can have the same group id.
@@ -8280,7 +8297,6 @@ namespace BlazorMonaco.Languages
         notShownReason: string | undefined;
         editorType: string;
         viewKind: string | undefined;
-        error: string | undefined;
         preceeded: boolean;
         languageId: string;
         requestReason: string;
@@ -8317,7 +8333,7 @@ namespace BlazorMonaco.Languages
         Auto = 2
     }
 
-    public class CodeActionList /* TODO : IDisposable*/
+    public class CodeActionList /* TODO : IDisposable$2*/
     {
         public List<CodeAction> Actions { get; set; }
     }
@@ -8387,7 +8403,7 @@ namespace BlazorMonaco.Languages
         activeParameter: number;
     }*/
 
-    /*export interface SignatureHelpResult extends IDisposable {
+    /*export interface SignatureHelpResult extends IDisposable$2 {
         value: SignatureHelp;
     }*/
 
@@ -8729,9 +8745,11 @@ namespace BlazorMonaco.Languages
         [DynamicDependency(nameof(ProvideDocumentFormattingEdits))]
 #endif
         [JSInvokable]
-        public Task<TextEdit[]> ProvideDocumentFormattingEdits(string modelUri, FormattingOptions options)
-            => ProvideMethod?.Invoke(modelUri, options)
-                ?? Task.FromResult<TextEdit[]>(null);
+        public async Task<JsonElement?> ProvideDocumentFormattingEdits(string modelUri, FormattingOptions options)
+        {
+            var textEdits = await ProvideMethod?.Invoke(modelUri, options);
+            return JsonElementExt.FromObject(textEdits);
+        }
 
         public DocumentFormattingEditProvider(string displayName, ProvideDelegate provideDocumentFormattingEditsDelegate)
         {
@@ -8888,7 +8906,7 @@ namespace BlazorMonaco.Languages
         /**
          * An optional event to signal that the folding ranges from this provider have changed.
          * /
-        onDidChange?: IEvent<this>;
+        onDidChange?: IEvent$1<this>;
         /**
          * Provides the folding ranges for a specific model.
          * /
@@ -9085,7 +9103,7 @@ namespace BlazorMonaco.Languages
     }*/
 
     /*export interface CodeLensProvider {
-        onDidChange?: IEvent<this>;
+        onDidChange?: IEvent$1<this>;
         provideCodeLenses(model: editor.ITextModel, token: CancellationToken): ProviderResult<CodeLensList>;
         resolveCodeLens?(model: editor.ITextModel, codeLens: CodeLens, token: CancellationToken): ProviderResult<CodeLens>;
     }*/
@@ -9120,7 +9138,7 @@ namespace BlazorMonaco.Languages
 
     /*export interface InlayHintsProvider {
         displayName?: string;
-        onDidChangeInlayHints?: IEvent<void>;
+        onDidChangeInlayHints?: IEvent$1<void>;
         provideInlayHints(model: editor.ITextModel, range: Range, token: CancellationToken): ProviderResult<InlayHintList>;
         resolveInlayHint?(hint: InlayHint, token: CancellationToken): ProviderResult<InlayHint>;
     }*/
@@ -9147,13 +9165,14 @@ namespace BlazorMonaco.Languages
     }*/
 
     /*export interface DocumentSemanticTokensProvider {
-        onDidChange?: IEvent<void>;
+        readonly onDidChange?: IEvent$1<void>;
         getLegend(): SemanticTokensLegend;
         provideDocumentSemanticTokens(model: editor.ITextModel, lastResultId: string | null, token: CancellationToken): ProviderResult<SemanticTokens | SemanticTokensEdits>;
         releaseDocumentSemanticTokens(resultId: string | undefined): void;
     }*/
 
     /*export interface DocumentRangeSemanticTokensProvider {
+        readonly onDidChange?: IEvent$1<void>;
         getLegend(): SemanticTokensLegend;
         provideDocumentRangeSemanticTokens(model: editor.ITextModel, range: Range, token: CancellationToken): ProviderResult<SemanticTokens>;
     }*/
@@ -9331,43 +9350,9 @@ namespace BlazorMonaco.Worker
     }*/
 }
 
-//dtsv=3
-
-//declare namespace monaco.editor {
-//export function createWebWorker<T extends object>(opts: IWebWorkerOptions): editor.MonacoWebWorker<T>;
-/*export interface IWebWorkerOptions {
-    /**
-     * The AMD moduleId to load.
-     * It should export a function `create` that should return the exported proxy.
-     * /
-    moduleId: string;
-    /**
-     * The data to send over when calling create on the module.
-     * /
-    createData?: any;
-    /**
-     * A label to be used to identify the web worker for debugging purposes.
-     * /
-    label?: string;
-    /**
-     * An object that can be used by the web worker to make calls back to the main thread.
-     * /
-    host?: any;
-    /**
-     * Keep idle models.
-     * Defaults to false, which means that idle models will stop syncing after a while.
-     * /
-    keepIdleModels?: boolean;
-}*/
-//}
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-
-namespace BlazorMonaco.Languages.Css
+namespace BlazorMonaco
 {
-    /*export interface CSSFormatConfiguration {
+    /*interface CSSFormatConfiguration {
         /** separate selectors with newline (e.g. "a,\nbr" or "a, br"): Default: true * /
         newlineBetweenSelectors?: boolean;
         /** add a new line after every css rule: Default: true * /
@@ -9381,7 +9366,7 @@ namespace BlazorMonaco.Languages.Css
         /** maximum number of line breaks to be preserved in one chunk. Default: unlimited * /
         maxPreserveNewLines?: number;
     }*/
-    /*export interface Options {
+    /*interface Options$1 {
         readonly validate?: boolean;
         readonly lint?: {
             readonly compatibleVendorPrefixes?: 'ignore' | 'warning' | 'error';
@@ -9412,7 +9397,7 @@ namespace BlazorMonaco.Languages.Css
          * /
         readonly format?: CSSFormatConfiguration;
     }*/
-    /*export interface ModeConfiguration {
+    /*interface ModeConfiguration$3 {
         /**
          * Defines whether the built-in completionItemProvider is enabled.
          * /
@@ -9466,24 +9451,24 @@ namespace BlazorMonaco.Languages.Css
          * /
         readonly documentRangeFormattingEdits?: boolean;
     }*/
-    /*export interface LanguageServiceDefaults {
+    /*interface LanguageServiceDefaults$3 {
         readonly languageId: string;
-        readonly onDidChange: IEvent<LanguageServiceDefaults>;
-        readonly modeConfiguration: ModeConfiguration;
-        readonly options: Options;
-        setOptions(options: Options): void;
-        setModeConfiguration(modeConfiguration: ModeConfiguration): void;
+        readonly onDidChange: IEvent$1<LanguageServiceDefaults$3>;
+        readonly modeConfiguration: ModeConfiguration$3;
+        readonly options: Options$1;
+        setOptions(options: Options$1): void;
+        setModeConfiguration(modeConfiguration: ModeConfiguration$3): void;
         /** @deprecated Use options instead * /
-        readonly diagnosticsOptions: DiagnosticsOptions;
+        readonly diagnosticsOptions: DiagnosticsOptions$2;
         /** @deprecated Use setOptions instead * /
-        setDiagnosticsOptions(options: DiagnosticsOptions): void;
+        setDiagnosticsOptions(options: DiagnosticsOptions$2): void;
     }*/
     /** @deprecated Use Options instead */
-    //export type DiagnosticsOptions = Options;
-    //export const cssDefaults: LanguageServiceDefaults;
-    //export const scssDefaults: LanguageServiceDefaults;
-    //export const lessDefaults: LanguageServiceDefaults;
-    /*export interface CSSDataConfiguration {
+    //type DiagnosticsOptions$2 = Options$1;
+    //declare const cssDefaults: LanguageServiceDefaults$3;
+    //declare const scssDefaults: LanguageServiceDefaults$3;
+    //declare const lessDefaults: LanguageServiceDefaults$3;
+    /*interface CSSDataConfiguration {
         /**
          * Defines whether the standard CSS properties, at-directives, pseudoClasses and pseudoElements are shown.
          * /
@@ -9499,67 +9484,80 @@ namespace BlazorMonaco.Languages.Css
      * Custom CSS properties, at-directives, pseudoClasses and pseudoElements
      * https://github.com/microsoft/vscode-css-languageservice/blob/main/docs/customData.md
      */
-    /*export interface CSSDataV1 {
+    /*interface CSSDataV1 {
         version: 1 | 1.1;
         properties?: IPropertyData[];
         atDirectives?: IAtDirectiveData[];
         pseudoClasses?: IPseudoClassData[];
         pseudoElements?: IPseudoElementData[];
     }*/
-    //export type EntryStatus = 'standard' | 'experimental' | 'nonstandard' | 'obsolete';
-    /*export interface IReference {
+    //type EntryStatus = 'standard' | 'experimental' | 'nonstandard' | 'obsolete';
+    /*interface IReference$1 {
         name: string;
         url: string;
     }*/
-    /*export interface IPropertyData {
+    /*interface IPropertyData {
         name: string;
-        description?: string | MarkupContent;
+        description?: string | MarkupContent$1;
         browsers?: string[];
         restrictions?: string[];
         status?: EntryStatus;
         syntax?: string;
-        values?: IValueData[];
-        references?: IReference[];
+        values?: IValueData$1[];
+        references?: IReference$1[];
         relevance?: number;
     }*/
-    /*export interface IAtDirectiveData {
+    /*interface IAtDirectiveData {
         name: string;
-        description?: string | MarkupContent;
+        description?: string | MarkupContent$1;
         browsers?: string[];
         status?: EntryStatus;
-        references?: IReference[];
+        references?: IReference$1[];
     }*/
-    /*export interface IPseudoClassData {
+    /*interface IPseudoClassData {
         name: string;
-        description?: string | MarkupContent;
+        description?: string | MarkupContent$1;
         browsers?: string[];
         status?: EntryStatus;
-        references?: IReference[];
+        references?: IReference$1[];
     }*/
-    /*export interface IPseudoElementData {
+    /*interface IPseudoElementData {
         name: string;
-        description?: string | MarkupContent;
+        description?: string | MarkupContent$1;
         browsers?: string[];
         status?: EntryStatus;
-        references?: IReference[];
+        references?: IReference$1[];
     }*/
-    /*export interface IValueData {
+    /*interface IValueData {
         name: string;
-        description?: string | MarkupContent;
+        description?: string | MarkupContent$1;
         browsers?: string[];
         status?: EntryStatus;
-        references?: IReference[];
+        references?: IReference$1[];
     }*/
-    /*export interface MarkupContent {
-        kind: MarkupKind;
+    /*interface MarkupContent {
+        kind: MarkupKind$1;
         value: string;
     }*/
-    //export type MarkupKind = 'plaintext' | 'markdown';
-}
+    //declare type MarkupKind$1 = 'plaintext' | 'markdown';
 
-namespace BlazorMonaco.Languages.Html
-{
-    /*export interface HTMLFormatConfiguration {
+    //type monaco_contribution$3_CSSDataConfiguration = CSSDataConfiguration;
+    //type monaco_contribution$3_CSSDataV1 = CSSDataV1;
+    //type monaco_contribution$3_CSSFormatConfiguration = CSSFormatConfiguration;
+    //type monaco_contribution$3_EntryStatus = EntryStatus;
+    //type monaco_contribution$3_IAtDirectiveData = IAtDirectiveData;
+    //type monaco_contribution$3_IPropertyData = IPropertyData;
+    //type monaco_contribution$3_IPseudoClassData = IPseudoClassData;
+    //type monaco_contribution$3_IPseudoElementData = IPseudoElementData;
+    //declare const monaco_contribution$3_cssDefaults: typeof cssDefaults;
+    //declare const monaco_contribution$3_lessDefaults: typeof lessDefaults;
+    //declare const monaco_contribution$3_scssDefaults: typeof scssDefaults;
+    /*declare namespace monaco_contribution$3 {
+        export { monaco_contribution$3_cssDefaults as cssDefaults, monaco_contribution$3_lessDefaults as lessDefaults, monaco_contribution$3_scssDefaults as scssDefaults };
+        export type { monaco_contribution$3_CSSDataConfiguration as CSSDataConfiguration, monaco_contribution$3_CSSDataV1 as CSSDataV1, monaco_contribution$3_CSSFormatConfiguration as CSSFormatConfiguration, DiagnosticsOptions$2 as DiagnosticsOptions, monaco_contribution$3_EntryStatus as EntryStatus, monaco_contribution$3_IAtDirectiveData as IAtDirectiveData, monaco_contribution$3_IPropertyData as IPropertyData, monaco_contribution$3_IPseudoClassData as IPseudoClassData, monaco_contribution$3_IPseudoElementData as IPseudoElementData, IReference$1 as IReference, IValueData$1 as IValueData, LanguageServiceDefaults$3 as LanguageServiceDefaults, MarkupContent$1 as MarkupContent, MarkupKind$1 as MarkupKind, ModeConfiguration$3 as ModeConfiguration, Options$1 as Options };
+    }*/
+
+    /*interface HTMLFormatConfiguration {
         readonly tabSize: number;
         readonly insertSpaces: boolean;
         readonly wrapLineLength: number;
@@ -9573,10 +9571,10 @@ namespace BlazorMonaco.Languages.Html
         readonly extraLiners: string;
         readonly wrapAttributes: 'auto' | 'force' | 'force-aligned' | 'force-expand-multiline';
     }*/
-    /*export interface CompletionConfiguration {
+    /*interface CompletionConfiguration {
         readonly [providerId: string]: boolean;
     }*/
-    /*export interface Options {
+    /*interface Options {
         /**
          * Settings for the HTML formatter.
          * /
@@ -9590,7 +9588,7 @@ namespace BlazorMonaco.Languages.Html
          * /
         readonly data?: HTMLDataConfiguration;
     }*/
-    /*export interface ModeConfiguration {
+    /*interface ModeConfiguration$2 {
         /**
          * Defines whether the built-in completionItemProvider is enabled.
          * /
@@ -9640,22 +9638,22 @@ namespace BlazorMonaco.Languages.Html
          * /
         readonly documentRangeFormattingEdits?: boolean;
     }*/
-    /*export interface LanguageServiceDefaults {
+    /*interface LanguageServiceDefaults$2 {
         readonly languageId: string;
-        readonly modeConfiguration: ModeConfiguration;
-        readonly onDidChange: IEvent<LanguageServiceDefaults>;
+        readonly modeConfiguration: ModeConfiguration$2;
+        readonly onDidChange: IEvent$1<LanguageServiceDefaults$2>;
         readonly options: Options;
         setOptions(options: Options): void;
-        setModeConfiguration(modeConfiguration: ModeConfiguration): void;
+        setModeConfiguration(modeConfiguration: ModeConfiguration$2): void;
     }*/
-    //export const htmlLanguageService: LanguageServiceRegistration;
-    //export const htmlDefaults: LanguageServiceDefaults;
-    //export const handlebarLanguageService: LanguageServiceRegistration;
-    //export const handlebarDefaults: LanguageServiceDefaults;
-    //export const razorLanguageService: LanguageServiceRegistration;
-    //export const razorDefaults: LanguageServiceDefaults;
-    /*export interface LanguageServiceRegistration extends IDisposable {
-        readonly defaults: LanguageServiceDefaults;
+    //declare const htmlLanguageService: LanguageServiceRegistration;
+    //declare const htmlDefaults: LanguageServiceDefaults$2;
+    //declare const handlebarLanguageService: LanguageServiceRegistration;
+    //declare const handlebarDefaults: LanguageServiceDefaults$2;
+    //declare const razorLanguageService: LanguageServiceRegistration;
+    //declare const razorDefaults: LanguageServiceDefaults$2;
+    /*interface LanguageServiceRegistration extends IDisposable$2 {
+        readonly defaults: LanguageServiceDefaults$2;
     }*/
     /**
      * Registers a new HTML language service for the languageId.
@@ -9664,8 +9662,8 @@ namespace BlazorMonaco.Languages.Html
      * Use this method to register additional language ids with a HTML service.
      * The language server has to be registered before an editor model is opened.
      */
-    //export function registerHTMLLanguageService(languageId: string, options?: Options, modeConfiguration?: ModeConfiguration): LanguageServiceRegistration;
-    /*export interface HTMLDataConfiguration {
+    //declare function registerHTMLLanguageService(languageId: string, options?: Options, modeConfiguration?: ModeConfiguration$2): LanguageServiceRegistration;
+    /*interface HTMLDataConfiguration {
         /**
          * Defines whether the standard HTML tags and attributes are shown
          * /
@@ -9681,48 +9679,70 @@ namespace BlazorMonaco.Languages.Html
      * Custom HTML tags attributes and attribute values
      * https://github.com/microsoft/vscode-html-languageservice/blob/main/docs/customData.md
      */
-    /*export interface HTMLDataV1 {
+    /*interface HTMLDataV1 {
         readonly version: 1 | 1.1;
         readonly tags?: ITagData[];
         readonly globalAttributes?: IAttributeData[];
         readonly valueSets?: IValueSet[];
     }*/
-    /*export interface IReference {
+    /*interface IReference {
         readonly name: string;
         readonly url: string;
     }*/
-    /*export interface ITagData {
+    /*interface ITagData {
         readonly name: string;
         readonly description?: string | MarkupContent;
         readonly attributes: IAttributeData[];
         readonly references?: IReference[];
     }*/
-    /*export interface IAttributeData {
+    /*interface IAttributeData {
         readonly name: string;
         readonly description?: string | MarkupContent;
         readonly valueSet?: string;
         readonly values?: IValueData[];
         readonly references?: IReference[];
     }*/
-    /*export interface IValueData {
+    /*interface IValueData {
         readonly name: string;
         readonly description?: string | MarkupContent;
         readonly references?: IReference[];
     }*/
-    /*export interface IValueSet {
+    /*interface IValueSet {
         readonly name: string;
         readonly values: IValueData[];
     }*/
-    /*export interface MarkupContent {
+    /*interface MarkupContent {
         readonly kind: MarkupKind;
         readonly value: string;
     }*/
-    //export type MarkupKind = 'plaintext' | 'markdown';
-}
+    //declare type MarkupKind = 'plaintext' | 'markdown';
 
-namespace BlazorMonaco.Languages.Json
-{
-    /*export interface BaseASTNode {
+    //type monaco_contribution$2_CompletionConfiguration = CompletionConfiguration;
+    //type monaco_contribution$2_HTMLDataConfiguration = HTMLDataConfiguration;
+    //type monaco_contribution$2_HTMLDataV1 = HTMLDataV1;
+    //type monaco_contribution$2_HTMLFormatConfiguration = HTMLFormatConfiguration;
+    //type monaco_contribution$2_IAttributeData = IAttributeData;
+    //type monaco_contribution$2_IReference = IReference;
+    //type monaco_contribution$2_ITagData = ITagData;
+    //type monaco_contribution$2_IValueData = IValueData;
+    //type monaco_contribution$2_IValueSet = IValueSet;
+    //type monaco_contribution$2_LanguageServiceRegistration = LanguageServiceRegistration;
+    //type monaco_contribution$2_MarkupContent = MarkupContent;
+    //type monaco_contribution$2_MarkupKind = MarkupKind;
+    //type monaco_contribution$2_Options = Options;
+    //declare const monaco_contribution$2_handlebarDefaults: typeof handlebarDefaults;
+    //declare const monaco_contribution$2_handlebarLanguageService: typeof handlebarLanguageService;
+    //declare const monaco_contribution$2_htmlDefaults: typeof htmlDefaults;
+    //declare const monaco_contribution$2_htmlLanguageService: typeof htmlLanguageService;
+    //declare const monaco_contribution$2_razorDefaults: typeof razorDefaults;
+    //declare const monaco_contribution$2_razorLanguageService: typeof razorLanguageService;
+    //declare const monaco_contribution$2_registerHTMLLanguageService: typeof registerHTMLLanguageService;
+    /*declare namespace monaco_contribution$2 {
+        export { monaco_contribution$2_handlebarDefaults as handlebarDefaults, monaco_contribution$2_handlebarLanguageService as handlebarLanguageService, monaco_contribution$2_htmlDefaults as htmlDefaults, monaco_contribution$2_htmlLanguageService as htmlLanguageService, monaco_contribution$2_razorDefaults as razorDefaults, monaco_contribution$2_razorLanguageService as razorLanguageService, monaco_contribution$2_registerHTMLLanguageService as registerHTMLLanguageService };
+        export type { monaco_contribution$2_CompletionConfiguration as CompletionConfiguration, monaco_contribution$2_HTMLDataConfiguration as HTMLDataConfiguration, monaco_contribution$2_HTMLDataV1 as HTMLDataV1, monaco_contribution$2_HTMLFormatConfiguration as HTMLFormatConfiguration, monaco_contribution$2_IAttributeData as IAttributeData, monaco_contribution$2_IReference as IReference, monaco_contribution$2_ITagData as ITagData, monaco_contribution$2_IValueData as IValueData, monaco_contribution$2_IValueSet as IValueSet, LanguageServiceDefaults$2 as LanguageServiceDefaults, monaco_contribution$2_LanguageServiceRegistration as LanguageServiceRegistration, monaco_contribution$2_MarkupContent as MarkupContent, monaco_contribution$2_MarkupKind as MarkupKind, ModeConfiguration$2 as ModeConfiguration, monaco_contribution$2_Options as Options };
+    }*/
+
+    /*interface BaseASTNode {
         readonly type: 'object' | 'array' | 'property' | 'string' | 'number' | 'boolean' | 'null';
         readonly parent?: ASTNode;
         readonly offset: number;
@@ -9731,13 +9751,13 @@ namespace BlazorMonaco.Languages.Json
         readonly value?: string | boolean | number | null;
     }*/
 
-    /*export interface ObjectASTNode extends BaseASTNode {
+    /*interface ObjectASTNode extends BaseASTNode {
         readonly type: 'object';
         readonly properties: PropertyASTNode[];
         readonly children: ASTNode[];
     }*/
 
-    /*export interface PropertyASTNode extends BaseASTNode {
+    /*interface PropertyASTNode extends BaseASTNode {
         readonly type: 'property';
         readonly keyNode: StringASTNode;
         readonly valueNode?: ASTNode;
@@ -9745,47 +9765,47 @@ namespace BlazorMonaco.Languages.Json
         readonly children: ASTNode[];
     }*/
 
-    /*export interface ArrayASTNode extends BaseASTNode {
+    /*interface ArrayASTNode extends BaseASTNode {
         readonly type: 'array';
         readonly items: ASTNode[];
         readonly children: ASTNode[];
     }*/
 
-    /*export interface StringASTNode extends BaseASTNode {
+    /*interface StringASTNode extends BaseASTNode {
         readonly type: 'string';
         readonly value: string;
     }*/
 
-    /*export interface NumberASTNode extends BaseASTNode {
+    /*interface NumberASTNode extends BaseASTNode {
         readonly type: 'number';
         readonly value: number;
         readonly isInteger: boolean;
     }*/
 
-    /*export interface BooleanASTNode extends BaseASTNode {
+    /*interface BooleanASTNode extends BaseASTNode {
         readonly type: 'boolean';
         readonly value: boolean;
     }*/
 
-    /*export interface NullASTNode extends BaseASTNode {
+    /*interface NullASTNode extends BaseASTNode {
         readonly type: 'null';
         readonly value: null;
     }*/
 
-    //export type ASTNode = ObjectASTNode | PropertyASTNode | ArrayASTNode | StringASTNode | NumberASTNode | BooleanASTNode | NullASTNode;
+    //type ASTNode = ObjectASTNode | PropertyASTNode | ArrayASTNode | StringASTNode | NumberASTNode | BooleanASTNode | NullASTNode;
 
-    /*export type JSONDocument = {
+    /*type JSONDocument = {
         root: ASTNode | undefined;
         getNodeFromOffset(offset: number, includeRightBound?: boolean): ASTNode | undefined;
     };*/
 
-    //export type JSONSchemaRef = JSONSchema | boolean;
+    //type JSONSchemaRef = JSONSchema | boolean;
 
-    /*export interface JSONSchemaMap {
+    /*interface JSONSchemaMap {
         [name: string]: JSONSchemaRef;
     }*/
 
-    /*export interface JSONSchema {
+    /*interface JSONSchema {
         id?: string;
         $id?: string;
         $schema?: string;
@@ -9852,12 +9872,12 @@ namespace BlazorMonaco.Languages.Json
         allowTrailingCommas?: boolean;
     }*/
 
-    /*export interface MatchingSchema {
+    /*interface MatchingSchema {
         node: ASTNode;
         schema: JSONSchema;
     }*/
 
-    /*export interface DiagnosticsOptions {
+    /*interface DiagnosticsOptions$1 {
         /**
          * If set, the validator will be enabled and perform syntax and schema based validation,
          * unless `DiagnosticsOptions.schemaValidation` is set to `ignore`.
@@ -9909,8 +9929,8 @@ namespace BlazorMonaco.Languages.Json
          * /
         readonly comments?: SeverityLevel;
     }*/
-    //export type SeverityLevel = 'error' | 'warning' | 'ignore';
-    /*export interface ModeConfiguration {
+    //type SeverityLevel = 'error' | 'warning' | 'ignore';
+    /*interface ModeConfiguration$1 {
         /**
          * Defines whether the built-in documentFormattingEdit provider is enabled.
          * /
@@ -9952,25 +9972,44 @@ namespace BlazorMonaco.Languages.Json
          * /
         readonly selectionRanges?: boolean;
     }*/
-    /*export interface LanguageServiceDefaults {
+    /*interface LanguageServiceDefaults$1 {
         readonly languageId: string;
-        readonly onDidChange: IEvent<LanguageServiceDefaults>;
-        readonly diagnosticsOptions: DiagnosticsOptions;
-        readonly modeConfiguration: ModeConfiguration;
-        setDiagnosticsOptions(options: DiagnosticsOptions): void;
-        setModeConfiguration(modeConfiguration: ModeConfiguration): void;
+        readonly onDidChange: IEvent$1<LanguageServiceDefaults$1>;
+        readonly diagnosticsOptions: DiagnosticsOptions$1;
+        readonly modeConfiguration: ModeConfiguration$1;
+        setDiagnosticsOptions(options: DiagnosticsOptions$1): void;
+        setModeConfiguration(modeConfiguration: ModeConfiguration$1): void;
     }*/
-    //export const jsonDefaults: LanguageServiceDefaults;
-    /*export interface IJSONWorker
-    {
-        parseJSONDocument(uri: string) : Promise<JSONDocument | null>;
-        getMatchingSchemas(uri: string) : Promise<MatchingSchema[]>;
+    //declare const jsonDefaults: LanguageServiceDefaults$1;
+    /*interface IJSONWorker {
+        parseJSONDocument(uri: string): Promise<JSONDocument | null>;
+        getMatchingSchemas(uri: string): Promise<MatchingSchema[]>;
     }*/
-    //export const getWorker: () => Promise<(...uris: Uri[]) => Promise<IJSONWorker>>;
-}
+    //declare const getWorker: () => Promise<(...uris: Uri[]) => Promise<IJSONWorker>>;
 
-namespace BlazorMonaco.Languages.Typescript
-{
+    //type monaco_contribution$1_ASTNode = ASTNode;
+    //type monaco_contribution$1_ArrayASTNode = ArrayASTNode;
+    //type monaco_contribution$1_BaseASTNode = BaseASTNode;
+    //type monaco_contribution$1_BooleanASTNode = BooleanASTNode;
+    //type monaco_contribution$1_IJSONWorker = IJSONWorker;
+    //type monaco_contribution$1_JSONDocument = JSONDocument;
+    //type monaco_contribution$1_JSONSchema = JSONSchema;
+    //type monaco_contribution$1_JSONSchemaMap = JSONSchemaMap;
+    //type monaco_contribution$1_JSONSchemaRef = JSONSchemaRef;
+    //type monaco_contribution$1_MatchingSchema = MatchingSchema;
+    //type monaco_contribution$1_NullASTNode = NullASTNode;
+    //type monaco_contribution$1_NumberASTNode = NumberASTNode;
+    //type monaco_contribution$1_ObjectASTNode = ObjectASTNode;
+    //type monaco_contribution$1_PropertyASTNode = PropertyASTNode;
+    //type monaco_contribution$1_SeverityLevel = SeverityLevel;
+    //type monaco_contribution$1_StringASTNode = StringASTNode;
+    //declare const monaco_contribution$1_getWorker: typeof getWorker;
+    //declare const monaco_contribution$1_jsonDefaults: typeof jsonDefaults;
+    /*declare namespace monaco_contribution$1 {
+        export { monaco_contribution$1_getWorker as getWorker, monaco_contribution$1_jsonDefaults as jsonDefaults };
+        export type { monaco_contribution$1_ASTNode as ASTNode, monaco_contribution$1_ArrayASTNode as ArrayASTNode, monaco_contribution$1_BaseASTNode as BaseASTNode, monaco_contribution$1_BooleanASTNode as BooleanASTNode, DiagnosticsOptions$1 as DiagnosticsOptions, monaco_contribution$1_IJSONWorker as IJSONWorker, monaco_contribution$1_JSONDocument as JSONDocument, monaco_contribution$1_JSONSchema as JSONSchema, monaco_contribution$1_JSONSchemaMap as JSONSchemaMap, monaco_contribution$1_JSONSchemaRef as JSONSchemaRef, LanguageServiceDefaults$1 as LanguageServiceDefaults, monaco_contribution$1_MatchingSchema as MatchingSchema, ModeConfiguration$1 as ModeConfiguration, monaco_contribution$1_NullASTNode as NullASTNode, monaco_contribution$1_NumberASTNode as NumberASTNode, monaco_contribution$1_ObjectASTNode as ObjectASTNode, monaco_contribution$1_PropertyASTNode as PropertyASTNode, monaco_contribution$1_SeverityLevel as SeverityLevel, monaco_contribution$1_StringASTNode as StringASTNode };
+    }*/
+
     public enum ModuleKind
     {
         None = 0,
@@ -10106,7 +10145,7 @@ namespace BlazorMonaco.Languages.Typescript
         useDefineForClassFields?: boolean;
         [option: string]: CompilerOptionsValue | undefined;
     }*/
-    /*export interface DiagnosticsOptions {
+    /*interface DiagnosticsOptions {
         noSemanticValidation?: boolean;
         noSyntaxValidation?: boolean;
         noSuggestionDiagnostics?: boolean;
@@ -10117,7 +10156,7 @@ namespace BlazorMonaco.Languages.Typescript
         onlyVisible?: boolean;
         diagnosticCodesToIgnore?: number[];
     }*/
-    /*export interface WorkerOptions {
+    /*interface WorkerOptions {
         /** A full HTTP path to a JavaScript file which adds a function `customTSWorkerFactory` to the self inside a web-worker * /
         customWorkerPath?: string;
     }*/
@@ -10134,7 +10173,7 @@ namespace BlazorMonaco.Languages.Typescript
         content: string;
         version: number;
     }*/
-    /*export interface IExtraLibs {
+    /*interface IExtraLibs {
         [path: string]: IExtraLib;
     }*/
     /**
@@ -10148,14 +10187,14 @@ namespace BlazorMonaco.Languages.Typescript
         code: number;
         next?: DiagnosticMessageChain[];
     }*/
-    /*export interface Diagnostic extends DiagnosticRelatedInformation {
+    /*interface Diagnostic extends DiagnosticRelatedInformation {
         /** May store more in future. For now, this will simply be `true` to indicate when a diagnostic is an unused-identifier diagnostic. * /
         reportsUnnecessary?: {};
         reportsDeprecated?: {};
         source?: string;
         relatedInformation?: DiagnosticRelatedInformation[];
     }*/
-    /*export interface DiagnosticRelatedInformation {
+    /*interface DiagnosticRelatedInformation {
         /** Diagnostic category: warning = 0, error = 1, suggestion = 2, message = 3 * /
         category: 0 | 1 | 2 | 3;
         code: number;
@@ -10167,7 +10206,7 @@ namespace BlazorMonaco.Languages.Typescript
         length: number | undefined;
         messageText: string | DiagnosticMessageChain;
     }*/
-    /*export interface EmitOutput {
+    /*interface EmitOutput {
         outputFiles: OutputFile[];
         emitSkipped: boolean;
         diagnostics?: Diagnostic[];
@@ -10177,7 +10216,7 @@ namespace BlazorMonaco.Languages.Typescript
         writeByteOrderMark: boolean;
         text: string;
     }*/
-    /*export interface ModeConfiguration
+    /*interface ModeConfiguration
     {
         /**
          * Defines whether the built-in completionItemProvider is enabled.
@@ -10232,15 +10271,15 @@ namespace BlazorMonaco.Languages.Typescript
          * /
         readonly inlayHints?: boolean;
     }*/
-    /*export interface LanguageServiceDefaults {
+    /*interface LanguageServiceDefaults {
         /**
          * Event fired when compiler options or diagnostics options are changed.
          * /
-        readonly onDidChange: IEvent<void>;
+        readonly onDidChange: IEvent$1<void>;
         /**
          * Event fired when extra libraries registered with the language service change.
          * /
-        readonly onDidExtraLibsChange: IEvent<void>;
+        readonly onDidExtraLibsChange: IEvent$1<void>;
         readonly workerOptions: WorkerOptions;
         readonly inlayHintsOptions: InlayHintsOptions;
         readonly modeConfiguration: ModeConfiguration;
@@ -10259,7 +10298,7 @@ namespace BlazorMonaco.Languages.Typescript
          * @returns A disposable which will remove the file from the
          * language service upon disposal.
          * /
-        addExtraLib(content: string, filePath?: string): IDisposable;
+        addExtraLib(content: string, filePath?: string): IDisposable$2;
         /**
          * Remove all existing extra libs and set the additional source
          * files to the language service. Use this for typescript definition
@@ -10310,7 +10349,7 @@ namespace BlazorMonaco.Languages.Typescript
          * /
         setInlayHintsOptions(options: InlayHintsOptions): void;
     }*/
-    /*export interface TypeScriptWorker {
+    /*interface TypeScriptWorker {
         /**
          * Get diagnostic messages for any syntax issues in the given file.
          * /
@@ -10415,9 +10454,410 @@ namespace BlazorMonaco.Languages.Typescript
          * /
         provideInlayHints(fileName: string, start: number, end: number): Promise<ReadonlyArray<any>>;
     }*/
-    //export const typescriptVersion: string;
-    //export const typescriptDefaults: LanguageServiceDefaults;
-    //export const javascriptDefaults: LanguageServiceDefaults;
-    //export const getTypeScriptWorker: () => Promise<(...uris: Uri[]) => Promise<TypeScriptWorker>>;
-    //export const getJavaScriptWorker: () => Promise<(...uris: Uri[]) => Promise<TypeScriptWorker>>;
+    //declare const typescriptVersion: string;
+    //declare const typescriptDefaults: LanguageServiceDefaults;
+    //declare const javascriptDefaults: LanguageServiceDefaults;
+    //declare const getTypeScriptWorker: () => Promise<(...uris: Uri[]) => Promise<TypeScriptWorker>>;
+    //declare const getJavaScriptWorker: () => Promise<(...uris: Uri[]) => Promise<TypeScriptWorker>>;
+
+    //type monaco_contribution_CompilerOptions = CompilerOptions;
+    //type monaco_contribution_Diagnostic = Diagnostic;
+    //type monaco_contribution_DiagnosticRelatedInformation = DiagnosticRelatedInformation;
+    //type monaco_contribution_DiagnosticsOptions = DiagnosticsOptions;
+    //type monaco_contribution_EmitOutput = EmitOutput;
+    //type monaco_contribution_IExtraLibs = IExtraLibs;
+    //type monaco_contribution_JsxEmit = JsxEmit;
+    //declare const monaco_contribution_JsxEmit: typeof JsxEmit;
+    //type monaco_contribution_LanguageServiceDefaults = LanguageServiceDefaults;
+    //type monaco_contribution_ModeConfiguration = ModeConfiguration;
+    //type monaco_contribution_ModuleKind = ModuleKind;
+    //declare const monaco_contribution_ModuleKind: typeof ModuleKind;
+    //type monaco_contribution_ModuleResolutionKind = ModuleResolutionKind;
+    //declare const monaco_contribution_ModuleResolutionKind: typeof ModuleResolutionKind;
+    //type monaco_contribution_NewLineKind = NewLineKind;
+    //declare const monaco_contribution_NewLineKind: typeof NewLineKind;
+    //type monaco_contribution_ScriptTarget = ScriptTarget;
+    //declare const monaco_contribution_ScriptTarget: typeof ScriptTarget;
+    //type monaco_contribution_TypeScriptWorker = TypeScriptWorker;
+    //type monaco_contribution_WorkerOptions = WorkerOptions;
+    //declare const monaco_contribution_getJavaScriptWorker: typeof getJavaScriptWorker;
+    //declare const monaco_contribution_getTypeScriptWorker: typeof getTypeScriptWorker;
+    //declare const monaco_contribution_javascriptDefaults: typeof javascriptDefaults;
+    //declare const monaco_contribution_typescriptDefaults: typeof typescriptDefaults;
+    //declare const monaco_contribution_typescriptVersion: typeof typescriptVersion;
+    /*declare namespace monaco_contribution {
+        export { monaco_contribution_JsxEmit as JsxEmit, monaco_contribution_ModuleKind as ModuleKind, monaco_contribution_ModuleResolutionKind as ModuleResolutionKind, monaco_contribution_NewLineKind as NewLineKind, monaco_contribution_ScriptTarget as ScriptTarget, monaco_contribution_getJavaScriptWorker as getJavaScriptWorker, monaco_contribution_getTypeScriptWorker as getTypeScriptWorker, monaco_contribution_javascriptDefaults as javascriptDefaults, monaco_contribution_typescriptDefaults as typescriptDefaults, monaco_contribution_typescriptVersion as typescriptVersion };
+        export type { monaco_contribution_CompilerOptions as CompilerOptions, monaco_contribution_Diagnostic as Diagnostic, monaco_contribution_DiagnosticRelatedInformation as DiagnosticRelatedInformation, monaco_contribution_DiagnosticsOptions as DiagnosticsOptions, monaco_contribution_EmitOutput as EmitOutput, monaco_contribution_IExtraLibs as IExtraLibs, monaco_contribution_LanguageServiceDefaults as LanguageServiceDefaults, monaco_contribution_ModeConfiguration as ModeConfiguration, monaco_contribution_TypeScriptWorker as TypeScriptWorker, monaco_contribution_WorkerOptions as WorkerOptions };
+    }*/
+
+    //#region node_modules/@hediet/json-rpc/dist/JsonRpcTypes.d.ts
+    /*type JSONObject = {
+        [key: string]: JSONValue | undefined;
+    };*/
+    //interface JSONArray extends Array<JSONValue> {}
+    //type JSONValue = string | number | boolean | null | JSONObject | JSONArray;
+    //type Message = IRequestMessage | IResponseMessage;
+    /**
+    * Represents a request or a notification.
+    */
+    /*interface IRequestMessage {
+        jsonrpc: "2.0";
+        /**  must not match `rpc\..*` * /
+        method: string;
+        params?: JSONArray | JSONObject;
+        /** Is not set if and only if the request is a notification. * /
+        id?: RequestId;
+        /** Requests don't have a result. * /
+        result?: never;
+    }*/
+    //type RequestId = number | string;
+    /**
+    * Either result or error is set.
+    */
+    /*interface IResponseMessage {
+        jsonrpc: "2.0";
+        /**
+        * This member is REQUIRED on success.
+        * This member MUST NOT exist if there was an error invoking the method.
+        * The value of this member is determined by the method invoked on the Server.
+        * /
+        result?: JSONValue;
+        /**
+        * This member is REQUIRED on error.
+        * This member MUST NOT exist if there was no error triggered during invocation.
+        * /
+        error?: ErrorObject;
+        /**
+        * If there was an error in detecting the id in the Request object
+        * (e.g. Parse error/Invalid Request), it MUST be Null.
+        * /
+        id: RequestId | null;
+        method?: never;
+    }*/
+    /*interface ErrorObject {
+        /** A Number that indicates the error type that occurred. * /
+        code: ErrorCode;
+        /** The message SHOULD be limited to a concise single sentence. * /
+        message: string;
+        /**
+        * A Primitive or Structured value that contains additional information about the error.
+        * This may be omitted.
+        * The value of this member is defined by the Server (e.g. detailed error information, nested errors etc.).
+        * /
+        data?: JSONValue;
+    }*/
+    /*declare namespace ErrorObject {
+        function create(obj: ErrorObject): ErrorObject;
+    }*/
+    //interface ErrorCode extends Number {}
+    /*declare namespace ErrorCode {
+        /**
+        * Invalid JSON was received by the server.
+        * An error occurred on the server while parsing the JSON text.
+        * /
+        const parseError: ErrorCode;
+        /**
+        * The JSON sent is not a valid Request object.
+        * /
+        const invalidRequest: ErrorCode;
+        /**
+        * The method does not exist/is not available.
+        * /
+        const methodNotFound: ErrorCode;
+        /**
+        * Invalid method parameter(s).
+        * /
+        const invalidParams: ErrorCode;
+        /**
+        * 	Internal JSON-RPC error.
+        * /
+        const internalError: ErrorCode;
+        /**
+        * implementation-defined server-errors.
+        * /
+        function isServerError(code: number): boolean;
+        /**
+        * implementation-defined server-errors.
+        * /
+        function serverError(code: number): ErrorCode;
+        /**
+        * Non-spec.
+        * /
+        const unexpectedServerError: ErrorCode;
+        function isApplicationError(code: number): boolean;
+        function applicationError(code: number): ErrorCode;
+        /**
+        * Non-spec.
+        * /
+        const genericApplicationError: ErrorCode;
+    }*/
+    //#endregion
+    //#region node_modules/@hediet/json-rpc/dist/common.d.ts
+    /*interface IDisposable$1 {
+        dispose(): void;
+    }*/
+    //type IEvent<T> = (listener: (e: T) => void) => IDisposable$1;
+    /*declare class EventEmitter<T> {
+        private listeners;
+        readonly event: IEvent<T>;
+        fire(args: T): void;
+    }*/
+    /*interface IValueWithChangeEvent<T> {
+        get value(): T;
+        get onChange(): IEvent<T>;
+    }*/
+    /*declare class ValueWithChangeEvent<T> implements IValueWithChangeEvent<T> {
+        private _value;
+        private eventEmitter;
+        constructor(initialValue: T);
+        get value(): T;
+        set value(newValue: T);
+        get onChange(): IEvent<T>;
+    }*/
+    //#endregion
+    //#region node_modules/@hediet/json-rpc/dist/MessageTransport.d.ts
+    /**
+    * Represents a mechanism to send and receive messages.
+    */
+    /*interface IMessageTransport {
+        get state(): IValueWithChangeEvent<ConnectionState>;
+        send(message: Message): Promise<void>;
+        /**
+        * Sets a listener for received messages.
+        * The listener might be called multiple times before this function returns.
+        * The method allows reentrancy.
+        * /
+        setListener(listener: MessageListener | undefined): void;
+        /**
+        * Returns a human readable representation of this stream.
+        * /
+        toString(): string;
+    }*/
+    /*type ConnectionState = {
+        state: "connecting";
+    } | {
+        state: "open";
+    } | {
+        state: "closed";
+        error: Error | undefined;
+    };*/
+    //type MessageListener = (message: Message) => void;
+    /**
+    * Base class for implementing a MessageStream.
+    * Provides an unreadMessage queue.
+    */
+    /*declare abstract class BaseMessageTransport implements IMessageTransport {
+        private static id;
+        private readonly _unprocessedMessages;
+        private _messageListener;
+        protected readonly id: number;
+        private readonly _state;
+        readonly state: ValueWithChangeEvent<ConnectionState>;
+        /**
+        * Sets a callback for incoming messages.
+        * /
+        setListener(listener: MessageListener | undefined): void;
+        /**
+        * Writes a message to the stream.
+        * /
+        send(message: Message): Promise<void>;
+        protected abstract _sendImpl(message: Message): Promise<void>;
+        /**
+        * Returns human readable information of this message stream.
+        * /
+        abstract toString(): string;
+        /**
+        * Call this in derived classes to signal a new message.
+        * /
+        protected _dispatchReceivedMessage(message: Message): void;
+        /**
+        * Call this in derived classes to signal that the connection closed.
+        * /
+        protected _onConnectionClosed(): void;
+        log(logger?: IMessageLogger): IMessageTransport;
+    }*/
+    /**
+    * Used by `StreamLogger` to log messages.
+    */
+    /*interface IMessageLogger {
+        log(stream: IMessageTransport, type: "incoming" | "outgoing", message: Message): void;
+    }*/
+    //#endregion
+    //#region node_modules/@hediet/json-rpc/dist/typedChannel/serializerMapping.d.ts
+    /*declare global {
+        interface JsonRpcSerializerMapper<T> {}
+    }*/
+    //#endregion
+    //#region src/utils.d.ts
+    /*interface IDisposable {
+        dispose(): void;
+    }*/
+    //#endregion
+    //#region src/adapters/LspClient.d.ts
+    /*declare class MonacoLspClient {
+        private _connection;
+        private readonly _capabilitiesRegistry;
+        private readonly _bridge;
+        private _initPromise;
+        constructor(transport: IMessageTransport);
+        private _init;
+        protected createFeatures(): IDisposable;
+    }*/
+    //#endregion
+    //#region node_modules/@hediet/json-rpc-websocket/dist/index.d.ts
+    /*type NormalizedWebSocketOptions = {
+        address: string;
+    };*/
+    /*type WebSocketOptions = NormalizedWebSocketOptions | {
+        host: string;
+        port: number;
+        forceTls?: boolean;
+    };*/
+    /**
+    * Represents a stream through a web socket.
+    * Use the static `connectTo` method to get a stream to a web socket server.
+    */
+    /*declare class WebSocketTransport extends BaseMessageTransport {
+        private readonly socket;
+        static connectTo(options: WebSocketOptions): Promise<WebSocketTransport>;
+        static fromWebSocket(socket: unknown): WebSocketTransport;
+        private readonly errorEmitter;
+        readonly onError: EventEmitter<{
+            error: unknown;
+        }>;
+        private constructor();
+        /**
+        * Closes the underlying socket.
+        * /
+        close(): void;
+        /**
+        * Same as `close`.
+        * /
+        dispose(): void;
+        _sendImpl(message: Message): Promise<void>;
+        toString(): string;
+    }*/
+    //#endregion
+    //#region node_modules/@hediet/json-rpc-browser/dist/worker.d.ts
+    /**
+    * Gets a stream that uses `worker.postMessage` to write
+    * and `worker.addEventListener` to read messages.
+    */
+    //declare function createTransportToWorker(worker: Worker): BaseMessageTransport;
+    //#endregion
+    //#region node_modules/@hediet/json-rpc-browser/dist/iframe.d.ts
+    /**
+    * Gets a stream that uses `worker.postMessage` to write
+    * and `worker.addEventListener` to read messages.
+    */
+    //declare function createTransportToIFrame(iframe: HTMLIFrameElement): BaseMessageTransport;
+
+    //type index_d_MonacoLspClient = MonacoLspClient;
+    //declare const index_d_MonacoLspClient: typeof MonacoLspClient;
+    //type index_d_WebSocketTransport = WebSocketTransport;
+    //declare const index_d_WebSocketTransport: typeof WebSocketTransport;
+    //declare const index_d_createTransportToIFrame: typeof createTransportToIFrame;
+    //declare const index_d_createTransportToWorker: typeof createTransportToWorker;
+    /*declare namespace index_d {
+        export {
+            index_d_MonacoLspClient as MonacoLspClient,
+            index_d_WebSocketTransport as WebSocketTransport,
+            index_d_createTransportToIFrame as createTransportToIFrame,
+            index_d_createTransportToWorker as createTransportToWorker,
+        };
+    }*/
+
+    //declare function createWebWorker<T extends object>(opts: IWebWorkerOptions): editor.MonacoWebWorker<T>;
+    /*interface IWebWorkerOptions {
+        /**
+        * The AMD moduleId to load.
+        * It should export a function `create` that should return the exported proxy.
+        * /
+        moduleId: string;
+        createWorker?: () => Worker;
+        /**
+        * The data to send over when calling create on the module.
+        * /
+        createData?: any;
+        /**
+        * A label to be used to identify the web worker for debugging purposes.
+        * /
+        label?: string;
+        /**
+        * An object that can be used by the web worker to make calls back to the main thread.
+        * /
+        host?: any;
+        /**
+        * Keep idle models.
+        * Defaults to false, which means that idle models will stop syncing after a while.
+        * /
+        keepIdleModels?: boolean;
+    }*/
+
+    //type editor_main_CancellationToken = CancellationToken;
+    //type editor_main_CancellationTokenSource = CancellationTokenSource;
+    //declare const editor_main_CancellationTokenSource: typeof CancellationTokenSource;
+    //type editor_main_Emitter<T> = Emitter<T>;
+    //declare const editor_main_Emitter: typeof Emitter;
+    //type editor_main_Environment = Environment;
+    //type editor_main_IKeyboardEvent = IKeyboardEvent;
+    //type editor_main_IMarkdownString = IMarkdownString;
+    //type editor_main_IMouseEvent = IMouseEvent;
+    //type editor_main_IPosition = IPosition;
+    //type editor_main_IRange = IRange;
+    //type editor_main_IScrollEvent = IScrollEvent;
+    //type editor_main_ISelection = ISelection;
+    //type editor_main_ITrustedTypePolicy = ITrustedTypePolicy;
+    //type editor_main_ITrustedTypePolicyOptions = ITrustedTypePolicyOptions;
+    //type editor_main_IWebWorkerOptions = IWebWorkerOptions;
+    //type editor_main_KeyCode = KeyCode;
+    //declare const editor_main_KeyCode: typeof KeyCode;
+    //type editor_main_KeyMod = KeyMod;
+    //declare const editor_main_KeyMod: typeof KeyMod;
+    //type editor_main_MarkdownStringTrustedOptions = MarkdownStringTrustedOptions;
+    //type editor_main_MarkerSeverity = MarkerSeverity;
+    //declare const editor_main_MarkerSeverity: typeof MarkerSeverity;
+    //type editor_main_MarkerTag = MarkerTag;
+    //declare const editor_main_MarkerTag: typeof MarkerTag;
+    //type editor_main_Position = Position;
+    //declare const editor_main_Position: typeof Position;
+    //type editor_main_Range = Range;
+    //declare const editor_main_Range: typeof Range;
+    //type editor_main_Selection = Selection;
+    //declare const editor_main_Selection: typeof Selection;
+    //type editor_main_SelectionDirection = SelectionDirection;
+    //declare const editor_main_SelectionDirection: typeof SelectionDirection;
+    //type editor_main_Thenable<T> = Thenable<T>;
+    //type editor_main_Token = Token;
+    //declare const editor_main_Token: typeof Token;
+    //type editor_main_Uri = Uri;
+    //declare const editor_main_Uri: typeof Uri;
+    //type editor_main_UriComponents = UriComponents;
+    //declare const editor_main_createWebWorker: typeof createWebWorker;
+    //import editor_main_editor = editor;
+    //import editor_main_languages = languages;
+    //import editor_main_worker = worker;
+    /*declare namespace editor_main {
+        export { editor_main_CancellationTokenSource as CancellationTokenSource, editor_main_Emitter as Emitter, editor_main_KeyCode as KeyCode, editor_main_KeyMod as KeyMod, editor_main_MarkerSeverity as MarkerSeverity, editor_main_MarkerTag as MarkerTag, editor_main_Position as Position, editor_main_Range as Range, editor_main_Selection as Selection, editor_main_SelectionDirection as SelectionDirection, editor_main_Token as Token, editor_main_Uri as Uri, editor_main_createWebWorker as createWebWorker, monaco_contribution$3 as css, editor_main_editor as editor, monaco_contribution$2 as html, monaco_contribution$1 as json, editor_main_languages as languages, index_d as lsp, monaco_contribution as typescript, editor_main_worker as worker };
+        export type { editor_main_CancellationToken as CancellationToken, editor_main_Environment as Environment, IDisposable$2 as IDisposable, IEvent$1 as IEvent, editor_main_IKeyboardEvent as IKeyboardEvent, editor_main_IMarkdownString as IMarkdownString, editor_main_IMouseEvent as IMouseEvent, editor_main_IPosition as IPosition, editor_main_IRange as IRange, editor_main_IScrollEvent as IScrollEvent, editor_main_ISelection as ISelection, editor_main_ITrustedTypePolicy as ITrustedTypePolicy, editor_main_ITrustedTypePolicyOptions as ITrustedTypePolicyOptions, editor_main_IWebWorkerOptions as IWebWorkerOptions, editor_main_MarkdownStringTrustedOptions as MarkdownStringTrustedOptions, editor_main_Thenable as Thenable, editor_main_UriComponents as UriComponents };
+    }*/
+
+    //export { editor_main as m };
+
+    /*declare namespace languages {
+        /** @deprecated Use the new top level "css" namespace instead. * /
+        export const css: { deprecated: true };
+
+        /** @deprecated Use the new top level "html" namespace instead. * /
+        export const html: { deprecated: true };
+
+        /** @deprecated Use the new top level "json" namespace instead. * /
+        export const json: { deprecated: true };
+
+        /** @deprecated Use the new top level "typescript" namespace instead. * /
+        export const typescript: { deprecated: true };
+    }*/
+
+
+    //declare global { export import monaco = editor_main; }
 }

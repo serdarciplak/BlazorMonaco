@@ -165,7 +165,7 @@ namespace BlazorMonaco.Editor
         [Parameter] public EventCallback OnDidBlurEditorWidgetOriginal { get; set; }
         [Parameter] public EventCallback OnDidCompositionStartOriginal { get; set; }
         [Parameter] public EventCallback OnDidCompositionEndOriginal { get; set; }
-        //readonly onDidAttemptReadOnlyEdit: IEvent<void>;
+        //readonly onDidAttemptReadOnlyEdit: IEvent$1<void>;
         [Parameter] public EventCallback<PasteEvent> OnDidPasteOriginal { get; set; }
         [Parameter] public EventCallback<EditorMouseEvent> OnMouseUpOriginal { get; set; }
         [Parameter] public EventCallback<EditorMouseEvent> OnMouseDownOriginal { get; set; }
@@ -177,7 +177,7 @@ namespace BlazorMonaco.Editor
         [Parameter] public EventCallback<EditorLayoutInfo> OnDidLayoutChangeOriginal { get; set; }
         [Parameter] public EventCallback<ContentSizeChangedEvent> OnDidContentSizeChangeOriginal { get; set; }
         [Parameter] public EventCallback<ScrollEvent> OnDidScrollChangeOriginal { get; set; }
-        //readonly onDidChangeHiddenAreas: IEvent<void>;
+        //readonly onDidChangeHiddenAreas: IEvent$1<void>;
 
         #endregion
 
@@ -200,7 +200,7 @@ namespace BlazorMonaco.Editor
         [Parameter] public EventCallback OnDidBlurEditorWidgetModified { get; set; }
         [Parameter] public EventCallback OnDidCompositionStartModified { get; set; }
         [Parameter] public EventCallback OnDidCompositionEndModified { get; set; }
-        //readonly onDidAttemptReadOnlyEdit: IEvent<void>;
+        //readonly onDidAttemptReadOnlyEdit: IEvent$1<void>;
         [Parameter] public EventCallback<PasteEvent> OnDidPasteModified { get; set; }
         [Parameter] public EventCallback<EditorMouseEvent> OnMouseUpModified { get; set; }
         [Parameter] public EventCallback<EditorMouseEvent> OnMouseDownModified { get; set; }
@@ -212,7 +212,7 @@ namespace BlazorMonaco.Editor
         [Parameter] public EventCallback<EditorLayoutInfo> OnDidLayoutChangeModified { get; set; }
         [Parameter] public EventCallback<ContentSizeChangedEvent> OnDidContentSizeChangeModified { get; set; }
         [Parameter] public EventCallback<ScrollEvent> OnDidScrollChangeModified { get; set; }
-        //readonly onDidChangeHiddenAreas: IEvent<void>;
+        //readonly onDidChangeHiddenAreas: IEvent$1<void>;
 
         #endregion
 
@@ -250,7 +250,7 @@ namespace BlazorMonaco.Editor
                 OriginalEditor.OnDidBlurEditorWidget = OnDidBlurEditorWidgetOriginal;
                 OriginalEditor.OnDidCompositionStart = OnDidCompositionStartOriginal;
                 OriginalEditor.OnDidCompositionEnd = OnDidCompositionEndOriginal;
-                //readonly onDidAttemptReadOnlyEdit: IEvent<void>;
+                //readonly onDidAttemptReadOnlyEdit: IEvent$1<void>;
                 OriginalEditor.OnDidPaste = OnDidPasteOriginal;
                 OriginalEditor.OnMouseUp = OnMouseUpOriginal;
                 OriginalEditor.OnMouseDown = OnMouseDownOriginal;
@@ -262,7 +262,7 @@ namespace BlazorMonaco.Editor
                 OriginalEditor.OnDidLayoutChange = OnDidLayoutChangeOriginal;
                 OriginalEditor.OnDidContentSizeChange = OnDidContentSizeChangeOriginal;
                 OriginalEditor.OnDidScrollChange = OnDidScrollChangeOriginal;
-                //readonly onDidChangeHiddenAreas: IEvent<void>;
+                //readonly onDidChangeHiddenAreas: IEvent$1<void>;
                 await OriginalEditor.SetEventListeners();
                 await OriginalEditor.OnDidInit.InvokeAsync(OriginalEditor);
 
@@ -290,7 +290,7 @@ namespace BlazorMonaco.Editor
                 ModifiedEditor.OnDidBlurEditorWidget = OnDidBlurEditorWidgetModified;
                 ModifiedEditor.OnDidCompositionStart = OnDidCompositionStartModified;
                 ModifiedEditor.OnDidCompositionEnd = OnDidCompositionEndModified;
-                //readonly onDidAttemptReadOnlyEdit: IEvent<void>;
+                //readonly onDidAttemptReadOnlyEdit: IEvent$1<void>;
                 ModifiedEditor.OnDidPaste = OnDidPasteModified;
                 ModifiedEditor.OnMouseUp = OnMouseUpModified;
                 ModifiedEditor.OnMouseDown = OnMouseDownModified;
@@ -302,7 +302,7 @@ namespace BlazorMonaco.Editor
                 ModifiedEditor.OnDidLayoutChange = OnDidLayoutChangeModified;
                 ModifiedEditor.OnDidContentSizeChange = OnDidContentSizeChangeModified;
                 ModifiedEditor.OnDidScrollChange = OnDidScrollChangeModified;
-                //readonly onDidChangeHiddenAreas: IEvent<void>;
+                //readonly onDidChangeHiddenAreas: IEvent$1<void>;
                 await ModifiedEditor.SetEventListeners();
                 await ModifiedEditor.OnDidInit.InvokeAsync(ModifiedEditor);
 
@@ -394,10 +394,10 @@ namespace BlazorMonaco.Editor
          */
         public Task UpdateOptions(DiffEditorOptions newOptions)
         {
-            // Convert the options object into a JsonElement to get rid of the properties with null values
-            var optionsJson = JsonSerializer.Serialize(newOptions, JsonSerializerExt.DefaultOptions);
-            var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
-            return JsRuntime.SafeInvokeAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
+            // Convert to JsonElement to remove the properties with null values
+            var optionsJson = JsonElementExt.FromObject(newOptions);
+
+            return JsRuntime.SafeInvokeAsync("blazorMonaco.editor.updateOptions", Id, optionsJson);
         }
         /**
          * Jumps to the next or previous diff.

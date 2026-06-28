@@ -84,10 +84,10 @@ namespace BlazorMonaco.Editor
 
         public Task UpdateOptions(EditorUpdateOptions newOptions)
         {
-            // Convert the options object into a JsonElement to get rid of the properties with null values
-            var optionsJson = JsonSerializer.Serialize(newOptions, JsonSerializerExt.DefaultOptions);
-            var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
-            return JsRuntime.SafeInvokeAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
+            // Convert to JsonElement to remove the properties with null values
+            var optionsJson = JsonElementExt.FromObject(newOptions);
+
+            return JsRuntime.SafeInvokeAsync("blazorMonaco.editor.updateOptions", Id, optionsJson);
         }
 
         [Obsolete("This method is deprecated. Use AddCommand(int keybinding, CommandHandler handler, string context = null) instead.")]
@@ -346,7 +346,7 @@ namespace BlazorMonaco.Editor
          * An event emitted when editing failed because the editor is read-only.
          * @event
          */
-        //readonly onDidAttemptReadOnlyEdit: IEvent<void>;
+        //readonly onDidAttemptReadOnlyEdit: IEvent$1<void>;
         /**
          * An event emitted when users paste text in the editor.
          * @event
@@ -406,7 +406,7 @@ namespace BlazorMonaco.Editor
          * An event emitted when hidden areas change in the editor (e.g. due to folding).
          * @event
          */
-        //readonly onDidChangeHiddenAreas: IEvent<void>;
+        //readonly onDidChangeHiddenAreas: IEvent$1<void>;
         /**
          * Some editor operations fire multiple events at once.
          * To allow users to react to multiple events fired by a single operation,
@@ -414,11 +414,11 @@ namespace BlazorMonaco.Editor
          * Whenever the editor fires `onBeginUpdate`, it will also fire `onEndUpdate` once the operation finishes.
          * Note that not all operations are bracketed by `onBeginUpdate` and `onEndUpdate`.
         */
-        //readonly onBeginUpdate: IEvent<void>;
+        //readonly onBeginUpdate: IEvent$1<void>;
         /**
          * Fires after the editor completes the operation it fired `onBeginUpdate` for.
         */
-        //readonly onEndUpdate: IEvent<void>;
+        //readonly onEndUpdate: IEvent$1<void>;
         /**
          * Saves current view state of the editor in a serializable object.
          */
@@ -610,10 +610,10 @@ namespace BlazorMonaco.Editor
         {
             oldDecorationIds = oldDecorationIds ?? new string[] { };
 
-            // Convert the newDecorations object into a JsonElement to get rid of the properties with null values
-            var newDecorationsJson = JsonSerializer.Serialize(newDecorations, JsonSerializerExt.DefaultOptions);
-            var newDecorationsElement = JsonSerializer.Deserialize<JsonElement>(newDecorationsJson);
-            var newDecorationIds = await JsRuntime.SafeInvokeAsync<string[]>("blazorMonaco.editor.deltaDecorations", Id, oldDecorationIds, newDecorationsElement);
+            // Convert to JsonElement to remove the properties with null values
+            var newDecorationsJson = JsonElementExt.FromObject(newDecorations);
+            
+            var newDecorationIds = await JsRuntime.SafeInvokeAsync<string[]>("blazorMonaco.editor.deltaDecorations", Id, oldDecorationIds, newDecorationsJson);
             _deltaDecorationIds.RemoveAll(d => oldDecorationIds.Any(o => o == d));
             _deltaDecorationIds.AddRange(newDecorationIds);
             return newDecorationIds;
