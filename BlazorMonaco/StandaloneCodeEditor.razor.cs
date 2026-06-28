@@ -84,10 +84,10 @@ namespace BlazorMonaco.Editor
 
         public Task UpdateOptions(EditorUpdateOptions newOptions)
         {
-            // Convert the options object into a JsonElement to get rid of the properties with null values
-            var optionsJson = JsonSerializer.Serialize(newOptions, JsonSerializerExt.DefaultOptions);
-            var optionsDict = JsonSerializer.Deserialize<JsonElement>(optionsJson);
-            return JsRuntime.SafeInvokeAsync("blazorMonaco.editor.updateOptions", Id, optionsDict);
+            // Convert to JsonElement to remove the properties with null values
+            var optionsJson = JsonElementExt.FromObject(newOptions);
+
+            return JsRuntime.SafeInvokeAsync("blazorMonaco.editor.updateOptions", Id, optionsJson);
         }
 
         [Obsolete("This method is deprecated. Use AddCommand(int keybinding, CommandHandler handler, string context = null) instead.")]
@@ -610,10 +610,10 @@ namespace BlazorMonaco.Editor
         {
             oldDecorationIds = oldDecorationIds ?? new string[] { };
 
-            // Convert the newDecorations object into a JsonElement to get rid of the properties with null values
-            var newDecorationsJson = JsonSerializer.Serialize(newDecorations, JsonSerializerExt.DefaultOptions);
-            var newDecorationsElement = JsonSerializer.Deserialize<JsonElement>(newDecorationsJson);
-            var newDecorationIds = await JsRuntime.SafeInvokeAsync<string[]>("blazorMonaco.editor.deltaDecorations", Id, oldDecorationIds, newDecorationsElement);
+            // Convert to JsonElement to remove the properties with null values
+            var newDecorationsJson = JsonElementExt.FromObject(newDecorations);
+            
+            var newDecorationIds = await JsRuntime.SafeInvokeAsync<string[]>("blazorMonaco.editor.deltaDecorations", Id, oldDecorationIds, newDecorationsJson);
             _deltaDecorationIds.RemoveAll(d => oldDecorationIds.Any(o => o == d));
             _deltaDecorationIds.AddRange(newDecorationIds);
             return newDecorationIds;
