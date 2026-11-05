@@ -1,10 +1,18 @@
 ﻿using Microsoft.JSInterop;
+#if NET5_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 using System.Threading.Tasks;
 
 namespace BlazorMonaco.Helpers
 {
     internal static class JsRuntimeExt
     {
+#if NET5_0_OR_GREATER
+        // Same as the annotation on IJSRuntime.InvokeAsync<TValue>
+        private const DynamicallyAccessedMemberTypes JsonSerialized = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicProperties;
+
+#endif
         private static IJSRuntime Shared { get; set; }
 
         public static IJSRuntime UpdateRuntime(IJSRuntime jsRuntime)
@@ -28,7 +36,11 @@ namespace BlazorMonaco.Helpers
             await jsRuntime.InvokeVoidAsync(identifier, args);
         }
 
+#if NET5_0_OR_GREATER
+        public static async Task<T> SafeInvokeAsync<[DynamicallyAccessedMembers(JsonSerialized)] T>(this IJSRuntime jsRuntime, string identifier, params object[] args)
+#else
         public static async Task<T> SafeInvokeAsync<T>(this IJSRuntime jsRuntime, string identifier, params object[] args)
+#endif
         {
             if (jsRuntime == null)
                 return default;

@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
+#if NET5_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 using System.Text.Json;
 using System.Threading.Tasks;
 // ReSharper disable InvalidXmlDocComment
@@ -31,6 +34,14 @@ namespace BlazorMonaco.Editor
         {
             get => base.ModifiedEditor as StandaloneCodeEditor;
             protected set => base.ModifiedEditor = value;
+        }
+
+#if NET5_0_OR_GREATER
+        [DynamicDependency(nameof(ActionCallback))]
+        [DynamicDependency(nameof(CommandCallback))]
+#endif
+        public StandaloneDiffEditor()
+        {
         }
 
         [JSInvokable]
@@ -145,6 +156,13 @@ namespace BlazorMonaco.Editor
     public class DiffEditor : Editor
     {
         #region Blazor
+
+#if NET5_0_OR_GREATER
+        [DynamicDependency(nameof(EventCallback))]
+#endif
+        public DiffEditor()
+        {
+        }
 
         #region Events for the original editor (left)
         [Parameter] public EventCallback OnDidDisposeOriginal { get; set; }

@@ -949,6 +949,9 @@ namespace BlazorMonaco.Editor
          * `domElement` should be empty (not contain other dom nodes).
          * The editor will read the size of `domElement`.
          */
+#if NET8_0_OR_GREATER
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = Editor.DotNetObjectReferenceJustification)]
+#endif
         internal static async Task Create(
             IJSRuntime jsRuntime,
             string domElementId,
@@ -999,6 +1002,9 @@ namespace BlazorMonaco.Editor
          * `domElement` should be empty (not contain other dom nodes).
          * The editor will read the size of `domElement`.
          */
+#if NET8_0_OR_GREATER
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = Editor.DotNetObjectReferenceJustification)]
+#endif
         internal static async Task CreateDiffEditor(
             IJSRuntime jsRuntime,
             string domElementId,
@@ -4409,10 +4415,20 @@ namespace BlazorMonaco.Editor
         {
             _options = options;
         }
+#if NET8_0_OR_GREATER
+        [RequiresUnreferencedCode("JSON deserialization of an arbitrary type might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo instead.")]
+        [RequiresDynamicCode("JSON deserialization of an arbitrary type might require runtime code generation. Use the overload that takes a JsonTypeInfo instead.")]
+#endif
         public T Get<T>(EditorOption id)
         {
             return JsonSerializer.Deserialize<T>(_options[(int)id]);
         }
+#if NET8_0_OR_GREATER
+        public T Get<T>(EditorOption id, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo)
+        {
+            return JsonSerializer.Deserialize(_options[(int)id], jsonTypeInfo);
+        }
+#endif
     }
 
     public class IEditorOption<V>

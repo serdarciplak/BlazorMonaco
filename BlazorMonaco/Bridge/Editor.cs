@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
+#if NET5_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 using System.Text.Json;
 using System.Threading.Tasks;
 // ReSharper disable InvalidXmlDocComment
@@ -32,8 +35,25 @@ namespace BlazorMonaco.Editor
         [Inject]
         protected IJSRuntime JsRuntime { get; set; }
 
+#if NET8_0_OR_GREATER
+        // DotNetObjectReference<T> preserves all public methods of T, including the ones annotated with RequiresUnreferencedCode.
+        // This is safe as JS can only invoke the methods marked with [JSInvokable], and none of them requires unreferenced code.
+        internal const string DotNetObjectReferenceJustification = "JS can only invoke the [JSInvokable] methods of the Editor, none of which requires unreferenced code.";
+
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = DotNetObjectReferenceJustification)]
+#endif
         internal DotNetObjectReference<Editor> _dotnetObjectRef;
 
+#if NET5_0_OR_GREATER
+        [DynamicDependency(nameof(LineNumbersCallback))]
+#endif
+        public Editor()
+        {
+        }
+
+#if NET8_0_OR_GREATER
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = DotNetObjectReferenceJustification)]
+#endif
         protected override void OnInitialized()
         {
             base.OnInitialized();
@@ -309,11 +329,30 @@ namespace BlazorMonaco.Editor
          * @param handlerId The id of the handler or the id of a contribution.
          * @param payload Extra data to be sent to the handler.
          */
+#if NET8_0_OR_GREATER
+        [RequiresUnreferencedCode("JSON serialization of an arbitrary payload might require types that cannot be statically analyzed. Use the overload that takes a JsonElement payload instead.")]
+        [RequiresDynamicCode("JSON serialization of an arbitrary payload might require runtime code generation. Use the overload that takes a JsonElement payload instead.")]
+#endif
         public Task Trigger(string source, string handlerId, object payload = null)
         {
             var payloadJsonElement = JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(payload));
-            return JsRuntime.SafeInvokeAsync("blazorMonaco.editor.trigger", Id, source, handlerId, payloadJsonElement);
+            return Trigger(source, handlerId, payloadJsonElement);
         }
+        /**
+         * Directly trigger a handler or an editor action.
+         * @param source The source of the call.
+         * @param handlerId The id of the handler or the id of a contribution.
+         */
+        public Task Trigger(string source, string handlerId)
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.trigger", Id, source, handlerId, null);
+        /**
+         * Directly trigger a handler or an editor action.
+         * @param source The source of the call.
+         * @param handlerId The id of the handler or the id of a contribution.
+         * @param payload Extra data to be sent to the handler.
+         */
+        public Task Trigger(string source, string handlerId, JsonElement payload)
+            => JsRuntime.SafeInvokeAsync("blazorMonaco.editor.trigger", Id, source, handlerId, payload);
         /**
          * Gets the current model attached to this editor.
          */
