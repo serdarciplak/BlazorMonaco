@@ -30,7 +30,11 @@ namespace BlazorMonaco.Helpers
                 }
             }
 
+#if NET8_0_OR_GREATER
+            var deserialized = JsonSerializer.Deserialize(ref reader, options.GetTypeInfo(type));
+#else
             var deserialized = JsonSerializer.Deserialize(ref reader, type, options);
+#endif
             return (IWorkspaceEdit)deserialized;
         }
 
@@ -40,7 +44,12 @@ namespace BlazorMonaco.Helpers
                 writer.WriteNullValue();
 
             var type = value?.GetType();
-            using (var jsonDocument = JsonDocument.Parse(JsonSerializer.Serialize(value, type, options)))
+#if NET8_0_OR_GREATER
+            var json = JsonSerializer.Serialize(value, options.GetTypeInfo(type));
+#else
+            var json = JsonSerializer.Serialize(value, type, options);
+#endif
+            using (var jsonDocument = JsonDocument.Parse(json))
             {
                 writer.WriteStartObject();
                 foreach (var element in jsonDocument.RootElement.EnumerateObject())

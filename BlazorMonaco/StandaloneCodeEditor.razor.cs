@@ -3,8 +3,14 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
+#if NET5_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 using System.Linq;
 using System.Text.Json;
+#if NET8_0_OR_GREATER
+using System.Text.Json.Serialization.Metadata;
+#endif
 using System.Threading.Tasks;
 // ReSharper disable InvalidXmlDocComment
 // ReSharper disable GrammarMistakeInComment
@@ -20,6 +26,14 @@ namespace BlazorMonaco.Editor
 
         private readonly Dictionary<string, List<ActionDescriptor>> _actions = new Dictionary<string, List<ActionDescriptor>>();
         private readonly Dictionary<string, List<CommandHandler>> _commands = new Dictionary<string, List<CommandHandler>>();
+
+#if NET5_0_OR_GREATER
+        [DynamicDependency(nameof(ActionCallback))]
+        [DynamicDependency(nameof(CommandCallback))]
+#endif
+        public StandaloneCodeEditor()
+        {
+        }
 
         [JSInvokable]
         public void ActionCallback(string actionId)
@@ -37,6 +51,9 @@ namespace BlazorMonaco.Editor
             commandHandlers.ForEach(handler => handler.Invoke(this, keyCode));
         }
 
+#if NET8_0_OR_GREATER
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = DotNetObjectReferenceJustification)]
+#endif
         internal static StandaloneCodeEditor CreateVirtualEditor(IJSRuntime jsRuntime, string id, string cssClass = null)
         {
             var virtualEditor = new StandaloneCodeEditor
@@ -148,6 +165,14 @@ namespace BlazorMonaco.Editor
     {
         #region Blazor
 
+#if NET5_0_OR_GREATER
+        [DynamicDependency(nameof(EventCallback))]
+        [DynamicDependency(nameof(ExecuteEditsCallback))]
+#endif
+        public CodeEditor()
+        {
+        }
+
         private readonly List<string> _deltaDecorationIds = new List<string>();
         public Task ResetDeltaDecorations()
             => DeltaDecorations(_deltaDecorationIds.ToArray(), Array.Empty<ModelDeltaDecoration>());
@@ -214,37 +239,35 @@ namespace BlazorMonaco.Editor
         [JSInvokable]
         public override async Task EventCallback(string eventName, string eventJson)
         {
-            var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-
             switch (eventName)
             {
                 case "OnDidCompositionEnd": await OnDidCompositionEnd.InvokeAsync(this); break;
                 case "OnDidCompositionStart": await OnDidCompositionStart.InvokeAsync(this); break;
-                case "OnContextMenu": if (eventJson != null) await OnContextMenu.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
+                case "OnContextMenu": if (eventJson != null) await OnContextMenu.InvokeAsync(JsonHelper.Deserialize<EditorMouseEvent>(eventJson)); break;
                 case "OnDidBlurEditorText": await OnDidBlurEditorText.InvokeAsync(this); break;
                 case "OnDidBlurEditorWidget": await OnDidBlurEditorWidget.InvokeAsync(this); break;
-                case "OnDidChangeConfiguration": await OnDidChangeConfiguration.InvokeAsync(new ConfigurationChangedEvent(JsonSerializer.Deserialize<List<bool>>(eventJson, jsonOptions))); break;
-                case "OnDidChangeCursorPosition": await OnDidChangeCursorPosition.InvokeAsync(JsonSerializer.Deserialize<CursorPositionChangedEvent>(eventJson, jsonOptions)); break;
-                case "OnDidChangeCursorSelection": await OnDidChangeCursorSelection.InvokeAsync(JsonSerializer.Deserialize<CursorSelectionChangedEvent>(eventJson, jsonOptions)); break;
-                case "OnWillChangeModel": await OnWillChangeModel.InvokeAsync(JsonSerializer.Deserialize<ModelChangedEvent>(eventJson, jsonOptions)); break;
-                case "OnDidChangeModel": await OnDidChangeModel.InvokeAsync(JsonSerializer.Deserialize<ModelChangedEvent>(eventJson, jsonOptions)); break;
-                case "OnDidChangeModelContent": await OnDidChangeModelContent.InvokeAsync(JsonSerializer.Deserialize<ModelContentChangedEvent>(eventJson, jsonOptions)); break;
-                case "OnDidChangeModelDecorations": await OnDidChangeModelDecorations.InvokeAsync(JsonSerializer.Deserialize<ModelDecorationsChangedEvent>(eventJson, jsonOptions)); break;
-                case "OnDidChangeModelLanguage": await OnDidChangeModelLanguage.InvokeAsync(JsonSerializer.Deserialize<ModelLanguageChangedEvent>(eventJson, jsonOptions)); break;
-                case "OnDidChangeModelLanguageConfiguration": await OnDidChangeModelLanguageConfiguration.InvokeAsync(JsonSerializer.Deserialize<ModelLanguageConfigurationChangedEvent>(eventJson, jsonOptions)); break;
-                case "OnDidChangeModelOptions": await OnDidChangeModelOptions.InvokeAsync(JsonSerializer.Deserialize<ModelOptionsChangedEvent>(eventJson, jsonOptions)); break;
-                case "OnDidContentSizeChange": await OnDidContentSizeChange.InvokeAsync(JsonSerializer.Deserialize<ContentSizeChangedEvent>(eventJson, jsonOptions)); break;
+                case "OnDidChangeConfiguration": await OnDidChangeConfiguration.InvokeAsync(new ConfigurationChangedEvent(JsonHelper.Deserialize<List<bool>>(eventJson))); break;
+                case "OnDidChangeCursorPosition": await OnDidChangeCursorPosition.InvokeAsync(JsonHelper.Deserialize<CursorPositionChangedEvent>(eventJson)); break;
+                case "OnDidChangeCursorSelection": await OnDidChangeCursorSelection.InvokeAsync(JsonHelper.Deserialize<CursorSelectionChangedEvent>(eventJson)); break;
+                case "OnWillChangeModel": await OnWillChangeModel.InvokeAsync(JsonHelper.Deserialize<ModelChangedEvent>(eventJson)); break;
+                case "OnDidChangeModel": await OnDidChangeModel.InvokeAsync(JsonHelper.Deserialize<ModelChangedEvent>(eventJson)); break;
+                case "OnDidChangeModelContent": await OnDidChangeModelContent.InvokeAsync(JsonHelper.Deserialize<ModelContentChangedEvent>(eventJson)); break;
+                case "OnDidChangeModelDecorations": await OnDidChangeModelDecorations.InvokeAsync(JsonHelper.Deserialize<ModelDecorationsChangedEvent>(eventJson)); break;
+                case "OnDidChangeModelLanguage": await OnDidChangeModelLanguage.InvokeAsync(JsonHelper.Deserialize<ModelLanguageChangedEvent>(eventJson)); break;
+                case "OnDidChangeModelLanguageConfiguration": await OnDidChangeModelLanguageConfiguration.InvokeAsync(JsonHelper.Deserialize<ModelLanguageConfigurationChangedEvent>(eventJson)); break;
+                case "OnDidChangeModelOptions": await OnDidChangeModelOptions.InvokeAsync(JsonHelper.Deserialize<ModelOptionsChangedEvent>(eventJson)); break;
+                case "OnDidContentSizeChange": await OnDidContentSizeChange.InvokeAsync(JsonHelper.Deserialize<ContentSizeChangedEvent>(eventJson)); break;
                 case "OnDidFocusEditorText": await OnDidFocusEditorText.InvokeAsync(this); break;
                 case "OnDidFocusEditorWidget": await OnDidFocusEditorWidget.InvokeAsync(this); break;
-                case "OnDidLayoutChange": if (eventJson != null) await OnDidLayoutChange.InvokeAsync(JsonSerializer.Deserialize<EditorLayoutInfo>(eventJson, jsonOptions)); break;
-                case "OnDidPaste": if (eventJson != null) await OnDidPaste.InvokeAsync(JsonSerializer.Deserialize<PasteEvent>(eventJson, jsonOptions)); break;
-                case "OnDidScrollChange": if (eventJson != null) await OnDidScrollChange.InvokeAsync(JsonSerializer.Deserialize<ScrollEvent>(eventJson, jsonOptions)); break;
-                case "OnKeyDown": if (eventJson != null) await OnKeyDown.InvokeAsync(JsonSerializer.Deserialize<KeyboardEvent>(eventJson, jsonOptions)); break;
-                case "OnKeyUp": if (eventJson != null) await OnKeyUp.InvokeAsync(JsonSerializer.Deserialize<KeyboardEvent>(eventJson, jsonOptions)); break;
-                case "OnMouseDown": if (eventJson != null) await OnMouseDown.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
-                case "OnMouseLeave": if (eventJson != null) await OnMouseLeave.InvokeAsync(JsonSerializer.Deserialize<PartialEditorMouseEvent>(eventJson, jsonOptions)); break;
-                case "OnMouseMove": if (eventJson != null) await OnMouseMove.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
-                case "OnMouseUp": if (eventJson != null) await OnMouseUp.InvokeAsync(JsonSerializer.Deserialize<EditorMouseEvent>(eventJson, jsonOptions)); break;
+                case "OnDidLayoutChange": if (eventJson != null) await OnDidLayoutChange.InvokeAsync(JsonHelper.Deserialize<EditorLayoutInfo>(eventJson)); break;
+                case "OnDidPaste": if (eventJson != null) await OnDidPaste.InvokeAsync(JsonHelper.Deserialize<PasteEvent>(eventJson)); break;
+                case "OnDidScrollChange": if (eventJson != null) await OnDidScrollChange.InvokeAsync(JsonHelper.Deserialize<ScrollEvent>(eventJson)); break;
+                case "OnKeyDown": if (eventJson != null) await OnKeyDown.InvokeAsync(JsonHelper.Deserialize<KeyboardEvent>(eventJson)); break;
+                case "OnKeyUp": if (eventJson != null) await OnKeyUp.InvokeAsync(JsonHelper.Deserialize<KeyboardEvent>(eventJson)); break;
+                case "OnMouseDown": if (eventJson != null) await OnMouseDown.InvokeAsync(JsonHelper.Deserialize<EditorMouseEvent>(eventJson)); break;
+                case "OnMouseLeave": if (eventJson != null) await OnMouseLeave.InvokeAsync(JsonHelper.Deserialize<PartialEditorMouseEvent>(eventJson)); break;
+                case "OnMouseMove": if (eventJson != null) await OnMouseMove.InvokeAsync(JsonHelper.Deserialize<EditorMouseEvent>(eventJson)); break;
+                case "OnMouseUp": if (eventJson != null) await OnMouseUp.InvokeAsync(JsonHelper.Deserialize<EditorMouseEvent>(eventJson)); break;
             }
 
             await base.EventCallback(eventName, eventJson);
@@ -470,11 +493,25 @@ namespace BlazorMonaco.Editor
         /**
          * Gets a specific editor option.
          */
+#if NET8_0_OR_GREATER
+        [RequiresUnreferencedCode("JSON deserialization of an arbitrary type might require types that cannot be statically analyzed. Use the overload that takes a JsonTypeInfo instead.")]
+        [RequiresDynamicCode("JSON deserialization of an arbitrary type might require runtime code generation. Use the overload that takes a JsonTypeInfo instead.")]
+#endif
         public async Task<T> GetOption<T>(EditorOption option)
         {
             var strValue = await JsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getOption", Id, (int)option);
             return JsonSerializer.Deserialize<T>(strValue);
         }
+#if NET8_0_OR_GREATER
+        /**
+         * Gets a specific editor option, using the given source generated type metadata for deserialization.
+         */
+        public async Task<T> GetOption<T>(EditorOption option, JsonTypeInfo<T> jsonTypeInfo)
+        {
+            var strValue = await JsRuntime.SafeInvokeAsync<string>("blazorMonaco.editor.getOption", Id, (int)option);
+            return JsonSerializer.Deserialize(strValue, jsonTypeInfo);
+        }
+#endif
         /**
          * Returns the editor's configuration (without any validation or defaults).
          */
